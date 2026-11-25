@@ -1,6 +1,21 @@
-"""Agente de clases: ventana pequeña para iniciar/parar la escucha y abrir el hub."""
+"""Agente de clases: ventana pequeña para iniciar/parar la escucha y abrir el hub.
+
+Opciones (las usa el instalador):
+  --asistente       abre el asistente de configuración
+  --inicio          arranque con Windows: escucha en automático y se queda junto al reloj
+  --registrar-mcp   conecta el agente con la app de escritorio de Claude
+  --quitar-mcp      lo desconecta (al desinstalar)
+  --descargar-modelo  descarga el modelo de voz que toca para este ordenador
+"""
 import os
+import subprocess
 import sys
+
+# En el .exe sin consola no hay stdout/stderr: cualquier print() fallaría
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
 import threading
 import tkinter as tk
 import webbrowser
@@ -10,15 +25,24 @@ from tkinter import messagebox, ttk
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from nucleo import almacen, horario, resumen  # noqa: E402
-from nucleo.config import RUTA_DATOS, api_key, cargar, guardar, nombre_asignatura  # noqa: E402
+from nucleo.config import CONGELADA, RUTA_DATOS, api_key, cargar, existe, guardar, nombre_asignatura  # noqa: E402
 from nucleo.motor import Motor, microfonos  # noqa: E402
 
 os.makedirs(RUTA_DATOS, exist_ok=True)
 RUTA_LOG = os.path.join(RUTA_DATOS, "agente.log")
 
 
+def lanzar_asistente():
+    """Abre el asistente en otro proceso (pywebview y Tk no conviven bien) y espera."""
+    cmd = [sys.executable] if CONGELADA else [sys.executable, os.path.abspath(__file__)]
+    try:
+        subprocess.run(cmd + ["--asistente"], check=False)
+    except Exception:
+        pass
+
+
 class App:
-    def __init__(self, root):
+    def __init__(self, root, inicio=False):
         self.root = root
         self.cfg = cargar()
         self.logs = []
@@ -30,6 +54,20 @@ class App:
         self.motor.precargar()
         self.motor.guardar_estado()
         self._tick()
+        if inicio and self.cfg["horario"]:
+            self.root.after(500, self._inicio_automatico)
+
+    def _inicio_automatico(self):
+        try:
+            self.motor.iniciar("auto", None)
+        except Exception as e:
+            self.log(f"No he podido empezar en automático: {e}")
+            return
+        self.btn_ini.configure(state="disabled")
+        self.btn_parar.configure(state="normal")
+        self.btn_cambiar.configure(state="normal")
+        if not self._a_bandeja():
+            self.root.iconify()
 
     # ---------- utilidades ----------
     def log(self, msg):
@@ -105,6 +143,7 @@ class App:
         self.lbl_pie = ttk.Label(pie, text="", style="Sub.TLabel")
         self.lbl_pie.pack(side="left")
         ttk.Button(pie, text="Ajustes", command=self.ajustes).pack(side="right")
+        ttk.Button(pie, text="Asignaturas y horario", command=self.reconfigurar).pack(side="right", padx=(6, 0))
         ttk.Button(pie, text="Registro", command=self.ver_log).pack(side="right", padx=6)
 
         r.protocol("WM_DELETE_WINDOW", self.al_cerrar)
@@ -175,6 +214,10 @@ class App:
     # ---------- acciones ----------
     def iniciar(self):
         self.cfg = cargar()
+        if not self.cfg["asignaturas"]:
+            if messagebox.askyesno("Faltan tus asignaturas", "Todavía no has puesto tus asignaturas. ¿Las añadimos ahora?"):
+                self.reconfigurar()
+            return
         d = DialogoModo(self.root, self.cfg)
         if not d.resultado:
             return
@@ -200,6 +243,17 @@ class App:
 
     def ajustes(self):
         DialogoAjustes(self.root)
+
+    def reconfigurar(self):
+        if self.motor.activo:
+            messagebox.showinfo("Asignaturas y horario", "Para la escucha antes de cambiar el horario.")
+            return
+        self.root.withdraw()
+        lanzar_asistente()
+        self.cfg = cargar()
+        self.motor.cfg = self.cfg
+        self.url_hub = self.cfg["ajustes"].get("url_hub") or self.url_hub
+        self._mostrar()
 
     def ver_log(self):
         w = tk.Toplevel(self.root)
@@ -352,8 +406,28 @@ class DialogoAjustes(tk.Toplevel):
 
 
 def main():
+    args = sys.argv[1:]
+    if "--asistente" in args:
+        from asistente.asistente import ejecutar
+        ejecutar()
+        return
+    if "--registrar-mcp" in args or "--quitar-mcp" in args:
+        import registrar_mcp
+        registrar_mcp.registrar(quitar="--quitar-mcp" in args)
+        return
+    if "--descargar-modelo" in args:
+        from nucleo.transcripcion import Transcriptor
+        try:
+            Transcriptor(cargar()["ajustes"]).cargar()
+        except Exception:
+            pass  # se volverá a intentar al abrir el agente
+        return
+    if not existe():
+        lanzar_asistente()
+        if not existe():
+            return  # cerró el asistente sin terminar
     root = tk.Tk()
-    App(root)
+    App(root, inicio="--inicio" in args)
     root.mainloop()
 
 

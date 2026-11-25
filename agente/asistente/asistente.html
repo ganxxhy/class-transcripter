@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente de clases</title>
+<style>
+/* Fuentes del sistema (sin internet): Segoe UI Variable en Windows 11, Segoe UI en Windows 10 */
+:root {
+  --bg: #F6F6F3; --surface: #FFFFFF; --fg: #16181D; --fg2: #3A3F4B; --muted: #5B6070; --faint: #8A8F9C;
+  --line: #E4E5EA; --line2: #C9CBD3; --accent: #4338CA; --accent-hover: #3730A3; --accent-soft: #F5F6FF;
+  --accent-tint: #E0E3FF; --accent-ink: #312E81; --ok: #0F766E; --warn-bg: #FFF7E6; --warn-line: #F5D9A3;
+  --warn-ink: #5C3A05; --warn-icon: #B45309; --danger: #B42318; --on-accent: #FFFFFF;
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111318; --surface: #1A1D24; --fg: #ECEDF1; --fg2: #C9CCD5; --muted: #9AA0AE; --faint: #6E7482;
+    --line: #2A2E38; --line2: #3A3F4B; --accent: #7C83F5; --accent-hover: #959BFF; --accent-soft: #1E2140;
+    --accent-tint: #2A2E5C; --accent-ink: #C7CAFF; --ok: #3FBFA5; --warn-bg: #2B2212; --warn-line: #5A4520;
+    --warn-ink: #F3D9A6; --warn-icon: #F0A93B; --danger: #FF7A70; --on-accent: #0E1030; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { height: 100%; display: flex; }
+.lado { width: 232px; flex: none; padding: 20px; display: flex; flex-direction: column; gap: 24px; }
+.marca { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 600; font-size: 16px; }
+.logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pasos li { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--muted); }
+.pasos .num { width: 22px; height: 22px; border-radius: 11px; border: 1.5px solid var(--line2); display: grid; place-items: center; font-size: 12px; flex: none; }
+.pasos li.hecho { color: var(--fg2); }
+.pasos li.hecho .num { border: 0; background: var(--accent-tint); }
+.pasos li.actual { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.pasos li.actual .num { border: 0; background: var(--accent); color: var(--on-accent); }
+
+.panel { flex: 1; min-width: 0; margin: 12px 12px 12px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; }
+.contenido { flex: 1; min-height: 0; overflow: auto; padding: 32px 40px 20px; display: flex; flex-direction: column; gap: 18px; }
+.pie { height: 68px; flex: none; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; gap: 12px; }
+.pie .der { display: flex; gap: 10px; align-items: center; }
+.puntos { display: flex; gap: 6px; }
+.puntos i { width: 6px; height: 6px; border-radius: 3px; background: var(--line2); transition: width .2s; }
+.puntos i.on { width: 24px; background: var(--accent); }
+
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: .02em; }
+h1 { margin: 4px 0 0; font-family: var(--display); font-size: 28px; font-weight: 600; line-height: 1.15; }
+.sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+p { margin: 0; }
+
+.btn { height: 44px; padding: 0 24px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; }
+.btn:hover { background: var(--accent-hover); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.oscuro { background: var(--fg); color: var(--surface); height: 40px; font-size: 14px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; }
+.btn-sec { height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line2); background: var(--surface); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+.btn-sec:hover { background: var(--bg); }
+.btn-texto { height: 44px; padding: 0 16px; border: 0; background: transparent; color: var(--fg2); font-weight: 500; font-size: 15px; border-radius: 10px; }
+.btn-texto.acento { color: var(--accent); font-size: 14px; }
+.btn-texto:hover { background: var(--bg); }
+
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo label, .etq { font-size: 13px; font-weight: 600; }
+.ayuda { font-size: 12px; color: var(--muted); }
+input[type=text], input[type=password], input[type=time], select, textarea {
+  height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--surface); font-size: 14px; }
+textarea { height: 120px; padding: 10px 12px; resize: vertical; font-family: Consolas, ui-monospace, monospace; font-size: 12px; }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; flex: none; }
+.fila { display: flex; gap: 10px; align-items: center; }
+
+.aviso { padding: 16px 18px; border-radius: 10px; background: var(--warn-bg); border: 1px solid var(--warn-line); display: flex; gap: 14px; align-items: flex-start; }
+.aviso .txt { color: var(--warn-ink); }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 500; cursor: pointer; }
+
+/* Horario */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 16px; border: 0; font-weight: 500; font-size: 13px; background: color-mix(in srgb, var(--c) 12%, var(--surface)); color: color-mix(in srgb, var(--c) 70%, var(--fg)); }
+.chip .pt { width: 10px; height: 10px; border-radius: 5px; background: var(--c); }
+.chip.nuevo { border: 1px dashed var(--faint); background: var(--surface); color: var(--fg2); }
+.semana { flex: 1; min-height: 300px; display: grid; grid-template-columns: 48px repeat(var(--dias), minmax(0, 1fr)); grid-template-rows: 26px 1fr; gap: 0 4px; }
+.semana .cab { font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; align-self: center; }
+.horas { position: relative; }
+.horas span { position: absolute; left: 0; font-size: 11px; color: var(--muted); transform: translateY(-50%); }
+.dia { position: relative; border-radius: 8px; background: repeating-linear-gradient(to bottom, var(--bg) 0 1px, transparent 1px var(--h1)); background-color: color-mix(in srgb, var(--bg) 40%, var(--surface)); cursor: copy; }
+.bloque { position: absolute; left: 2px; right: 2px; border-radius: 7px; background: var(--c); color: #fff; padding: 5px 8px; overflow: hidden; border: 0; text-align: left; display: flex; flex-direction: column; font-size: 11px; line-height: 1.3; cursor: pointer; }
+.bloque strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bloque span { opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Micro */
+.medidor { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px; background: var(--bg); }
+.barras { flex: 1; display: flex; gap: 3px; align-items: center; height: 24px; }
+.barras i { flex: 1; height: 6px; border-radius: 2px; background: var(--line2); transition: height .08s, background .08s; }
+.opciones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.opcion { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 10px; border: 1px solid var(--line2); cursor: pointer; }
+.opcion:has(input:checked) { border: 2px solid var(--accent); background: var(--accent-soft); padding: 13px; }
+.opcion .t { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.opcion .d { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Resúmenes */
+.modo { display: flex; gap: 16px; padding: 18px; border-radius: 12px; border: 1px solid var(--line2); cursor: pointer; }
+.modo:has(> input:checked) { border: 2px solid var(--accent); background: var(--accent-soft); padding: 17px; }
+.modo > input { margin-top: 3px; }
+.modo .cuerpo { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.modo .t { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.etiqueta { font-size: 11px; font-weight: 600; color: var(--accent-ink); background: var(--accent-tint); padding: 3px 8px; border-radius: 10px; }
+
+/* Final */
+.final { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; }
+.final .logo { width: 80px; height: 80px; border-radius: 24px; }
+.proxima { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); text-align: left; min-width: 420px; }
+.proxima .barra { width: 6px; align-self: stretch; border-radius: 3px; background: var(--c, var(--accent)); }
+
+/* Diálogo */
+dialog { border: 0; border-radius: 14px; padding: 0; background: var(--surface); color: var(--fg); box-shadow: 0 20px 60px rgba(0,0,0,.25); width: 440px; max-width: calc(100vw - 32px); }
+dialog::backdrop { background: rgba(10,12,18,.45); }
+dialog form { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight: 600; }
+.colores { display: flex; gap: 8px; flex-wrap: wrap; }
+.colores label { width: 28px; height: 28px; border-radius: 14px; background: var(--c); cursor: pointer; display: grid; place-items: center; }
+.colores input { position: absolute; opacity: 0; width: 0; height: 0; }
+.colores label:has(input:checked) { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
+.dlg-pie { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.dlg-pie .der { display: flex; gap: 8px; margin-left: auto; }
+.peligro { color: var(--danger); }
+.error { color: var(--danger); font-size: 13px; }
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="lado">
+    <div class="marca">
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></div>
+      Configurar
+    </div>
+    <ol class="pasos" id="pasos"></ol>
+  </aside>
+
+  <main class="panel">
+    <div class="contenido" id="contenido">
+
+      <!-- PASO 1 -->
+      <section data-paso="1" class="contenido" style="padding:0">
+        <div>
+          <div class="eyebrow">PASO 1 DE 5</div>
+          <h1>Hola, vamos a dejarlo listo</h1>
+        </div>
+        <p style="font-size:15px;line-height:1.6;color:var(--fg2);max-width:540px">En un par de minutos le dices qué asignaturas tienes y a qué hora, eliges el micrófono y decides cómo hacer los resúmenes.</p>
+        <div class="dos" style="max-width:560px">
+          <div class="campo">
+            <label for="nombre">¿Cómo te llamas?</label>
+            <input type="text" id="nombre" autocomplete="given-name" placeholder="Tu nombre">
+          </div>
+          <div class="campo">
+            <label for="estudios">¿Qué estudias?</label>
+            <input type="text" id="estudios" placeholder="Ej.: 2º de Ingeniería Informática">
+          </div>
+        </div>
+        <span class="ayuda" style="margin-top:-10px">Opcional. Ayuda a que los resúmenes entiendan mejor tus clases.</span>
+        <div class="aviso" style="margin-top:auto">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warn-icon)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="txt"><strong>Antes de grabar, pide permiso.</strong> Grabar una clase puede necesitar el permiso del profesorado y de tu universidad. Tú eres responsable de cómo uses las grabaciones.</div>
+            <label class="check"><input type="checkbox" id="permiso"> Lo entiendo y solo grabaré con permiso</label>
+          </div>
+        </div>
+      </section>
+
+      <!-- PASO 2 -->
+      <section data-paso="2" class="contenido" style="padding:0" hidden>
+        <div class="fila" style="justify-content:space-between;align-items:flex-end">
+          <div>
+            <div class="eyebrow">PASO 2 DE 5</div>
+            <h1>Tus asignaturas y tu horario</h1>
+          </div>
+          <button type="button" class="btn-sec" id="btnCaptura"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-8 7"/></svg>Leer de una captura</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="semana" id="semana"></div>
+        <div class="ayuda">Pulsa en un hueco para añadir una clase, o en una clase para cambiarla. Con el horario puesto, el agente graba solo: empieza 5 minutos antes y sigue 10 minutos después por si el profe se alarga.</div>
+      </section>
+
+      <!-- PASO 3 -->
+      <section data-paso="3" class="contenido" style="padding:0" hidden>
+        <div>
+          <div class="eyebrow">PASO 3 DE 5</div>
+          <h1>Micrófono y calidad</h1>
+        </div>
+        <div class="campo">
+          <label for="mic">Micrófono</label>
+          <div class="fila">
+            <select id="mic" style="flex:1"></select>
+            <button type="button" class="btn-sec" id="btnMics" aria-label="Buscar micrófonos" style="width:40px;padding:0;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+          </div>
+          <div class="medidor" style="margin-top:6px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            <div class="barras" id="barras" aria-hidden="true"></div>
+            <span id="nivelTxt" style="font-size:13px;font-weight:600;color:var(--muted);min-width:120px;text-align:right">Habla para probar</span>
+          </div>
+        </div>
+        <div class="campo">
+          <div class="etq">Calidad de la transcripción</div>
+          <div class="opciones">
+            <label class="opcion"><span class="t"><input type="radio" name="calidad" value="small">Rápida</span><span class="d">Para portátiles sencillos. Algún error más.</span></label>
+            <label class="opcion"><span class="t"><input type="radio" name="calidad" value="auto" checked>Automática</span><span class="d">Elige la mejor que tu ordenador aguanta. Recomendada.</span></label>
+            <label class="opcion"><span class="t"><input type="radio" name="calidad" value="large-v3-turbo">Máxima</span><span class="d">La más precisa. Va mejor con gráfica NVIDIA.</span></label>
+          </div>
+          <div class="ayuda" id="hw"></div>
+        </div>
+      </section>
+
+      <!-- PASO 4 -->
+      <section data-paso="4" class="contenido" style="padding:0" hidden>
+        <div>
+          <div class="eyebrow">PASO 4 DE 5</div>
+          <h1>¿Cómo quieres los resúmenes?</h1>
+          <p class="sub">Cada clase tendrá un resumen completo, en orden y por temas, y aparte los exámenes, entregas y fechas.</p>
+        </div>
+        <label class="modo">
+          <input type="radio" name="modo" value="cuenta" checked>
+          <div class="cuerpo">
+            <div class="t">Con mi cuenta de Claude <span class="etiqueta">RECOMENDADO</span></div>
+            <div style="font-size:13px;line-height:1.55;color:var(--fg2)">Usa tu suscripción Pro o Max, sin pagar nada más. Crea tu panel "Mis clases" en Claude: ahí ves todas tus clases desde el móvil o cualquier ordenador.</div>
+            <div class="fila">
+              <button type="button" class="btn oscuro" id="btnPanel">Crear mi panel en Claude<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+              <span class="ayuda">Se abre Claude y lo prepara solo</span>
+            </div>
+            <div class="campo">
+              <label for="urlHub" style="font-weight:500;font-size:13px">Cuando te dé el enlace, pégalo aquí (opcional)</label>
+              <input type="text" id="urlHub" placeholder="https://claude.ai/artifact/…">
+            </div>
+          </div>
+        </label>
+        <label class="modo">
+          <input type="radio" name="modo" value="clave">
+          <div class="cuerpo">
+            <div class="t">Con una clave de API</div>
+            <div style="font-size:13px;line-height:1.55;color:var(--muted)">Si no tienes Claude Pro. El resumen se hace solo en tu ordenador al acabar cada clase. Vale una clave de Claude o de Gemini.</div>
+            <div class="fila">
+              <select id="proveedor" aria-label="Proveedor"><option value="claude">Claude</option><option value="gemini">Gemini</option></select>
+              <input type="password" id="clave" aria-label="Clave de API" placeholder="Pega aquí tu clave" style="flex:1" autocomplete="off">
+            </div>
+            <div class="ayuda" id="claveAyuda"></div>
+          </div>
+        </label>
+        <div class="ayuda">Puedes usar las dos cosas a la vez, o dejarlo para más tarde en Ajustes.</div>
+      </section>
+
+      <!-- PASO 5 -->
+      <section data-paso="5" class="final" hidden>
+        <div class="logo"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div>
+          <h1 id="tituloFin" style="font-size:34px">Todo listo</h1>
+          <p style="margin:10px auto 0;font-size:15px;line-height:1.6;color:var(--fg2);max-width:520px">El agente se queda junto al reloj de Windows y empezará a escuchar solo en tu próxima clase.</p>
+        </div>
+        <div class="proxima" id="proxima">
+          <div class="barra"></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em">PRÓXIMA CLASE</div>
+            <div id="proxNombre" style="font-size:17px;font-weight:600;margin-top:2px"></div>
+            <div id="proxCuando" style="font-size:13px;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div class="error" id="errorGuardar" hidden></div>
+        <div class="fila" style="gap:12px">
+          <button type="button" class="btn-sec" id="btnHub" style="height:46px;padding:0 22px;font-weight:600;font-size:15px">Abrir Mis clases</button>
+          <button type="button" class="btn" id="btnFin" style="height:46px">Ir al agente</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="pie" id="pie">
+      <div>
+        <button type="button" class="btn-texto" id="btnAtras" hidden>Atrás</button>
+        <div class="puntos" id="puntos" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="der">
+        <button type="button" class="btn-texto acento" id="btnLuego" hidden>Lo pongo luego</button>
+        <button type="button" class="btn" id="btnSig">Empezar</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Diálogo: asignatura -->
+<dialog id="dlgAsig">
+  <form method="dialog" id="formAsig">
+    <h2 id="dlgAsigTit">Nueva asignatura</h2>
+    <div class="campo"><label for="asigNombre">Nombre</label><input type="text" id="asigNombre" required></div>
+    <div class="campo"><div class="etq">Color</div><div class="colores" id="asigColores"></div></div>
+    <div class="dlg-pie">
+      <button type="button" class="btn-texto peligro" id="asigBorrar" hidden>Borrar</button>
+      <div class="der"><button type="button" class="btn-texto" value="cancel" data-cerrar>Cancelar</button><button class="btn" value="ok" style="height:40px">Guardar</button></div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: clase -->
+<dialog id="dlgClase">
+  <form method="dialog" id="formClase">
+    <h2 id="dlgClaseTit">Añadir clase</h2>
+    <div class="campo"><label for="claseAsig">Asignatura</label><select id="claseAsig" required></select></div>
+    <div class="campo"><label for="claseDia">Día</label>
+      <select id="claseDia"><option value="lunes">Lunes</option><option value="martes">Martes</option><option value="miercoles">Miércoles</option><option value="jueves">Jueves</option><option value="viernes">Viernes</option><option value="sabado">Sábado</option></select></div>
+    <div class="dos">
+      <div class="campo"><label for="claseIni">Empieza</label><input type="time" id="claseIni" required></div>
+      <div class="campo"><label for="claseFin">Acaba</label><input type="time" id="claseFin" required></div>
+    </div>
+    <div class="campo"><label for="claseAula">Aula (opcional)</label><input type="text" id="claseAula"></div>
+    <div class="error" id="claseError" hidden></div>
+    <div class="dlg-pie">
+      <button type="button" class="btn-texto peligro" id="claseBorrar" hidden>Borrar</button>
+      <div class="der"><button type="button" class="btn-texto" data-cerrar>Cancelar</button><button class="btn" value="ok" style="height:40px">Guardar</button></div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: leer de una captura -->
+<dialog id="dlgCaptura" style="width:520px">
+  <form method="dialog" id="formCaptura">
+    <h2>Leer el horario de una captura</h2>
+    <p style="color:var(--fg2)">1. Abre Claude con las instrucciones ya escritas, adjunta la captura de tu horario y envíalo.</p>
+    <div><button type="button" class="btn oscuro" id="btnAbrirHorario">Abrir Claude<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></button></div>
+    <p style="color:var(--fg2)">2. Copia lo que te conteste y pégalo aquí.</p>
+    <textarea id="capturaTexto" aria-label="Respuesta de Claude" placeholder='{"asignaturas": [...], "horario": [...]}'></textarea>
+    <div class="error" id="capturaError" hidden></div>
+    <div class="dlg-pie"><div class="der"><button type="button" class="btn-texto" data-cerrar>Cancelar</button><button class="btn" value="ok" style="height:40px">Importar</button></div></div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+const DIAS_CORTO = { lunes: "Lun", martes: "Mar", miercoles: "Mié", jueves: "Jue", viernes: "Vie", sabado: "Sáb" };
+const DIAS_LARGO = { lunes: "lunes", martes: "martes", miercoles: "miércoles", jueves: "jueves", viernes: "viernes", sabado: "sábado", domingo: "domingo" };
+const NOMBRES_PASOS = ["Bienvenida", "Asignaturas y horario", "Micrófono", "Resúmenes", "Listo"];
+const ICONO_OK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+
+// ---------- puente con Python (pywebview); en un navegador normal usa datos de prueba ----------
+let apiLista;
+const apiPromesa = new Promise((res) => { apiLista = res; });
+window.addEventListener("pywebviewready", () => apiLista(window.pywebview.api));
+setTimeout(() => { if (!window.pywebview) apiLista(simulada()); }, 1200);
+async function api(nombre, ...args) { const a = await apiPromesa; return a[nombre](...args); }
+function simulada() {
+  let n = 0;
+  return {
+    estado_inicial: async () => ({ perfil: {}, asignaturas: [], horario: [], ajustes: { modelo_whisper: "auto", proveedor: "claude" },
+      colores: ["#2f5bd3", "#c25a1f", "#0f8a6a", "#8a3fb8", "#b07e00", "#c2366b", "#0e7c8c", "#5a6b1f"],
+      hardware: { texto: "Vista previa en el navegador." }, prompt_horario: "" }),
+    listar_micros: async () => [{ indice: 1, nombre: "Micrófono del portátil", defecto: true }, { indice: 2, nombre: "Auriculares USB", defecto: false }],
+    iniciar_medidor: async () => ({ ok: true }), parar_medidor: async () => {},
+    nivel: async () => { n += 0.4; return Math.abs(Math.sin(n)) * 0.8; },
+    guardar: async (d) => { console.log("guardar", d); return { ok: true }; },
+    abrir_claude_horario: async () => {}, abrir_claude_panel: async () => {}, abrir: async () => {},
+    terminar: async (s) => console.log("terminar", s),
+  };
+}
+
+// ---------- estado ----------
+const E = { paso: 1, asignaturas: [], horario: [], colores: [], micros: [], urlHub: "" };
+
+function pintarPasos() {
+  $("#pasos").innerHTML = "";
+  NOMBRES_PASOS.forEach((nombre, i) => {
+    const li = document.createElement("li");
+    const n = i + 1;
+    li.className = n < E.paso ? "hecho" : n === E.paso ? "actual" : "";
+    li.innerHTML = `<span class="num">${n < E.paso ? ICONO_OK : n}</span>`;
+    li.append(nombre);
+    if (n === E.paso) li.setAttribute("aria-current", "step");
+    $("#pasos").append(li);
+  });
+  document.querySelectorAll("#puntos i").forEach((p, i) => p.classList.toggle("on", i === E.paso - 1));
+}
+
+function irA(paso) {
+  if (E.paso === 3 && paso !== 3) api("parar_medidor");
+  E.paso = paso;
+  document.querySelectorAll("section[data-paso]").forEach((s) => { s.hidden = Number(s.dataset.paso) !== paso; });
+  $("#pie").hidden = paso === 5;
+  $("#btnAtras").hidden = paso === 1 || paso === 5;
+  $("#puntos").hidden = paso !== 1;
+  $("#btnLuego").hidden = !(paso === 2 || paso === 4);
+  $("#btnLuego").textContent = paso === 2 ? "Lo pongo luego" : "Lo hago luego";
+  $("#btnSig").textContent = paso === 1 ? "Empezar" : "Siguiente";
+  validar();
+  pintarPasos();
+  if (paso === 2) pintarHorario();
+  if (paso === 3) entrarMicro();
+  if (paso === 5) terminarAsistente();
+}
+
+function validar() {
+  let ok = true;
+  if (E.paso === 1) ok = $("#permiso").checked;
+  $("#btnSig").disabled = !ok;
+}
+
+// ---------- paso 2: asignaturas y horario ----------
+const aMin = (h) => { const [a, b] = String(h).split(":").map(Number); return a * 60 + (b || 0); };
+const asig = (id) => E.asignaturas.find((a) => a.id === id);
+function idNuevo(nombre) {
+  const base = (nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().match(/[a-z0-9]+/g) || ["asig"])
+    .map((w, _i, arr) => arr.length > 1 ? w[0] : w.slice(0, 4)).join("").slice(0, 6) || "asig";
+  let id = base, k = 2;
+  while (asig(id)) id = base + k++;
+  return id;
+}
+function colorLibre() {
+  const usados = new Set(E.asignaturas.map((a) => a.color));
+  return E.colores.find((c) => !usados.has(c)) || E.colores[E.asignaturas.length % E.colores.length];
+}
+
+function pintarChips() {
+  const cont = $("#chips");
+  cont.innerHTML = "";
+  for (const a of E.asignaturas) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.style.setProperty("--c", a.color);
+    b.innerHTML = '<span class="pt"></span>';
+    b.append(a.nombre);
+    b.onclick = () => abrirAsig(a);
+    cont.append(b);
+  }
+  const nuevo = document.createElement("button");
+  nuevo.type = "button"; nuevo.className = "chip nuevo"; nuevo.textContent = "+ Asignatura";
+  nuevo.onclick = () => abrirAsig(null);
+  cont.append(nuevo);
+}
+
+function pintarHorario() {
+  pintarChips();
+  const sem = $("#semana");
+  const dias = E.horario.some((c) => c.dia === "sabado") ? DIAS : DIAS.slice(0, 5);
+  let ini = 8 * 60, fin = 21 * 60;
+  for (const c of E.horario) { ini = Math.min(ini, Math.floor(aMin(c.inicio) / 60) * 60); fin = Math.max(fin, Math.ceil(aMin(c.fin) / 60) * 60); }
+  const total = fin - ini;
+  sem.style.setProperty("--dias", dias.length);
+  sem.innerHTML = "<div></div>";
+  for (const d of dias) { const c = document.createElement("div"); c.className = "cab"; c.textContent = DIAS_CORTO[d]; sem.append(c); }
+  const horas = document.createElement("div");
+  horas.className = "horas";
+  for (let m = ini; m < fin; m += 60) {
+    if ((m - ini) % 120) continue;
+    const s = document.createElement("span"); s.style.top = `${((m - ini) / total) * 100}%`; s.textContent = `${m / 60}:00`;
+    if (m !== ini) horas.append(s); else { s.style.transform = "none"; horas.append(s); }
+  }
+  sem.append(horas);
+  for (const d of dias) {
+    const col = document.createElement("div");
+    col.className = "dia";
+    col.setAttribute("aria-label", `Añadir clase el ${DIAS_LARGO[d]}`);
+    col.style.setProperty("--h1", `${(60 / total) * 100}%`);
+    col.style.backgroundSize = `100% ${(60 / total) * 100}%`;
+    col.onclick = (ev) => {
+      if (ev.target !== col) return;
+      const r = col.getBoundingClientRect();
+      const m = ini + Math.floor(((ev.clientY - r.top) / r.height) * total / 30) * 30;
+      abrirClase(null, d, m);
+    };
+    for (const c of E.horario.filter((x) => x.dia === d)) {
+      const a = asig(c.asignatura);
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "bloque";
+      b.style.setProperty("--c", a ? a.color : "#5B6070");
+      b.style.top = `${((aMin(c.inicio) - ini) / total) * 100}%`;
+      b.style.height = `${((aMin(c.fin) - aMin(c.inicio)) / total) * 100}%`;
+      const s = document.createElement("strong"); s.textContent = a ? a.nombre : c.asignatura;
+      const t = document.createElement("span"); t.textContent = `${c.inicio} – ${c.fin}${c.aula ? " · " + c.aula : ""}`;
+      b.append(s, t);
+      b.onclick = () => abrirClase(c);
+      col.append(b);
+    }
+    sem.append(col);
+  }
+}
+
+let asigEditando = null;
+function abrirAsig(a) {
+  asigEditando = a;
+  $("#dlgAsigTit").textContent = a ? "Asignatura" : "Nueva asignatura";
+  $("#asigNombre").value = a ? a.nombre : "";
+  $("#asigBorrar").hidden = !a;
+  const elegido = a ? a.color : colorLibre();
+  $("#asigColores").innerHTML = "";
+  E.colores.forEach((c, i) => {
+    const l = document.createElement("label");
+    l.style.setProperty("--c", c);
+    l.innerHTML = `<input type="radio" name="color" value="${c}" aria-label="Color ${i + 1}">`;
+    if (c === elegido) l.querySelector("input").checked = true;
+    $("#asigColores").append(l);
+  });
+  $("#dlgAsig").showModal();
+}
+$("#formAsig").addEventListener("submit", () => {
+  const nombre = $("#asigNombre").value.trim();
+  if (!nombre) return;
+  const color = (document.querySelector('#asigColores input:checked') || {}).value || colorLibre();
+  if (asigEditando) Object.assign(asigEditando, { nombre, color });
+  else E.asignaturas.push({ id: idNuevo(nombre), nombre, color });
+  pintarHorario();
+});
+$("#asigBorrar").onclick = () => {
+  if (!asigEditando) return;
+  E.asignaturas = E.asignaturas.filter((a) => a !== asigEditando);
+  E.horario = E.horario.filter((c) => c.asignatura !== asigEditando.id);
+  $("#dlgAsig").close();
+  pintarHorario();
+};
+
+let claseEditando = null;
+function abrirClase(c, dia, minuto) {
+  if (!E.asignaturas.length) { abrirAsig(null); return; }
+  claseEditando = c;
+  $("#dlgClaseTit").textContent = c ? "Clase" : "Añadir clase";
+  const sel = $("#claseAsig");
+  sel.innerHTML = "";
+  for (const a of E.asignaturas) { const o = document.createElement("option"); o.value = a.id; o.textContent = a.nombre; sel.append(o); }
+  const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  sel.value = c ? c.asignatura : E.asignaturas[E.asignaturas.length - 1].id;
+  $("#claseDia").value = c ? c.dia : dia;
+  $("#claseIni").value = c ? c.inicio : hh(minuto);
+  $("#claseFin").value = c ? c.fin : hh(Math.min(minuto + 100, 23 * 60 + 59));
+  $("#claseAula").value = c ? (c.aula || "") : "";
+  $("#claseBorrar").hidden = !c;
+  $("#claseError").hidden = true;
+  $("#dlgClase").showModal();
+}
+$("#formClase").addEventListener("submit", (ev) => {
+  const datos = { dia: $("#claseDia").value, inicio: $("#claseIni").value, fin: $("#claseFin").value,
+    asignatura: $("#claseAsig").value, aula: $("#claseAula").value.trim() };
+  if (aMin(datos.fin) <= aMin(datos.inicio)) {
+    ev.preventDefault(); $("#claseError").textContent = "La clase tiene que acabar después de empezar."; $("#claseError").hidden = false; return;
+  }
+  const choca = E.horario.find((c) => c !== claseEditando && c.dia === datos.dia && aMin(c.inicio) < aMin(datos.fin) && aMin(datos.inicio) < aMin(c.fin));
+  if (choca) {
+    ev.preventDefault(); $("#claseError").textContent = `Se solapa con ${asig(choca.asignatura)?.nombre || "otra clase"} (${choca.inicio} – ${choca.fin}).`; $("#claseError").hidden = false; return;
+  }
+  if (claseEditando) Object.assign(claseEditando, datos); else E.horario.push(datos);
+  E.horario.sort((a, b) => DIAS.indexOf(a.dia) - DIAS.indexOf(b.dia) || aMin(a.inicio) - aMin(b.inicio));
+  pintarHorario();
+});
+$("#claseBorrar").onclick = () => { E.horario = E.horario.filter((c) => c !== claseEditando); $("#dlgClase").close(); pintarHorario(); };
+
+$("#btnCaptura").onclick = () => { $("#capturaTexto").value = ""; $("#capturaError").hidden = true; $("#dlgCaptura").showModal(); };
+$("#btnAbrirHorario").onclick = () => api("abrir_claude_horario");
+$("#formCaptura").addEventListener("submit", (ev) => {
+  try {
+    const txt = $("#capturaTexto").value;
+    const json = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
+    const nuevasA = (json.asignaturas || []).filter((a) => a && a.nombre);
+    const nuevasH = (json.horario || []).filter((c) => c && c.dia && c.inicio && c.fin && c.asignatura);
+    if (!nuevasA.length || !nuevasH.length) throw new Error("vacío");
+    const mapa = {};
+    for (const a of nuevasA) {
+      const existente = E.asignaturas.find((x) => x.nombre.toLowerCase() === String(a.nombre).toLowerCase());
+      if (existente) { mapa[a.id] = existente.id; continue; }
+      const n = { id: idNuevo(String(a.id || a.nombre)), nombre: String(a.nombre), color: colorLibre() };
+      E.asignaturas.push(n); mapa[a.id] = n.id;
+    }
+    const norm = (d) => String(d).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const hora = (h) => { const [a, b] = String(h).split(":"); return `${String(Number(a)).padStart(2, "0")}:${String(Number(b) || 0).padStart(2, "0")}`; };
+    E.horario = E.horario.concat(nuevasH.filter((c) => DIAS.includes(norm(c.dia)) && mapa[c.asignatura]).map((c) => ({
+      dia: norm(c.dia), inicio: hora(c.inicio), fin: hora(c.fin), asignatura: mapa[c.asignatura], aula: String(c.aula || "") })));
+    E.horario.sort((a, b) => DIAS.indexOf(a.dia) - DIAS.indexOf(b.dia) || aMin(a.inicio) - aMin(b.inicio));
+    pintarHorario();
+  } catch (e) {
+    ev.preventDefault();
+    $("#capturaError").textContent = "No entiendo lo que has pegado. Copia la respuesta entera de Claude, con las llaves { }.";
+    $("#capturaError").hidden = false;
+  }
+});
+
+// ---------- paso 3: micrófono ----------
+for (let i = 0; i < 14; i++) $("#barras").append(document.createElement("i"));
+let medidor = null, maxNivel = 0;
+async function cargarMicros(refrescar) {
+  const lista = await api("listar_micros", refrescar);
+  const sel = $("#mic");
+  sel.innerHTML = '<option value="">El de Windows (predeterminado)</option>';
+  if (Array.isArray(lista)) for (const m of lista) { const o = document.createElement("option"); o.value = m.nombre; o.textContent = m.nombre; sel.append(o); }
+  if (E.microfono && [...sel.options].some((o) => o.value === E.microfono)) sel.value = E.microfono;
+}
+async function arrancarMedidor() {
+  maxNivel = 0;
+  const r = await api("iniciar_medidor", $("#mic").value || null);
+  if (r && r.error) { $("#nivelTxt").textContent = "No puedo abrir este micro"; $("#nivelTxt").style.color = "var(--danger)"; return; }
+  $("#nivelTxt").textContent = "Habla para probar"; $("#nivelTxt").style.color = "var(--muted)";
+  clearInterval(medidor);
+  medidor = setInterval(async () => {
+    if (E.paso !== 3) { clearInterval(medidor); return; }
+    const v = await api("nivel");
+    maxNivel = Math.max(maxNivel * 0.995, v);
+    const barras = $("#barras").children;
+    for (let i = 0; i < barras.length; i++) {
+      const on = v > i / barras.length;
+      barras[i].style.height = `${6 + Math.min(18, i * 1.4)}px`;
+      barras[i].style.background = on ? "var(--ok)" : "var(--line2)";
+    }
+    if (maxNivel > 0.45) { $("#nivelTxt").textContent = "Se te oye bien"; $("#nivelTxt").style.color = "var(--ok)"; }
+    else if (maxNivel > 0.2) { $("#nivelTxt").textContent = "Se oye flojo"; $("#nivelTxt").style.color = "var(--warn-icon)"; }
+  }, 100);
+}
+async function entrarMicro() { if (!$("#mic").options.length) await cargarMicros(false); arrancarMedidor(); }
+$("#mic").onchange = () => { E.microfono = $("#mic").value; arrancarMedidor(); };
+$("#btnMics").onclick = async () => { await api("parar_medidor"); await cargarMicros(true); arrancarMedidor(); };
+
+// ---------- paso 4: resúmenes ----------
+$("#btnPanel").onclick = (ev) => { ev.preventDefault(); document.querySelector('input[name=modo][value=cuenta]').checked = true; api("abrir_claude_panel"); };
+const AYUDA_CLAVE = {
+  claude: 'Consíguela en console.anthropic.com, en "API keys". Se guarda solo en tu ordenador.',
+  gemini: 'Consíguela gratis en aistudio.google.com, en "Get API key". Se guarda solo en tu ordenador.',
+};
+$("#proveedor").onchange = () => { $("#claveAyuda").textContent = AYUDA_CLAVE[$("#proveedor").value]; };
+$("#clave").addEventListener("input", () => { if ($("#clave").value) document.querySelector('input[name=modo][value=clave]').checked = true; });
+
+// ---------- paso 5 ----------
+function proximaClase() {
+  if (!E.horario.length) return null;
+  const ahora = new Date();
+  const orden = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+  for (let k = 0; k < 8; k++) {
+    const f = new Date(ahora); f.setDate(ahora.getDate() + k);
+    const dia = orden[f.getDay()];
+    const mins = ahora.getHours() * 60 + ahora.getMinutes();
+    const hoy = E.horario.filter((c) => c.dia === dia && (k > 0 || aMin(c.inicio) > mins)).sort((a, b) => aMin(a.inicio) - aMin(b.inicio));
+    if (hoy.length) return { c: hoy[0], k, dia };
+  }
+  return null;
+}
+async function terminarAsistente() {
+  const nombre = $("#nombre").value.trim();
+  $("#tituloFin").textContent = nombre ? `Todo listo, ${nombre}` : "Todo listo";
+  const p = proximaClase();
+  if (p) {
+    const a = asig(p.c.asignatura);
+    $("#proxima").hidden = false;
+    $("#proxima").style.setProperty("--c", a ? a.color : "var(--accent)");
+    $("#proxNombre").textContent = a ? a.nombre : p.c.asignatura;
+    const cuando = p.k === 0 ? "Hoy" : p.k === 1 ? `Mañana, ${DIAS_LARGO[p.dia]},` : `El ${DIAS_LARGO[p.dia]}`;
+    $("#proxCuando").textContent = `${cuando} a las ${p.c.inicio}${p.c.aula ? " · Aula " + p.c.aula : ""}`;
+  } else {
+    $("#proxima").hidden = true;
+  }
+  const modo = document.querySelector("input[name=modo]:checked").value;
+  E.urlHub = $("#urlHub").value.trim();
+  $("#btnHub").hidden = !E.urlHub;
+  const r = await api("guardar", {
+    nombre, estudios: $("#estudios").value.trim(), permiso: $("#permiso").checked,
+    asignaturas: E.asignaturas, horario: E.horario,
+    microfono: $("#mic").value || null,
+    modelo_whisper: document.querySelector("input[name=calidad]:checked").value,
+    proveedor: modo === "clave" ? $("#proveedor").value : null,
+    clave: modo === "clave" ? $("#clave").value : "",
+    url_hub: E.urlHub,
+  });
+  if (!r || !r.ok) { $("#errorGuardar").textContent = "No he podido guardar la configuración: " + ((r && r.error) || "error desconocido"); $("#errorGuardar").hidden = false; }
+}
+$("#btnFin").onclick = () => api("terminar", "agente");
+$("#btnHub").onclick = () => { if (E.urlHub.startsWith("https://")) api("abrir", E.urlHub); api("terminar", "agente"); };
+
+// ---------- navegación ----------
+$("#btnSig").onclick = () => irA(E.paso + 1);
+$("#btnLuego").onclick = () => irA(E.paso + 1);
+$("#btnAtras").onclick = () => irA(E.paso - 1);
+$("#permiso").onchange = validar;
+document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.closest("dialog").close(); });
+
+// ---------- arranque ----------
+(async () => {
+  const s = await api("estado_inicial");
+  E.asignaturas = s.asignaturas || [];
+  E.horario = s.horario || [];
+  E.colores = s.colores || [];
+  E.microfono = s.ajustes.microfono || "";
+  $("#nombre").value = (s.perfil && s.perfil.nombre) || "";
+  $("#estudios").value = (s.perfil && s.perfil.estudios) || "";
+  $("#hw").textContent = s.hardware.texto || "";
+  const cal = document.querySelector(`input[name=calidad][value="${s.ajustes.modelo_whisper}"]`);
+  if (cal) cal.checked = true;
+  $("#proveedor").value = s.ajustes.proveedor || "claude";
+  $("#proveedor").onchange();
+  if (s.ajustes.url_hub) $("#urlHub").value = s.ajustes.url_hub;
+  if (s.ajustes.tiene_clave) { document.querySelector('input[name=modo][value=clave]').checked = true; $("#clave").placeholder = "Ya tienes una clave guardada (déjalo vacío para mantenerla)"; }
+  irA(1);
+})();
+</script>
+</body>
+</html>

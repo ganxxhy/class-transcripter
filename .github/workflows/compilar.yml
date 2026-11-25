@@ -1,0 +1,118 @@
+name: Compilar instalador de Windows
+
+# - Cada push a main que toque la app: compila y deja el instalador como artefacto de la ejecución.
+# - Una etiqueta v1.2.3: además publica el instalador en Releases.
+# - También se puede lanzar a mano desde la pestaña Actions.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths:
+      - "agente/**"
+      - "hub/**"
+      - "packaging/**"
+      - "tests/**"
+      - ".github/workflows/compilar.yml"
+  pull_request:
+    paths:
+      - "agente/**"
+      - "packaging/**"
+      - ".github/workflows/compilar.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: agente/requirements.txt
+
+      - name: Dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r agente/requirements.txt pyinstaller
+
+      - name: Pruebas
+        run: python tests/test_horario.py
+
+      - name: Versión
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.${GITHUB_RUN_NUMBER}"; fi
+          echo "v=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Icono e imágenes del instalador
+        run: python packaging/generar_imagenes.py
+
+      - name: Compilar la app (PyInstaller)
+        run: >
+          pyinstaller --noconfirm --clean --windowed
+          --name AgenteClases
+          --icon packaging/build/icono.ico
+          --paths agente
+          --add-data "agente/asistente/asistente.html;asistente"
+          --add-data "agente/config.ejemplo.json;."
+          --collect-data faster_whisper
+          --collect-binaries ctranslate2
+          --collect-submodules webview
+          --hidden-import pystray._win32
+          --hidden-import asistente.asistente
+          --hidden-import registrar_mcp
+          agente/app.py
+
+      - name: Compilar el servidor del hub (MCP)
+        run: >
+          pyinstaller --noconfirm --onefile --console
+          --name agente-mcp
+          --icon packaging/build/icono.ico
+          --paths agente
+          agente/mcp_servidor.py
+
+      - name: Juntar
+        shell: bash
+        run: cp dist/agente-mcp.exe dist/AgenteClases/
+
+      - name: Prueba rápida del .exe
+        shell: bash
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}/datos-prueba
+        run: |
+          # El servidor MCP tiene que responder a initialize por stdio
+          echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' | dist/AgenteClases/agente-mcp.exe | tee salida.txt
+          grep -q agente_clases salida.txt
+
+      - name: Instalador (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc /DVersion=${{ steps.version.outputs.v }} packaging\instalador.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AgenteClases-${{ steps.version.outputs.v }}-instalador
+          path: dist/AgenteClases-*-instalador.exe
+          if-no-files-found: error
+
+      - name: Publicar en Releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/AgenteClases-*-instalador.exe \
+            --title "Agente de clases ${{ steps.version.outputs.v }}" \
+            --notes "Descarga **AgenteClases-${{ steps.version.outputs.v }}-instalador.exe**, ábrelo y sigue los pasos. Windows 10 u 11 de 64 bits.
+
+          Antes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad."

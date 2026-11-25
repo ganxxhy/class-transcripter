@@ -1,22 +1,38 @@
 # Agente de clases
 
-Aplicación de escritorio para Windows que graba tus clases, las transcribe en tu propio ordenador (Whisper) y genera un resumen por asignatura con los exámenes, trabajos y fechas importantes destacados.
+Aplicación de escritorio para Windows que graba tus clases, las transcribe en tu propio ordenador (Whisper) y genera un resumen por asignatura: primero la clase entera en orden y por temas, y aparte los exámenes, trabajos y fechas importantes.
 
-> 🚧 **En desarrollo.** Todavía no hay versión descargable. Cuando esté lista aparecerá en [Releases](../../releases).
+## Descargar
 
-## Qué hará
+Ve a [Releases](../../releases), descarga `AgenteClases-…-instalador.exe` y ábrelo. Funciona en Windows 10 y 11 de 64 bits, no pide permisos de administrador y no necesitas instalar nada más.
 
-- Grabar automáticamente según tu horario de clases.
-- Transcribir el audio en local, sin subirlo a ningún sitio.
-- Resumir cada clase con Claude (con tu cuenta de Claude Pro) o con una clave de API opcional.
-- Mostrar todas tus clases en un panel "Mis clases".
+La primera vez que abras la app, un asistente te ayuda a:
+
+1. Poner tu nombre y aceptar el aviso de permiso para grabar.
+2. Añadir tus asignaturas y tu horario (a mano o leyendo una captura con Claude).
+3. Elegir el micrófono y probarlo.
+4. Decidir cómo hacer los resúmenes: con tu cuenta de Claude Pro o Max (recomendado) o con una clave de API de Claude o Gemini.
+
+Después el agente se queda junto al reloj y graba solo según tu horario.
+
+## Cómo funciona
+
+- **Transcripción en local:** el audio nunca sale de tu ordenador.
+- **Resúmenes con tu cuenta de Claude:** publicas tu propio panel "Mis clases" en Claude ([instrucciones](hub/PUBLICAR.md)) y los resúmenes se hacen con tu suscripción. Ves tus clases desde el móvil o cualquier ordenador.
+- **Resúmenes con clave de API (opcional):** si pones una clave de Claude o Gemini, el resumen se hace solo en tu ordenador al acabar la clase.
+- Tus datos se guardan en `Documentos\AgenteClases`.
 
 ## Aviso legal
 
 Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cumplir las normas de tu universidad. Tú eres responsable del uso que hagas de las grabaciones.
 
-## Estructura del código
+## Para desarrollar
 
-- `agente/`: la aplicación de escritorio (grabación, transcripción con faster-whisper, resúmenes y servidor MCP para el hub). `config.ejemplo.json` es una plantilla; tu `config.json` real nunca se sube.
-- `hub/`: el panel "Mis clases", que cada usuario publica como artefacto en su propia cuenta de Claude.
+- `agente/`: la aplicación (grabación, transcripción con faster-whisper, resúmenes, asistente y servidor MCP para el panel). `config.ejemplo.json` es una plantilla; tu `config.json` real nunca se sube.
+- `hub/`: el panel "Mis clases".
+- `packaging/`: icono, imágenes y script del instalador (Inno Setup).
 - `tests/`: pruebas (`python tests/test_horario.py`).
+
+Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`.
+
+El instalador lo compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión, crea una etiqueta `vX.Y.Z` y se sube sola a Releases.

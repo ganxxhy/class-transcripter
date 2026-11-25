@@ -4,3 +4,4 @@ numpy
 anthropic>=2.13
 pystray
 pillow
+pywebview>=5.0

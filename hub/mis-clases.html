@@ -371,8 +371,8 @@ async function host(tool, input) {
 
 /* ---------- Lectura directa de la carpeta del agente (hub instalado como app) ---------- */
 let RAIZ = lsGet("clases-carpeta") || "";
-const CANDIDATAS = ["~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Documents/AgenteClases",
-  "~/Desktop/AgenteClases", "~/AgenteClases"];
+const CANDIDATAS = ["~/Documents/AgenteClases", "~/OneDrive/Documents/AgenteClases", "~/OneDrive/Documentos/AgenteClases",
+  "~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Desktop/AgenteClases", "~/AgenteClases"];
 const fsj = async (ruta) => JSON.parse(await desktop.fs.readFile(ruta, "utf8"));
 const rutaClase = (id) => { if (!id || /[\\/]|\.\./.test(id)) throw new Error("id no válido"); return `${RAIZ}/datos/clases/${id}.json`; };
 async function fsEscribir(ruta, datos) { const tmp = ruta + ".hub.tmp"; await desktop.fs.writeFile(ruta + ".hub.tmp", JSON.stringify(datos, null, 1), "utf8"); await desktop.fs.rename(tmp, ruta); }
@@ -422,7 +422,7 @@ const AG = {
   async borrar_clase({ id }) { await desktop.shell.trashItem(rutaClase(id)); return { ok: true }; },
 };
 async function esCarpetaAgente(r) {
-  try { return (await desktop.fs.exists(`${r}/config.json`)) && (await desktop.fs.exists(`${r}/mcp_servidor.py`)); } catch (e) { return false; }
+  try { return (await desktop.fs.exists(`${r}/config.json`)) && ((await desktop.fs.exists(`${r}/datos`)) || (await desktop.fs.exists(`${r}/mcp_servidor.py`))); } catch (e) { return false; }
 }
 async function buscarCarpeta() {
   if (RAIZ && await esCarpetaAgente(RAIZ)) return RAIZ;
@@ -468,7 +468,7 @@ function pedirCarpeta() {
   b.onclick = async () => {
     const r = i.value.trim().replace(/[\\/]+$/, "");
     if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); pasarAModoFs(false); }
-    else m.textContent = "Ahí no está el agente (no encuentro config.json y mcp_servidor.py).";
+    else m.textContent = "Ahí no está el agente (no encuentro su config.json). Con la app instalada suele estar en Documentos\\AgenteClases.";
   };
   n.append(i, b, m); i.focus();
 }
