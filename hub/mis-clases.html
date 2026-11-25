@@ -39,6 +39,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .seg button { border: 0; background: transparent; padding: 5px 11px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 13px; font-size: .82rem; font-weight: 600; }
+a.btn { text-decoration: none; display: inline-flex; align-items: center; color: inherit; }
 .btn:hover { border-color: var(--muted); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.danger:hover { border-color: var(--alta); color: var(--alta); }
@@ -141,7 +142,7 @@ select { font: inherit; font-size: .82rem; border: 1px solid var(--line); backgr
 footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line); padding-top: 14px; }
 
 .note { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; background: var(--surface); border-color: var(--line); }
-#appNote, #syncNote { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+#panelNote, #appNote, #syncNote { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
 .note-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: .82rem; cursor: pointer; }
 .mini span { color: var(--muted); }
@@ -158,6 +159,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
       </div>
     </div>
   </div>
+  <div class="note" id="panelNote" hidden></div>
   <div class="note" id="appNote" hidden></div>
   <div class="note" id="syncNote" hidden></div>
   <div class="note" id="sumBar" hidden>
@@ -195,6 +197,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
 </div>
 
 <script>
+const VERSION_PANEL = "1.0.0"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
 const HOST = "host:agente_clases";
 const POR_PARTE = 400; // segmentos por documento de transcripción
 const $ = (s, el = document) => el.querySelector(s);
@@ -393,7 +396,9 @@ const AG = {
     const cfg = await fsj(`${RAIZ}/config.json`);
     let agente = { activo: false };
     try { agente = await fsj(`${RAIZ}/datos/estado_agente.json`); } catch (e) {}
-    return { asignaturas: cfg.asignaturas || [], horario: cfg.horario || [], agente }; // nunca se leen los ajustes (clave de API)
+    let panel = null;
+    try { panel = await fsj(`${RAIZ}/datos/panel.json`); } catch (e) {}
+    return { asignaturas: cfg.asignaturas || [], horario: cfg.horario || [], agente, panel }; // nunca se leen los ajustes (clave de API)
   },
   async listar_clases() {
     const dir = `${RAIZ}/datos/clases`;
@@ -487,6 +492,32 @@ function pedirCarpeta() {
   };
   n.append(i, b, m); i.focus();
 }
+// Panel nuevo: el agente apunta la versión del panel de la última release (datos/panel.json).
+// Si es más nueva que esta, se ofrece actualizar: Claude vuelve a publicar el HTML nuevo en esta
+// misma URL, así que las clases y los resúmenes (la base de datos del artefacto) se conservan.
+const tuplaV = (v) => (String(v).match(/\d+/g) || []).concat(["0", "0", "0"]).slice(0, 3).map(Number);
+function esMasNueva(a, b) { const x = tuplaV(a), y = tuplaV(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i]; return false; }
+const URL_OK = (u) => typeof u === "string" && u.startsWith("https://raw.githubusercontent.com/ganxxhy/class-transcripter/");
+function avisarPanelNuevo(p) {
+  const n = $("#panelNote");
+  if (!p || !p.version || !esMasNueva(p.version, VERSION_PANEL) || lsGet("clases-panel-saltado") === p.version || !URL_OK(p.html) || !URL_OK(p.guia)) { n.hidden = true; return; }
+  if (!n.hidden && n.dataset.v === p.version) return;
+  n.dataset.v = p.version; n.hidden = false; n.textContent = "";
+  const t = document.createElement("div"); t.style.flex = "1 1 280px";
+  const b = document.createElement("strong"); b.textContent = `Hay una versión nueva del panel (${p.version}). `;
+  const s = document.createElement("span"); s.textContent = `Tienes la ${VERSION_PANEL}. Se actualiza en una conversación con Claude y tus clases y resúmenes se conservan.`;
+  t.append(b, s);
+  const notas = Array.isArray(p.notas) ? p.notas.slice(0, 6) : [];
+  if (notas.length) { const ul = document.createElement("ul"); ul.style.margin = "6px 0 0"; ul.style.paddingLeft = "18px"; for (const x of notas) { const li = document.createElement("li"); li.textContent = String(x); ul.append(li); } t.append(ul); }
+  const prompt = `Actualiza mi panel "Mis clases" del Agente de clases a la versión ${p.version}. Es un artefacto que ya tengo publicado (búscalo entre mis artefactos). `
+    + `Lee las instrucciones de ${p.guia} y vuelve a publicar en ESA MISMA URL, sin crear uno nuevo, el HTML de ${p.html} tal cual, con las capacidades que indica la guía. Así se conservan mis clases y resúmenes. Cuando esté, dímelo.`;
+  const si = document.createElement("a"); si.className = "btn primary"; si.textContent = "Actualizar el panel";
+  si.href = "https://claude.ai/new?q=" + encodeURIComponent(prompt); si.target = "_blank"; si.rel = "noopener";
+  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Ahora no";
+  no.onclick = () => { lsSet("clases-panel-saltado", p.version); n.hidden = true; };
+  const acc = document.createElement("span"); acc.className = "note-actions"; acc.append(si, no);
+  n.append(t, acc);
+}
 // Recién creado el panel: proponer instalarlo como app de escritorio (lee las clases directamente
 // del ordenador y se abre como un programa). Instalar necesita un clic, así que es un aviso con botón.
 async function sugerirApp() {
@@ -518,6 +549,7 @@ async function sincronizar() {
   try {
     const est = await host("estado");
     hostOK = true; hostMsg = "";
+    avisarPanelNuevo(est.panel);
     const gen = { asignaturas: est.asignaturas || [], horario: est.horario || [], agente: est.agente || null };
     const firma = JSON.stringify(gen);
     if (firma !== ultimoGen) { ultimoGen = firma; GEN = { ...GEN, ...gen }; }
