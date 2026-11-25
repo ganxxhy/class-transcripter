@@ -17,6 +17,10 @@ Publica como artefacto el archivo [`mis-clases.html`](mis-clases.html) **tal cua
 
 Cuando esté publicado, recomienda abrirlo en la app de escritorio de Claude: el panel ofrece instalarse como app de escritorio con un clic. Da también el enlace del artefacto: la persona lo pega en el asistente (paso "Resúmenes") para que el botón "Abrir Mis clases" lleve a su panel.
 
+## Actualizar un panel ya publicado
+
+Cuando sale una versión nueva, el panel lo avisa y su botón **Actualizar el panel** abre Claude con la petición escrita. Para Claude: busca el artefacto "Mis clases" entre los de la persona, léelo y **vuelve a publicar en la misma URL** el HTML nuevo (el de la etiqueta de la versión que indica la petición), con las mismas capacidades. No crees uno nuevo: la base de datos va con la URL, así se conservan las clases y los resúmenes.
+
 ## Si algo no funciona
 
 - **"Sin sincronizar"**: abre el panel dentro de la app de escritorio de Claude (no en el navegador) y comprueba que la app se reinició después de instalar Agente de clases.

@@ -80,6 +80,7 @@ class App:
 
         def hilo():
             info = actualizacion.buscar()
+            actualizacion.revisar_panel(info)
             def responder():
                 if info and actualizacion.es_mas_nueva(info["version"]):
                     subprocess.Popen(_comando("--buscar-actualizacion", "--forzar"))
