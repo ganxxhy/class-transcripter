@@ -45,7 +45,7 @@ Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Messages]
 es.WelcomeLabel1=Te damos la bienvenida al instalador
-es.WelcomeLabel2=Agente de clases graba tus clases, las transcribe en tu ordenador y te prepara un resumen de cada una, con exámenes y entregas aparte.%n%n✓  No necesitas instalar nada más%n✓  El audio nunca sale de tu ordenador%n✓  Ocupa unos 600 MB con el modelo de voz%n%nPulsa Siguiente para continuar.
+es.WelcomeLabel2=Agente de clases graba tus clases, las transcribe en tu ordenador y te prepara un resumen de cada una, con exámenes y entregas aparte.%n%n✓  No necesitas instalar nada más%n✓  El audio nunca sale de tu ordenador%n✓  Al abrirlo por primera vez descarga el modelo de voz (de 0,5 a 1,6 GB según tu ordenador)%n%nPulsa Siguiente para continuar.
 es.FinishedHeadingLabel=Todo listo
 es.FinishedLabelNoIcons=Agente de clases está instalado. La primera vez que lo abras te ayudará a poner tus asignaturas y tu horario en un par de minutos.%n%nSi tienes la app de Claude abierta, ciérrala y vuelve a abrirla para que vea tus clases.
 es.FinishedLabel=Agente de clases está instalado. La primera vez que lo abras te ayudará a poner tus asignaturas y tu horario en un par de minutos.%n%nSi tienes la app de Claude abierta, ciérrala y vuelve a abrirla para que vea tus clases.
@@ -69,15 +69,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#Exe}"; Parameters: "--registrar-mcp"; StatusMsg: "Conectando con la app de Claude…"; Flags: runhidden waituntilterminated
-Filename: "{app}\{#Exe}"; Parameters: "--descargar-modelo"; StatusMsg: "Descargando el modelo de voz (unos 500 MB, puede tardar unos minutos)…"; Flags: runhidden waituntilterminated; BeforeInstall: BarraEnMovimiento
 Filename: "{app}\{#Exe}"; Description: "Abrir Agente de clases ahora"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
 Filename: "{app}\{#Exe}"; Parameters: "--quitar-mcp"; Flags: runhidden waituntilterminated; RunOnceId: "QuitarMCP"
 
-[Code]
-// Mientras corre el paso largo (descarga del modelo) la barra se mueve sola
-procedure BarraEnMovimiento();
-begin
-  WizardForm.ProgressGauge.Style := npbstMarquee;
-end;

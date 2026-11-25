@@ -117,6 +117,12 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 16
 .proxima { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); text-align: left; min-width: 420px; }
 .proxima .barra { width: 6px; align-self: stretch; border-radius: 3px; background: var(--c, var(--accent)); }
 
+.descarga { width: 420px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.pista { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.pista > div { height: 100%; width: 0; border-radius: 4px; background: var(--accent); transition: width .4s; }
+.pista.indeterminada > div { width: 30%; animation: ir 1.2s ease-in-out infinite; }
+@keyframes ir { from { margin-left: -30%; } to { margin-left: 100%; } }
+
 /* Diálogo */
 dialog { border: 0; border-radius: 14px; padding: 0; background: var(--surface); color: var(--fg); box-shadow: 0 20px 60px rgba(0,0,0,.25); width: 440px; max-width: calc(100vw - 32px); }
 dialog::backdrop { background: rgba(10,12,18,.45); }
@@ -269,6 +275,13 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight
           </div>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         </div>
+        <div class="descarga" id="descarga" hidden>
+          <div class="fila" style="justify-content:space-between;font-size:13px">
+            <span id="descargaTxt">Descargando el modelo de voz…</span>
+            <span id="descargaPct" style="color:var(--muted)"></span>
+          </div>
+          <div class="pista" role="progressbar" aria-label="Descarga del modelo de voz" aria-valuemin="0" aria-valuemax="100" id="descargaBarra"><div id="descargaRelleno"></div></div>
+        </div>
         <div class="error" id="errorGuardar" hidden></div>
         <div class="fila" style="gap:12px">
           <button type="button" class="btn-sec" id="btnHub" style="height:46px;padding:0 22px;font-weight:600;font-size:15px">Abrir Mis clases</button>
@@ -352,7 +365,7 @@ window.addEventListener("pywebviewready", () => apiLista(window.pywebview.api));
 setTimeout(() => { if (!window.pywebview) apiLista(simulada()); }, 1200);
 async function api(nombre, ...args) { const a = await apiPromesa; return a[nombre](...args); }
 function simulada() {
-  let n = 0;
+  let n = 0, desc = { estado: "parada" };
   return {
     estado_inicial: async () => ({ perfil: {}, asignaturas: [], horario: [], ajustes: { modelo_whisper: "auto", proveedor: "claude" },
       colores: ["#2f5bd3", "#c25a1f", "#0f8a6a", "#8a3fb8", "#b07e00", "#c2366b", "#0e7c8c", "#5a6b1f"],
@@ -363,6 +376,8 @@ function simulada() {
     guardar: async (d) => { console.log("guardar", d); return { ok: true }; },
     abrir_claude_horario: async () => {}, abrir_claude_panel: async () => {}, abrir: async () => {},
     terminar: async (s) => console.log("terminar", s),
+    iniciar_descarga: async () => { desc = { estado: "descargando", hecho: 0, total: 1.6e9 }; },
+    progreso_descarga: async () => { if (desc.estado === "descargando") { desc.hecho += 2.5e8; if (desc.hecho >= desc.total) desc.estado = "lista"; } return desc; },
   };
 }
 
@@ -639,6 +654,7 @@ function proximaClase() {
   return null;
 }
 async function terminarAsistente() {
+  vigilarDescarga();
   const nombre = $("#nombre").value.trim();
   $("#tituloFin").textContent = nombre ? `Todo listo, ${nombre}` : "Todo listo";
   const p = proximaClase();
@@ -666,11 +682,54 @@ async function terminarAsistente() {
   });
   if (!r || !r.ok) { $("#errorGuardar").textContent = "No he podido guardar la configuración: " + ((r && r.error) || "error desconocido"); $("#errorGuardar").hidden = false; }
 }
+// Descarga del modelo de voz (empieza al salir del paso 3)
+const GB = (b) => (b / 1e9).toLocaleString("es-ES", { maximumFractionDigits: 1 });
+let vigilando = null;
+function vigilarDescarga() {
+  clearInterval(vigilando);
+  const tick = async () => {
+    const d = await api("progreso_descarga");
+    if (!d || d.estado === "parada") { $("#descarga").hidden = true; $("#btnFin").disabled = false; return; }
+    $("#descarga").hidden = false;
+    const barra = $("#descargaBarra");
+    if (d.estado === "descargando") {
+      $("#btnFin").disabled = true;
+      $("#btnFin").textContent = "Esperando a la descarga…";
+      if (d.total) {
+        const pct = Math.min(99, Math.floor((d.hecho / d.total) * 100));
+        barra.classList.remove("indeterminada");
+        $("#descargaRelleno").style.width = pct + "%";
+        barra.setAttribute("aria-valuenow", pct);
+        $("#descargaPct").textContent = `${GB(d.hecho)} de ${GB(d.total)} GB`;
+      } else { barra.classList.add("indeterminada"); $("#descargaPct").textContent = ""; }
+      $("#descargaTxt").textContent = "Descargando el modelo de voz (solo esta vez)…";
+      return;
+    }
+    clearInterval(vigilando);
+    barra.classList.remove("indeterminada");
+    $("#btnFin").disabled = false;
+    $("#btnFin").textContent = "Ir al agente";
+    if (d.estado === "lista") {
+      $("#descargaRelleno").style.width = "100%";
+      $("#descargaTxt").textContent = "Modelo de voz listo";
+      $("#descargaPct").textContent = "";
+    } else {
+      $("#descargaTxt").textContent = "No he podido descargar el modelo. Se intentará otra vez al abrir el agente; revisa la conexión a internet.";
+      $("#descargaTxt").style.color = "var(--danger)";
+      $("#descargaPct").textContent = "";
+    }
+  };
+  tick();
+  vigilando = setInterval(tick, 700);
+}
 $("#btnFin").onclick = () => api("terminar", "agente");
 $("#btnHub").onclick = () => { if (E.urlHub.startsWith("https://")) api("abrir", E.urlHub); api("terminar", "agente"); };
 
 // ---------- navegación ----------
-$("#btnSig").onclick = () => irA(E.paso + 1);
+$("#btnSig").onclick = () => {
+  if (E.paso === 3) api("iniciar_descarga", document.querySelector("input[name=calidad]:checked").value);
+  irA(E.paso + 1);
+};
 $("#btnLuego").onclick = () => irA(E.paso + 1);
 $("#btnAtras").onclick = () => irA(E.paso - 1);
 $("#permiso").onchange = validar;

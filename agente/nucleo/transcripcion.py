@@ -52,6 +52,20 @@ def _preparar_dlls_cuda():
                 pass
 
 
+def modelo_previsto(ajustes):
+    """El modelo que usará cargar() en este ordenador (para descargarlo antes con progreso)."""
+    nombre = ajustes.get("modelo_whisper", "auto")
+    if nombre != "auto":
+        return nombre
+    try:
+        import ctranslate2
+        if ctranslate2.get_cuda_device_count() > 0 and ajustes.get("dispositivo", "auto") != "cpu":
+            return "large-v3-turbo"
+    except Exception:
+        pass
+    return "large-v3-turbo" if _cpu_potente() else "small"
+
+
 class Transcriptor:
     def __init__(self, ajustes, log=print):
         self.ajustes = ajustes

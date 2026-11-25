@@ -4,6 +4,7 @@ Es una ventana web (pywebview, con el motor Edge que ya trae Windows) para que s
 bien. La interfaz está en asistente.html y llama a la clase Api de aquí.
 Se lanza con: AgenteClases.exe --asistente   (o python app.py --asistente)
 """
+import fnmatch
 import json
 import os
 import shutil
@@ -55,6 +56,17 @@ def _hardware():
     return {"hilos": hilos, "nvidia": nvidia, "texto": texto}
 
 
+def _tam_carpeta(ruta):
+    total = 0
+    for raiz, _d, archivos in os.walk(ruta):
+        for a in archivos:
+            try:
+                total += os.path.getsize(os.path.join(raiz, a))
+            except OSError:
+                pass
+    return total
+
+
 class Api:
     def __init__(self):
         # Ojo: pywebview expone a la página todo atributo público de esta clase, recorriéndolo
@@ -63,6 +75,7 @@ class Api:
         self._nivel = 0.0
         self._ventana = None
         self._terminado = None  # "agente" | None
+        self._descarga = {"estado": "parada", "hecho": 0, "total": 0, "modelo": "", "error": ""}
 
     # ----- datos -----
     def estado_inicial(self):
@@ -150,6 +163,51 @@ class Api:
                 pass
         self._stream = None
         self._nivel = 0.0
+
+    # ----- modelo de voz -----
+    def iniciar_descarga(self, modelo_whisper="auto"):
+        """Descarga en segundo plano el modelo de voz que tocará usar, para enseñar el progreso."""
+        if self._descarga["estado"] == "descargando":
+            return self._descarga
+        from nucleo.transcripcion import modelo_previsto
+        nombre = modelo_previsto({"modelo_whisper": modelo_whisper or "auto"})
+        self._descarga = {"estado": "descargando", "hecho": 0, "total": 0, "modelo": nombre, "error": ""}
+        threading.Thread(target=self._descargar, args=(nombre,), daemon=True).start()
+        return self._descarga
+
+    def _descargar(self, nombre):
+        d = self._descarga
+        try:
+            from faster_whisper.utils import _MODELS
+            from huggingface_hub import HfApi, constants, snapshot_download
+            repo = _MODELS.get(nombre, nombre)
+            patrones = ["config.json", "preprocessor_config.json", "model.bin", "tokenizer.json", "vocabulary.*"]
+            try:
+                info = HfApi().model_info(repo, files_metadata=True)
+                d["total"] = sum((f.size or 0) for f in info.siblings
+                                 if any(fnmatch.fnmatch(f.rfilename, p) for p in patrones))
+            except Exception:
+                d["total"] = 0
+            blobs = os.path.join(constants.HF_HUB_CACHE, "models--" + repo.replace("/", "--"), "blobs")
+            parar = threading.Event()
+
+            def medir():
+                while not parar.wait(0.5):
+                    d["hecho"] = _tam_carpeta(blobs)
+
+            threading.Thread(target=medir, daemon=True).start()
+            try:
+                snapshot_download(repo, allow_patterns=patrones)
+            finally:
+                parar.set()
+            d["hecho"] = d["total"] or _tam_carpeta(blobs)
+            d["estado"] = "lista"
+        except Exception as e:
+            d["estado"] = "error"
+            d["error"] = str(e)[:300]
+
+    def progreso_descarga(self):
+        return self._descarga
 
     # ----- enlaces -----
     def abrir_claude_horario(self):

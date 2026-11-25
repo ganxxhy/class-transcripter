@@ -44,6 +44,14 @@ jobs:
       - name: Pruebas
         run: python tests/test_horario.py
 
+      - name: Prueba de la descarga del modelo de voz (modelo tiny)
+        working-directory: agente
+        run: >
+          python -c "import time; from asistente.asistente import Api;
+          a = Api(); a.iniciar_descarga('tiny');
+          [time.sleep(1) for _ in range(300) if a.progreso_descarga()['estado'] == 'descargando'];
+          d = a.progreso_descarga(); print(d); assert d['estado'] == 'lista' and d['hecho'] > 1e7, d"
+
       - name: Versión
         id: version
         shell: bash
