@@ -426,6 +426,8 @@ def main():
         lanzar_asistente()
         if not existe():
             return  # cerró el asistente sin terminar
+    from nucleo.config import escribir_puntero
+    escribir_puntero()
     root = tk.Tk()
     App(root, inicio="--inicio" in args)
     root.mainloop()
