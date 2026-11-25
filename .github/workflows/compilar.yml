@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # las etiquetas hacen falta para las notas de la versión
 
       - uses: actions/setup-python@v5
         with:
@@ -51,6 +53,10 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.${GITHUB_RUN_NUMBER}"; fi
           echo "v=$v" >> "$GITHUB_OUTPUT"
 
+      - name: Escribir la versión en la app
+        shell: bash
+        run: printf 'VERSION = "%s"\n' "${{ steps.version.outputs.v }}" > agente/version.py
+
       - name: Icono e imágenes del instalador
         run: python packaging/generar_imagenes.py
 
@@ -61,6 +67,7 @@ jobs:
           --icon packaging/build/icono.ico
           --paths agente
           --add-data "agente/asistente/asistente.html;asistente"
+          --add-data "agente/asistente/actualizacion.html;asistente"
           --add-data "agente/config.ejemplo.json;."
           --collect-data faster_whisper
           --collect-binaries ctranslate2
@@ -68,6 +75,8 @@ jobs:
           --hidden-import pystray._win32
           --hidden-import asistente.asistente
           --hidden-import registrar_mcp
+          --hidden-import actualizacion
+          --hidden-import version
           agente/app.py
 
       - name: Compilar el servidor del hub (MCP)
@@ -104,6 +113,14 @@ jobs:
             Write-Error "El asistente no ha llegado a cargar"; exit 1
           }
 
+      - name: Prueba de la búsqueda de actualizaciones (sin versión nueva no abre nada)
+        shell: pwsh
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}\datos-actualizacion
+        run: |
+          $p = Start-Process dist\AgenteClases\AgenteClases.exe -ArgumentList "--buscar-actualizacion" -PassThru
+          if (-not $p.WaitForExit(60000)) { $p.Kill(); Write-Error "La búsqueda de actualizaciones se ha quedado colgada"; exit 1 }
+
       - name: Instalador (Inno Setup)
         shell: pwsh
         run: |
@@ -124,8 +141,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/AgenteClases-*-instalador.exe \
-            --title "Agente de clases ${{ steps.version.outputs.v }}" \
-            --notes "Descarga **AgenteClases-${{ steps.version.outputs.v }}-instalador.exe**, ábrelo y sigue los pasos. Windows 10 u 11 de 64 bits.
-
-          Antes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad."
+          v="${{ steps.version.outputs.v }}"
+          # Notas: la sección "## v" de CAMBIOS.md; si no hay, los títulos de las PR desde la versión anterior
+          notas=$(awk -v v="## $v" '$0==v{f=1;next} /^## /{f=0} f' CAMBIOS.md | sed '/./,$!d')
+          if [ -z "$notas" ]; then
+            anterior=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
+            rango=${anterior:+$anterior..}$GITHUB_REF_NAME
+            notas=$(git log "$rango" --merges --pretty='- %b' | grep -v '^- $' || true)
+          fi
+          printf '%s\n\n---\nDescarga **AgenteClases-%s-instalador.exe**, ábrelo y sigue los pasos (Windows 10 u 11 de 64 bits). Si ya lo tienes, la app te avisará y se actualizará sola.\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" > notas.md
+          gh release create "$GITHUB_REF_NAME" dist/AgenteClases-*-instalador.exe --title "Agente de clases $v" --notes-file notas.md

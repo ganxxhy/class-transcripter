@@ -15,7 +15,7 @@ Publica como artefacto el archivo [`mis-clases.html`](mis-clases.html) **tal cua
 | `mcp`, con el servidor local `agente_clases` | Leer las clases del ordenador cuando el panel se abre en la app de escritorio de Claude. |
 | `desktop` | Plan B: si el servidor local no responde, el panel se instala como app y lee la carpeta `Documentos\AgenteClases`. |
 
-Cuando esté publicado, da el enlace del artefacto: la persona lo pega en el asistente (paso "Resúmenes") para que el botón "Abrir Mis clases" lleve a su panel.
+Cuando esté publicado, recomienda abrirlo en la app de escritorio de Claude: el panel ofrece instalarse como app de escritorio con un clic. Da también el enlace del artefacto: la persona lo pega en el asistente (paso "Resúmenes") para que el botón "Abrir Mis clases" lleve a su panel.
 
 ## Si algo no funciona
 

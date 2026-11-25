@@ -6,6 +6,8 @@ Opciones (las usa el instalador):
   --registrar-mcp   conecta el agente con la app de escritorio de Claude
   --quitar-mcp      lo desconecta (al desinstalar)
   --descargar-modelo  descarga el modelo de voz que toca para este ordenador
+  --al-arrancar     novedades tras actualizar y aviso si hay versión nueva (lo lanza la app)
+  --buscar-actualizacion [--forzar]  aviso de versión nueva (--forzar: aunque se saltara)
 """
 import os
 import subprocess
@@ -27,9 +29,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from nucleo import almacen, horario, resumen  # noqa: E402
 from nucleo.config import CONGELADA, RUTA_DATOS, api_key, cargar, existe, guardar, nombre_asignatura  # noqa: E402
 from nucleo.motor import Motor, microfonos  # noqa: E402
+from version import VERSION  # noqa: E402
 
 os.makedirs(RUTA_DATOS, exist_ok=True)
 RUTA_LOG = os.path.join(RUTA_DATOS, "agente.log")
+
+
+def _comando(*args):
+    return ([sys.executable] if CONGELADA else [sys.executable, os.path.abspath(__file__)]) + list(args)
 
 
 def lanzar_asistente():
@@ -56,6 +63,32 @@ class App:
         self._tick()
         if inicio and self.cfg["horario"]:
             self.root.after(500, self._inicio_automatico)
+        # Novedades (si se acaba de actualizar) y aviso de versión nueva, al arrancar y cada día
+        self.root.after(4000, self._revisar_actualizaciones)
+
+    def _revisar_actualizaciones(self):
+        if CONGELADA:
+            try:
+                subprocess.Popen(_comando("--al-arrancar"))
+            except Exception as e:
+                self.log(f"No he podido buscar actualizaciones: {e}")
+        self.root.after(24 * 3600 * 1000, self._revisar_actualizaciones)
+
+    def buscar_actualizacion(self):
+        """Botón de Ajustes: busca ya, y si no hay nada lo dice."""
+        import actualizacion
+
+        def hilo():
+            info = actualizacion.buscar()
+            def responder():
+                if info and actualizacion.es_mas_nueva(info["version"]):
+                    subprocess.Popen(_comando("--buscar-actualizacion", "--forzar"))
+                elif info is None:
+                    messagebox.showinfo("Actualizaciones", "No he podido comprobarlo. Revisa la conexión a internet.")
+                else:
+                    messagebox.showinfo("Actualizaciones", f"Ya tienes la última versión ({VERSION}).")
+            self.root.after(0, responder)
+        threading.Thread(target=hilo, daemon=True).start()
 
     def _inicio_automatico(self):
         try:
@@ -242,7 +275,7 @@ class App:
             self.motor.cambiar_asignatura(d.resultado[1])
 
     def ajustes(self):
-        DialogoAjustes(self.root)
+        DialogoAjustes(self.root, self.buscar_actualizacion)
 
     def reconfigurar(self):
         if self.motor.activo:
@@ -363,7 +396,7 @@ class DialogoModo(tk.Toplevel):
 class DialogoAjustes(tk.Toplevel):
     MODELOS = ["auto", "small", "medium", "large-v3-turbo", "large-v3"]
 
-    def __init__(self, padre):
+    def __init__(self, padre, buscar_actualizacion=None):
         super().__init__(padre)
         self.title("Ajustes")
         self.transient(padre)
@@ -384,6 +417,11 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         ttk.Label(f, text="El horario y los márgenes se cambian en config.json.",
                   foreground="#5d6676").pack(anchor="w", pady=(10, 0))
+        ver = ttk.Frame(f)
+        ver.pack(fill="x", pady=(12, 0))
+        ttk.Label(ver, text=f"Versión {VERSION}", foreground="#5d6676").pack(side="left")
+        if buscar_actualizacion:
+            ttk.Button(ver, text="Buscar actualizaciones", command=buscar_actualizacion).pack(side="right")
         fila = ttk.Frame(f)
         fila.pack(fill="x", pady=(12, 0))
         ttk.Button(fila, text="Guardar", command=self._guardar).pack(side="right")
@@ -414,6 +452,12 @@ def main():
     if "--registrar-mcp" in args or "--quitar-mcp" in args:
         import registrar_mcp
         registrar_mcp.registrar(quitar="--quitar-mcp" in args)
+        return
+    if "--al-arrancar" in args or "--buscar-actualizacion" in args:
+        import actualizacion
+        if "--al-arrancar" in args:
+            actualizacion.novedades_si_toca()
+        actualizacion.comprobar_y_avisar(forzar="--forzar" in args)
         return
     if "--descargar-modelo" in args:
         from nucleo.transcripcion import Transcriptor

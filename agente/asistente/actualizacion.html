@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente de clases</title>
+<style>
+:root {
+  --bg: #F6F6F3; --surface: #FFFFFF; --fg: #16181D; --fg2: #3A3F4B; --muted: #5B6070;
+  --line: #E4E5EA; --line2: #C9CBD3; --accent: #4338CA; --accent-hover: #3730A3; --accent-tint: #E0E3FF;
+  --accent-ink: #312E81; --on-accent: #FFFFFF; --danger: #B42318; --ok: #0F766E;
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111318; --surface: #1A1D24; --fg: #ECEDF1; --fg2: #C9CCD5; --muted: #9AA0AE;
+    --line: #2A2E38; --line2: #3A3F4B; --accent: #7C83F5; --accent-hover: #959BFF; --accent-tint: #2A2E5C;
+    --accent-ink: #C7CAFF; --on-accent: #0E1030; --danger: #FF7A70; --ok: #3FBFA5; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.55; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.caja { height: 100%; padding: 12px; display: flex; }
+.panel { flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; min-height: 0; }
+.cabecera { padding: 28px 32px 18px; display: flex; gap: 16px; align-items: center; }
+.logo { width: 52px; height: 52px; border-radius: 14px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.eyebrow { font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .03em; }
+h1 { margin: 2px 0 0; font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1.2; }
+.versiones { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.notas { flex: 1; min-height: 0; overflow: auto; margin: 0 32px; padding: 16px 18px; border-radius: 10px; background: var(--bg); color: var(--fg2); }
+.notas h2, .notas h3 { font-family: var(--display); font-size: 15px; margin: 14px 0 6px; color: var(--fg); }
+.notas h2:first-child, .notas h3:first-child { margin-top: 0; }
+.notas ul { margin: 0 0 8px; padding-left: 20px; }
+.notas li { margin: 3px 0; }
+.notas p { margin: 0 0 8px; }
+.notas a { color: var(--accent); }
+.progreso { margin: 14px 32px 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.pista { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.pista > div { height: 100%; width: 0; background: var(--accent); border-radius: 4px; transition: width .3s; }
+.pie { padding: 18px 32px 22px; display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.pie .izq { margin-right: auto; }
+.btn { height: 42px; padding: 0 22px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; }
+.btn:hover { background: var(--accent-hover); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-sec { height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--line2); background: var(--surface); color: var(--fg); font-weight: 500; }
+.btn-texto { height: 42px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); border-radius: 10px; }
+.btn-texto:hover, .btn-sec:hover { background: var(--bg); }
+.error { color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="caja">
+  <main class="panel">
+    <div class="cabecera">
+      <div class="logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></div>
+      <div>
+        <div class="eyebrow" id="eyebrow"></div>
+        <h1 id="titulo"></h1>
+        <div class="versiones" id="versiones"></div>
+      </div>
+    </div>
+    <div class="notas" id="notas" tabindex="0" aria-label="Qué ha cambiado"></div>
+    <div class="progreso" id="progreso" hidden>
+      <div style="display:flex;justify-content:space-between"><span id="progTxt">Descargando…</span><span id="progNum" style="color:var(--muted)"></span></div>
+      <div class="pista" role="progressbar" aria-label="Descarga de la actualización" aria-valuemin="0" aria-valuemax="100" id="progBarra"><div id="progRelleno"></div></div>
+    </div>
+    <div class="pie" id="pieAviso" hidden>
+      <button type="button" class="btn-texto izq" id="btnSaltar">Saltar esta versión</button>
+      <button type="button" class="btn-sec" id="btnNo">Ahora no</button>
+      <button type="button" class="btn" id="btnSi">Actualizar ahora</button>
+    </div>
+    <div class="pie" id="pieNovedades" hidden>
+      <button type="button" class="btn" id="btnVale">Entendido</button>
+    </div>
+  </main>
+</div>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+let apiLista;
+const apiPromesa = new Promise((r) => { apiLista = r; });
+window.addEventListener("pywebviewready", () => apiLista(window.pywebview.api));
+setTimeout(() => { if (!window.pywebview) apiLista(simulada()); }, 1200);
+async function api(n, ...a) { return (await apiPromesa)[n](...a); }
+function simulada() {
+  let p = { estado: "parado", hecho: 0, total: 9e7 };
+  return {
+    datos: async () => ({ modo: new URLSearchParams(location.search).get("modo") || "aviso", actual: "1.0.0", version: "1.1.0", fecha: "2026-12-01",
+      notas: "## Novedades\n- Aviso de **actualizaciones** con lo que ha cambiado\n- El panel se puede instalar como app al crearlo\n\n## Arreglos\n- El asistente ya no se cuelga al abrir", tamano: 9e7 }),
+    actualizar: async () => { p.estado = "descargando"; }, progreso: async () => { if (p.estado === "descargando") { p.hecho += 1.5e7; if (p.hecho >= p.total) p.estado = "instalando"; } return p; },
+    ahora_no: async () => {}, saltar: async () => {}, cerrar: async () => {}, abrir_web: async () => {},
+  };
+}
+
+// Markdown mínimo y seguro (las notas vienen de GitHub): títulos, listas, negrita, enlaces
+function esc(t) { return t.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+function enLinea(t) {
+  return esc(t)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function markdown(md) {
+  const out = []; let lista = false;
+  for (let linea of md.replace(/\r/g, "").split("\n")) {
+    linea = linea.replace(/ by @[\w-]+ in https:\/\/\S+$/, "");  // notas automáticas de GitHub
+    if (/^\*\*Full Changelog\*\*/.test(linea)) continue;
+    if (/^---\s*$/.test(linea)) break;  // lo de abajo es el texto de descarga de la página de GitHub
+    const li = linea.match(/^\s*[-*]\s+(.*)/);
+    if (li) { if (!lista) { out.push("<ul>"); lista = true; } out.push(`<li>${enLinea(li[1])}</li>`); continue; }
+    if (lista) { out.push("</ul>"); lista = false; }
+    const h = linea.match(/^(#{1,3})\s+(.*)/);
+    if (h) out.push(`<h${h[1].length === 1 ? 2 : h[1].length}>${enLinea(h[2])}</h${h[1].length === 1 ? 2 : h[1].length}>`);
+    else if (linea.trim()) out.push(`<p>${enLinea(linea)}</p>`);
+  }
+  if (lista) out.push("</ul>");
+  return out.join("");
+}
+const MB = (b) => (b / 1e6).toLocaleString("es-ES", { maximumFractionDigits: 0 });
+
+(async () => {
+  const d = await api("datos");
+  $("#notas").innerHTML = markdown(d.notas || "") || "<p>Sin notas para esta versión.</p>";
+  if (d.modo === "novedades") {
+    $("#eyebrow").textContent = "ACTUALIZADO";
+    $("#titulo").textContent = `Novedades de la versión ${d.version}`;
+    $("#versiones").textContent = "Esto es lo que ha cambiado.";
+    $("#pieNovedades").hidden = false;
+    $("#btnVale").focus();
+  } else {
+    $("#eyebrow").textContent = "ACTUALIZACIÓN DISPONIBLE";
+    $("#titulo").textContent = `Hay una versión nueva: ${d.version}`;
+    $("#versiones").textContent = `Tienes la ${d.actual}${d.fecha ? ` · publicada el ${new Date(d.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}` : ""}. Tus clases y ajustes se conservan.`;
+    $("#pieAviso").hidden = false;
+    $("#btnSi").focus();
+  }
+})();
+
+$("#btnVale").onclick = () => api("cerrar");
+$("#btnNo").onclick = () => api("ahora_no");
+$("#btnSaltar").onclick = () => api("saltar");
+$("#btnSi").onclick = async () => {
+  $("#btnSi").disabled = true; $("#btnNo").disabled = true; $("#btnSaltar").disabled = true;
+  $("#progreso").hidden = false;
+  await api("actualizar");
+  const t = setInterval(async () => {
+    const p = await api("progreso");
+    if (p.estado === "descargando") {
+      const pct = p.total ? Math.min(100, Math.round((p.hecho / p.total) * 100)) : 0;
+      $("#progRelleno").style.width = pct + "%";
+      $("#progBarra").setAttribute("aria-valuenow", pct);
+      $("#progTxt").textContent = "Descargando la actualización…";
+      $("#progNum").textContent = p.total ? `${MB(p.hecho)} de ${MB(p.total)} MB` : "";
+    } else if (p.estado === "instalando") {
+      clearInterval(t);
+      $("#progRelleno").style.width = "100%";
+      $("#progTxt").textContent = "Instalando… el agente se cerrará y se volverá a abrir solo.";
+      $("#progNum").textContent = "";
+    } else if (p.estado === "error") {
+      clearInterval(t);
+      $("#progTxt").innerHTML = "";
+      const e = document.createElement("span"); e.className = "error"; e.textContent = "No he podido actualizar: " + p.error; $("#progTxt").append(e);
+      $("#btnSi").disabled = false; $("#btnNo").disabled = false; $("#btnSaltar").disabled = false;
+      $("#btnSi").textContent = "Reintentar";
+    }
+  }, 400);
+};
+</script>
+</body>
+</html>

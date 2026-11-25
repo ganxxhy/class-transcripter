@@ -31,8 +31,9 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 - `agente/`: la aplicación (grabación, transcripción con faster-whisper, resúmenes, asistente y servidor MCP para el panel). `config.ejemplo.json` es una plantilla; tu `config.json` real nunca se sube.
 - `hub/`: el panel "Mis clases".
 - `packaging/`: icono, imágenes y script del instalador (Inno Setup).
+- `CAMBIOS.md`: novedades de cada versión (salen en Releases y en el aviso de actualización).
 - `tests/`: pruebas (`python tests/test_horario.py`).
 
 Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`.
 
-El instalador lo compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión, crea una etiqueta `vX.Y.Z` y se sube sola a Releases.
+El instalador lo compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión: añade su sección `## X.Y.Z` en `CAMBIOS.md`, crea la etiqueta `vX.Y.Z` y se sube sola a Releases. Las apps ya instaladas avisarán de la actualización.
