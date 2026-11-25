@@ -14,3 +14,9 @@ Aplicación de escritorio para Windows que graba tus clases, las transcribe en t
 ## Aviso legal
 
 Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cumplir las normas de tu universidad. Tú eres responsable del uso que hagas de las grabaciones.
+
+## Estructura del código
+
+- `agente/`: la aplicación de escritorio (grabación, transcripción con faster-whisper, resúmenes y servidor MCP para el hub). `config.ejemplo.json` es una plantilla; tu `config.json` real nunca se sube.
+- `hub/`: el panel "Mis clases", que cada usuario publica como artefacto en su propia cuenta de Claude.
+- `tests/`: pruebas (`python tests/test_horario.py`).

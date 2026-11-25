@@ -1,0 +1,788 @@
+<title>Mis clases</title>
+<script type="application/json" id="claude-artifacts-manifest">{"permissions": ["full-access"]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Mismo diseño que "Mis asignaturas": mesa con un libro por asignatura y doble página con el índice de clases. */
+:root {
+  --bg: #eef0f3; --surface: #ffffff; --fg: #161a22; --muted: #5d6676; --line: #d9dde5;
+  --desk: #d9cdb8; --desk-edge: #b9a98d; --paper: #fbfaf6; --accent: #2f5bd3;
+  --alta: #c4372f; --ok: #0f8a6a; --mix: 0%;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #1a1f28; --fg: #e8ebf1; --muted: #9aa3b3; --line: #2a3140;
+    --desk: #3a3329; --desk-edge: #4d4436; --paper: #1f232b; --accent: #7d9cf5;
+    --alta: #ff7a70; --ok: #3fbf99; --mix: 45%; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #1a1f28; --fg: #e8ebf1; --muted: #9aa3b3; --line: #2a3140;
+  --desk: #3a3329; --desk-edge: #4d4436; --paper: #1f232b; --accent: #7d9cf5;
+  --alta: #ff7a70; --ok: #3fbf99; --mix: 45%; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ct { color: color-mix(in srgb, var(--c), white var(--mix)); }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 20px; }
+.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.top h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; margin: 0; letter-spacing: -0.02em; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--line); padding: 3px; border-radius: 999px; }
+.seg button { border: 0; background: transparent; padding: 5px 11px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 13px; font-size: .82rem; font-weight: 600; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.danger:hover { border-color: var(--alta); color: var(--alta); }
+.live { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .82rem; font-weight: 600; }
+.live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.live.on .dot { background: #e5484d; animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .live.on .dot { animation: none; } }
+.lead { margin: 0; color: var(--muted); max-width: 70ch; font-size: .92rem; }
+.note { background: color-mix(in srgb, var(--alta) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--alta) 35%, var(--line)); border-radius: 10px; padding: 10px 14px; font-size: .88rem; }
+
+/* Lo importante */
+.imp { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 12px; }
+.imp-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.imp-head h2 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.card { border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 10px; padding: 11px 13px; display: grid; gap: 5px; background: var(--paper); min-width: 0; }
+.card.done { opacity: .5; }
+.card .row1 { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: .74rem; }
+.tag { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; border-radius: 999px; padding: 1px 8px; border: 1px solid currentColor; }
+.tag.alta { color: var(--alta); }
+.when { margin-left: auto; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); white-space: nowrap; }
+.when.soon { color: var(--alta); font-weight: 700; }
+.card b { font-size: .95rem; overflow-wrap: anywhere; }
+.card p { margin: 0; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.card .row2 { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: .78rem; }
+.card .row2 a { color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.card label { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); cursor: pointer; }
+.empty { color: var(--muted); font-size: .9rem; margin: 0; }
+
+/* Mesa */
+.desk { background: var(--desk); border-radius: 16px; padding: 26px 22px 0; border-bottom: 10px solid var(--desk-edge); overflow-x: auto; }
+.books { display: flex; gap: 18px; align-items: flex-end; min-width: max-content; padding-bottom: 18px; }
+.rbook { position: relative; width: 150px; height: 206px; border: 0; padding: 0; overflow: hidden; background: color-mix(in srgb, var(--c) 72%, #0b0d12); border-radius: 3px 8px 8px 3px; box-shadow: inset 12px 0 0 rgb(0 0 0 / .28), inset 13px 0 0 rgb(255 255 255 / .12), 0 8px 16px rgb(0 0 0 / .25); text-align: left; transition: transform .2s; }
+.rbook .art { position: absolute; left: 12px; right: 0; bottom: 0; height: 62%; opacity: .9; }
+.rbook .art svg { width: 100%; height: 100%; }
+.rbook .ttl { position: absolute; left: 24px; right: 12px; top: 18px; font-family: var(--font-display); font-weight: 800; font-size: 1.22rem; line-height: 1.05; letter-spacing: -0.015em; color: #fff; text-wrap: balance; text-shadow: 0 1px 2px rgb(0 0 0 / .35); }
+.rbook .ttl.long { font-size: 1.02rem; letter-spacing: -0.025em; }
+.rbook .ttl.xlong { font-size: .9rem; letter-spacing: -0.02em; }
+.rbook .ttl::after { content: ""; display: block; width: 28px; height: 3px; margin-top: 10px; background: rgb(255 255 255 / .7); }
+.rbook .n { position: absolute; right: 8px; bottom: 8px; font-family: var(--font-mono); font-size: .7rem; color: #fff; background: rgb(0 0 0 / .35); border-radius: 999px; padding: 1px 7px; }
+.rbook .bad { position: absolute; right: 8px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #ff5a4f; box-shadow: 0 0 0 2px rgb(255 255 255 / .8); }
+.rbook::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, rgb(255 255 255 / .1), transparent 40%); pointer-events: none; }
+.rbook[aria-expanded="true"] { transform: translateY(-14px) rotate(-2deg); }
+@media (prefers-reduced-motion: reduce) { .rbook { transition: none; } }
+
+/* Doble página */
+.spread { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 12px 28px rgb(0 0 0 / .1); overflow: hidden; }
+.spread > div { padding: 26px 28px; min-width: 0; }
+.spread .left { border-right: 1px solid var(--line); background: linear-gradient(90deg, transparent 85%, rgb(0 0 0 / .05)); display: grid; align-content: start; gap: 12px; }
+.eb { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
+.spread .left h2 { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1.05; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+.spread .left p { margin: 0; color: var(--muted); }
+.slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: .85rem; color: var(--muted); }
+.slots b { color: var(--fg); font-weight: 600; text-transform: capitalize; }
+.mini { display: grid; gap: 6px; }
+.mini div { font-size: .85rem; border-left: 3px solid var(--alta); padding-left: 8px; }
+.spread .right h3 { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 10px; font-weight: 500; }
+.toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.toc button { display: flex; width: 100%; align-items: baseline; gap: 8px; border: 0; background: none; padding: 6px 0; text-align: left; }
+.toc button:hover .tt { color: color-mix(in srgb, var(--c), white var(--mix)); }
+.toc .tt { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.toc .dots { flex: 1; border-bottom: 2px dotted var(--line); min-width: 20px; transform: translateY(-4px); }
+.toc .pg { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.toc .meta { display: block; font-size: .78rem; color: var(--muted); font-weight: 400; }
+.st { font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; }
+.st.rec { color: #e5484d; border-color: #e5484d; }
+.st.err { color: var(--alta); border-color: var(--alta); }
+@media (max-width: 640px) { .spread { grid-template-columns: minmax(0, 1fr); } .spread .left { border-right: 0; border-bottom: 1px solid var(--line); } .spread > div { padding: 20px; } }
+
+/* Lector de una clase */
+.reader { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.rbar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface); border-bottom: 3px solid var(--c, var(--accent)); flex-wrap: wrap; }
+.rbar .rt { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.rbody { overflow: auto; }
+.page { max-width: 820px; margin: 0 auto; padding: 28px 16px 64px; display: grid; gap: 22px; }
+.page h1 { font-family: var(--font-display); font-size: 2rem; line-height: 1.1; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+.page h2 { font-family: var(--font-mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
+.page section h3 { font-size: 1.02rem; margin: 18px 0 6px; color: var(--fg); }
+.page section { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+.page p { margin: 0 0 10px; }
+.page p:last-child { margin: 0; }
+.page ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.dl { display: grid; gap: 8px; }
+.dl div b { display: block; }
+.dl div span { color: var(--muted); font-size: .9rem; }
+.dest { display: grid; gap: 10px; }
+.dest .card { background: var(--surface); }
+.q { font-style: italic; color: var(--muted); font-size: .85rem; border-left: 2px solid var(--line); padding-left: 8px; }
+.trans-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.trans-tools input { flex: 1; min-width: 160px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .88rem; }
+.trans { display: grid; gap: 4px; font-size: .92rem; max-height: 70vh; overflow: auto; }
+.trans div { display: grid; grid-template-columns: 56px 1fr; gap: 8px; }
+.trans time { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); padding-top: 3px; }
+.trans mark { background: color-mix(in srgb, #ffd23f 60%, transparent); color: inherit; }
+.trans .hl { background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: 4px; }
+.meta-line { color: var(--muted); font-size: .88rem; display: flex; gap: 12px; flex-wrap: wrap; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+select { font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 5px 10px; }
+footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line); padding-top: 14px; }
+
+.note { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; background: var(--surface); border-color: var(--line); }
+#syncNote { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+.note-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: .82rem; cursor: pointer; }
+.mini span { color: var(--muted); }
+</style>
+<div class="wrap">
+  <div class="top">
+    <h1>Mis clases</h1>
+    <div class="tools">
+      <span class="live" id="live"><span class="dot"></span><span id="liveTxt">Conectando…</span></span>
+      <div class="seg" role="group" aria-label="Tema" id="theme">
+        <button data-th="auto" aria-pressed="true">Automático</button>
+        <button data-th="light" aria-pressed="false">Claro</button>
+        <button data-th="dark" aria-pressed="false">Oscuro</button>
+      </div>
+    </div>
+  </div>
+  <div class="note" id="syncNote" hidden></div>
+  <div class="note" id="sumBar" hidden>
+    <span id="sumTxt"></span>
+    <span class="note-actions">
+      <label class="chk"><input type="checkbox" id="autoSum"> Resumir solas al abrir el hub</label>
+      <button class="btn primary" id="sumBtn">Resumir ahora</button>
+    </span>
+  </div>
+
+  <section class="imp" aria-labelledby="impT">
+    <div class="imp-head">
+      <h2 id="impT">Lo importante</h2>
+      <div class="seg" role="group" aria-label="Filtro" id="fil">
+        <button data-f="pend" aria-pressed="true">Pendiente</button>
+        <button data-f="alta" aria-pressed="false">Solo muy importante</button>
+        <button data-f="all" aria-pressed="false">Todo</button>
+      </div>
+    </div>
+    <div class="cards" id="cards"><p class="empty">Cargando…</p></div>
+  </section>
+
+  <div class="desk"><div class="books" id="books"></div></div>
+  <div id="spread"></div>
+  <footer id="foot">Las clases se graban y transcriben en tu ordenador con el Agente de clases. Este hub las recoge cuando lo abres en la app de Claude de ese ordenador, y desde ahí se ven en cualquier sitio.</footer>
+</div>
+
+<div class="reader" id="reader" hidden>
+  <div class="rbar">
+    <button class="btn primary" id="back">← Volver</button>
+    <span class="eb ct" id="rsub"></span>
+    <span class="rt" id="rtitle"></span>
+  </div>
+  <div class="rbody" id="rbody"></div>
+</div>
+
+<script>
+const HOST = "host:agente_clases";
+const POR_PARTE = 400; // segmentos por documento de transcripción
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const color = (c) => /^#[0-9a-fA-F]{3,8}$/.test(c || "") ? c : "#4b5566";
+
+/* Tema */
+function setTheme(t) {
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else { t = "auto"; document.documentElement.removeAttribute("data-theme"); }
+  document.querySelectorAll("#theme button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.th === t));
+  lsSet("clases-theme", t);
+}
+document.querySelectorAll("#theme button").forEach((b) => b.onclick = () => setTheme(b.dataset.th));
+setTheme(lsGet("clases-theme") || lsGet("hub-theme") || "auto");
+
+/* Portadas */
+const W = "rgb(255 255 255 / .28)", W2 = "rgb(255 255 255 / .5)";
+const ART = {
+  lf: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="3"><circle cx="50" cy="70" r="22"/><circle cx="140" cy="70" r="22"/><circle cx="140" cy="70" r="16"/><circle cx="95" cy="150" r="22"/><path d="M72 70h44M128 90l-22 40M62 90l22 40"/><path d="M40 48c-6-24 26-24 20 0" /></g><g fill="${W2}" font-family="monospace" font-size="16"><text x="86" y="62">a</text><text x="122" y="118">b</text><text x="56" y="118">ε</text></g></svg>`,
+  papi: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="${W}" font-family="monospace" font-size="15"><text x="14" y="34">GET /api/users</text><text x="14" y="58">app.use(auth)</text><text x="14" y="82">SELECT * FROM</text><text x="14" y="106">jwt.verify()</text><text x="14" y="130">res.json({…})</text></g><g fill="none" stroke="${W2}" stroke-width="4"><path d="M120 150l-26 26 26 26M156 150l26 26-26 26"/></g></svg>`,
+  rt: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="3"><circle cx="140" cy="60" r="34"/><path d="M140 40v20l14 10"/></g><g stroke="${W}" stroke-width="10" stroke-linecap="round"><path d="M20 120h70M110 120h50"/><path d="M50 145h90"/><path d="M20 170h30M80 170h90"/></g></svg>`,
+  sd: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="${W2}" stroke-width="6" stroke-linecap="round">${Array.from({ length: 18 }, (_, i) => { const h = 12 + Math.abs(Math.sin(i * 1.3) * 60) + (i % 3) * 8; return `<path d="M${14 + i * 10.5} ${100 - h / 2}v${h}"/>`; }).join("")}</g></svg>`,
+  si: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="${W}" stroke-width="2">${[[40,40],[40,90],[40,140]].flatMap(a => [[100,50],[100,110]].map(b => `<path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}"/>`)).join("")}${[[100,50],[100,110]].map(a => `<path d="M${a[0]} ${a[1]}L160 80"/>`).join("")}</g><g fill="${W2}"><circle cx="40" cy="40" r="9"/><circle cx="40" cy="90" r="9"/><circle cx="40" cy="140" r="9"/><circle cx="100" cy="50" r="9"/><circle cx="100" cy="110" r="9"/><circle cx="160" cy="80" r="11"/></g></svg>`,
+  tal: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="4" stroke-linecap="round"><circle cx="70" cy="80" r="26"/><circle cx="70" cy="80" r="9"/>${Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4; return `<path d="M${70 + Math.cos(a) * 26} ${80 + Math.sin(a) * 26}L${70 + Math.cos(a) * 36} ${80 + Math.sin(a) * 36}"/>`; }).join("")}<path d="M110 170l50-50M150 110l20 20-14 14-20-20z"/></g></svg>`,
+  est: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="${W}"><rect x="20" y="40" width="40" height="40" rx="4"/><rect x="66" y="40" width="40" height="40" rx="4" fill="${W2}"/><rect x="112" y="40" width="40" height="40" rx="4"/><rect x="20" y="86" width="40" height="40" rx="4" fill="${W2}"/><rect x="66" y="86" width="40" height="40" rx="4"/></g><g fill="none" stroke="${W2}" stroke-width="3"><path d="M30 190c30-50 60-50 90 0s40 10 60-20"/></g></svg>`,
+  vsie: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="4" stroke-linejoin="round"><rect x="30" y="60" width="130" height="70" rx="30"/><path d="M60 82v26M47 95h26"/></g><g fill="${W2}"><circle cx="122" cy="88" r="7"/><circle cx="138" cy="104" r="7"/></g><g fill="${W}" font-family="monospace" font-size="14"><text x="34" y="170">f(x) = sim</text><text x="34" y="192">learn++</text></g></svg>`,
+};
+const ARTX = `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="${W}" stroke-width="8" stroke-linecap="round"><path d="M20 60h150M20 90h120M20 120h140M20 150h90"/></g></svg>`;
+
+
+/* Estado */
+let db = null, mcp = null, sample = null, hostOK = false;
+let GEN = { asignaturas: [], horario: [], agente: null, sincronizado: null };
+let CLASES = [], MAPA = {}, HECHOS = new Set(), cargado = false;
+let open = lsGet("clases-open"), filtro = "pend", lectorId = null;
+const asig = (id) => GEN.asignaturas.find((a) => a.id === id) || { id, nombre: id || "Sin asignatura", color: "#4b5566" };
+const hoy = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const fmtFecha = (iso) => new Date(iso + (iso.length === 10 ? "T00:00" : "")).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+const fmtHora = (iso) => new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+const fmtDur = (s) => s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.round(s % 3600 / 60)} min` : `${Math.max(1, Math.round(s / 60))} min`;
+const mmss = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+const hace = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "ahora mismo" : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `el ${fmtFecha(iso.slice(0, 10))}`; };
+const TIPOS = { examen: "Examen", trabajo: "Trabajo", entrega: "Entrega", fecha: "Fecha", aviso: "Aviso", comentario: "Comentario" };
+
+function destacados() {
+  const out = [];
+  for (const c of CLASES) (c.resumen?.destacados || []).forEach((d, i) => out.push({ ...d, clase: c, clave: `${c.id}~${i}` }));
+  return out;
+}
+function cuando(d) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha_iso || "")) return { txt: "sin fecha", dias: null };
+  const f = new Date(d.fecha_iso + "T00:00"), dias = Math.round((f - hoy()) / 864e5);
+  const txt = dias === 0 ? "hoy" : dias === 1 ? "mañana" : dias > 1 ? `en ${dias} días · ${fmtFecha(d.fecha_iso)}` : `${fmtFecha(d.fecha_iso)} · pasado`;
+  return { txt, dias };
+}
+const vigente = (d) => !HECHOS.has(d.clave) && !(cuando(d).dias < 0);
+
+/* ---------- Pintado ---------- */
+function cardHTML(d, conClase = true) {
+  const a = asig(d.clase.asignatura), w = cuando(d), hecho = HECHOS.has(d.clave);
+  return `<div class="card${hecho ? " done" : ""}" style="--c:${color(a.color)}">
+    <div class="row1"><span class="tag ct">${esc(TIPOS[d.tipo] || d.tipo)}</span>${d.importancia === "alta" ? `<span class="tag alta">Muy importante</span>` : ""}<span class="when${w.dias !== null && w.dias >= 0 && w.dias <= 7 ? " soon" : ""}">${esc(w.txt)}</span></div>
+    <b>${esc(d.titulo)}</b>
+    ${d.detalle ? `<p>${esc(d.detalle)}</p>` : ""}
+    ${!conClase && d.cita ? `<div class="q">«${esc(d.cita)}»${d.minuto ? ` · ${esc(d.minuto)}` : ""}</div>` : ""}
+    <div class="row2">${conClase ? `<a href="#" data-open="${esc(d.clase.id)}" class="ct">${esc(a.nombre)} · ${esc(fmtFecha(d.clase.fecha))}</a>` : `<span></span>`}
+      <label><input type="checkbox" data-hecho="${esc(d.clave)}" ${hecho ? "checked" : ""} ${db ? "" : "disabled"}> Hecho</label></div>
+  </div>`;
+}
+function bindCards(root) {
+  root.querySelectorAll("[data-open]").forEach((a) => a.onclick = (e) => { e.preventDefault(); abrirClase(a.dataset.open); });
+  root.querySelectorAll("[data-hecho]").forEach((cb) => cb.onchange = async () => {
+    const ref = db.doc("hechos/" + cb.dataset.hecho);
+    try { cb.checked ? await ref.set({ hecho: true, cuando: new Date().toISOString() }) : await ref.delete(); }
+    catch (e) { cb.checked = !cb.checked; }
+  });
+}
+function renderImportante() {
+  let ds = destacados();
+  if (filtro !== "all") ds = ds.filter(vigente);
+  if (filtro === "alta") ds = ds.filter((d) => d.importancia === "alta");
+  const peso = (d) => { const w = cuando(d); return w.dias === null ? 1e6 - new Date(d.clase.inicio) / 1e9 : w.dias < 0 ? 2e6 - w.dias : w.dias; };
+  ds.sort((x, y) => peso(x) - peso(y));
+  $("#cards").innerHTML = ds.length ? ds.map((d) => cardHTML(d)).join("")
+    : `<p class="empty">${!cargado ? "Cargando…" : CLASES.length ? "Nada pendiente. Cuando el profe mencione un examen, una entrega o algo importante, aparecerá aquí." : "Aún no hay clases. Inicia el agente en clase y aquí irán apareciendo los exámenes, trabajos y avisos importantes."}</p>`;
+  bindCards($("#cards"));
+}
+document.querySelectorAll("#fil button").forEach((b) => b.onclick = () => {
+  filtro = b.dataset.f;
+  document.querySelectorAll("#fil button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  renderImportante();
+});
+
+function renderMesa() {
+  const ids = [...GEN.asignaturas.map((a) => a.id), ...new Set(CLASES.map((c) => c.asignatura).filter((id) => !GEN.asignaturas.some((a) => a.id === id)))];
+  $(".desk").hidden = !ids.length;
+  if (!ids.length) { $("#books").innerHTML = ""; $("#spread").innerHTML = ""; return; }
+  if (!ids.includes(open)) open = ids[0];
+  $("#books").innerHTML = ids.map((id) => {
+    const a = asig(id), n = CLASES.filter((c) => c.asignatura === id).length;
+    const urg = destacados().some((d) => d.clase.asignatura === id && d.importancia === "alta" && vigente(d));
+    const maxw = Math.max(...a.nombre.split(" ").map((w) => w.length));
+    const cls = a.nombre.length > 30 ? "xlong" : maxw >= 11 ? "long" : "";
+    return `<button class="rbook" style="--c:${color(a.color)}" aria-expanded="${open === id}" data-b="${esc(id)}" aria-label="${esc(a.nombre)}, ${n} clases">
+      <span class="art">${ART[id] || ARTX}</span><span class="ttl ${cls}">${esc(a.nombre)}</span>
+      ${urg ? `<span class="bad" title="Tiene cosas muy importantes pendientes"></span>` : ""}<span class="n">${n}</span></button>`;
+  }).join("");
+  $("#books").querySelectorAll(".rbook").forEach((b) => b.onclick = () => { open = b.dataset.b; lsSet("clases-open", open); renderMesa(); });
+  const a = asig(open), cs = CLASES.filter((c) => c.asignatura === open);
+  const slots = GEN.horario.filter((h) => h.asignatura === open);
+  const pend = destacados().filter((d) => d.clase.asignatura === open && vigente(d) && ["examen", "trabajo", "entrega"].includes(d.tipo));
+  const dur = cs.reduce((s, c) => s + (c.duracion_s || 0), 0);
+  $("#spread").innerHTML = `<div class="spread" style="--c:${color(a.color)}">
+    <div class="left"><span class="eb ct">Asignatura</span><h2>${esc(a.nombre)}</h2>
+      ${slots.length ? `<ul class="slots">${slots.map((h) => `<li><b>${esc(String(h.dia).replace("miercoles", "miércoles"))}</b> ${esc(h.inicio)}–${esc(h.fin)}${h.aula ? ` · aula ${esc(h.aula)}` : ""}</li>`).join("")}</ul>` : ""}
+      <p>${cs.length} ${cs.length === 1 ? "clase grabada" : "clases grabadas"}${dur ? ` · ${fmtDur(dur)}` : ""}</p>
+      ${pend.length ? `<div class="mini">${pend.slice(0, 4).map((d) => `<div><b>${esc(d.titulo)}</b><br><span>${esc(cuando(d).txt)}</span></div>`).join("")}</div>` : ""}
+    </div>
+    <div class="right"><h3>Clases</h3>${cs.length ? `<ol class="toc">${cs.map((c) => {
+      const titulo = c.resumen?.titulo || (c.en_curso ? "Clase en curso" : c.estado_resumen === "vacio" ? "Sin contenido" : "Resumen pendiente");
+      const st = c.en_curso ? `<span class="st rec">grabando</span>` : resumiendo.has(c.id) ? `<span class="st">resumiendo</span>` : (!c.resumen && c.estado_resumen === "error") ? `<span class="st err">sin resumen</span>` : "";
+      const nd = (c.resumen?.destacados || []).filter((d) => d.importancia === "alta").length;
+      return `<li><button data-open="${esc(c.id)}"><span class="tt">${esc(titulo)}${st}<span class="meta">${esc(fmtFecha(c.fecha))} · ${esc(fmtHora(c.inicio))}${c.duracion_s ? ` · ${fmtDur(c.duracion_s)}` : ""}${nd ? ` · ${nd} muy importante${nd > 1 ? "s" : ""}` : ""}</span></span><span class="dots"></span><span class="pg">${esc(fmtFecha(c.fecha))}</span></button></li>`;
+    }).join("")}</ol>` : `<p class="empty">Todavía no hay clases de esta asignatura.</p>`}</div>
+  </div>`;
+  bindCards($("#spread"));
+}
+
+function renderEstado() {
+  const ag = GEN.agente, vivo = ag && ag.actualizado && (Date.now() - new Date(ag.actualizado)) < 3 * 60000;
+  const grabando = hostOK && vivo && ag.activo && ag.clase_id;
+  $("#live").classList.toggle("on", !!grabando);
+  $("#liveTxt").textContent = hostOK
+    ? (vivo && ag.activo ? ag.estado : "Agente parado")
+    : GEN.sincronizado ? `Sincronizado ${hace(GEN.sincronizado)}` : "Sin sincronizar todavía";
+  const n = $("#syncNote");
+  if (!db) { n.hidden = false; n.textContent = "No puedo abrir la base de datos del hub. Inicia sesión en claude.ai y vuelve a abrirlo."; }
+  else if (!hostOK && (hostMsg || notaAccion)) {
+    n.hidden = false; n.textContent = "";
+    const t = document.createElement("span"); t.textContent = hostMsg; n.appendChild(t);
+    if (notaAccion) {
+      const b = document.createElement("button"); b.className = "btn primary"; b.textContent = notaAccion.texto;
+      b.onclick = () => notaAccion.fn(b); n.appendChild(b);
+    }
+  }
+  else n.hidden = true;
+  renderResumenBar();
+}
+function renderTodo() { renderEstado(); renderImportante(); renderMesa(); if (lectorId && !$("#reader").hidden) refrescarLector(); }
+
+/* ---------- Base de datos ---------- */
+function suscribir() {
+  let listo = 0;
+  const t = setTimeout(() => { if (!cargado) { cargado = true; hostMsg = hostMsg || "No consigo leer la base de datos ahora mismo; lo que ves puede no estar al día."; renderTodo(); } }, 10000);
+  const hecho = () => { if (++listo >= 2) { clearTimeout(t); cargado = true; } renderTodo(); autoResumir(); };
+  db.doc("config/general").onSnapshot((s) => { if (s.exists) GEN = { ...GEN, ...s.data() }; renderTodo(); }, () => {});
+  db.collection("clases").onSnapshot((s) => {
+    CLASES = s.docs.map((d) => d.data()).filter((c) => c && c.id).sort((x, y) => String(y.inicio).localeCompare(String(x.inicio)));
+    MAPA = Object.fromEntries(CLASES.map((c) => [c.id, c]));
+    hecho();
+  }, () => hecho());
+  db.collection("hechos").onSnapshot((s) => { HECHOS = new Set(s.docs.map((d) => d.id)); hecho(); }, () => hecho());
+}
+
+/* ---------- Sincronización con el agente del ordenador ---------- */
+let hostMsg = "", sincronizando = false, ultimoGen = "";
+let desktop = null, modo = "mcp", notaAccion = null, puedeInstalar = false; // modo: "mcp" (conector local) o "fs" (app instalada lee la carpeta)
+async function host(tool, input) {
+  if (modo === "fs") return AG[tool](input || {});
+  return (await mcp.callTool(HOST, tool, input || {}, { cache: false })).payload;
+}
+
+/* ---------- Lectura directa de la carpeta del agente (hub instalado como app) ---------- */
+let RAIZ = lsGet("clases-carpeta") || "";
+const CANDIDATAS = ["~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Documents/AgenteClases",
+  "~/Desktop/AgenteClases", "~/AgenteClases"];
+const fsj = async (ruta) => JSON.parse(await desktop.fs.readFile(ruta, "utf8"));
+const rutaClase = (id) => { if (!id || /[\\/]|\.\./.test(id)) throw new Error("id no válido"); return `${RAIZ}/datos/clases/${id}.json`; };
+async function fsEscribir(ruta, datos) { const tmp = ruta + ".hub.tmp"; await desktop.fs.writeFile(ruta + ".hub.tmp", JSON.stringify(datos, null, 1), "utf8"); await desktop.fs.rename(tmp, ruta); }
+async function fsActualizar(id, campos) { const r = rutaClase(id); const d = await fsj(r); Object.assign(d, campos); await fsEscribir(r, d); return { ok: true }; }
+const versionDe = (c) => `${c.n_segmentos || 0}|${c.estado_resumen}|${c.en_curso ? 1 : 0}|${c.asignatura}|${(c.resumen && c.resumen.generado) || ""}`;
+const CACHE_FS = new Map(); // ruta -> {mtime, meta}
+const AG = {
+  async estado() {
+    const cfg = await fsj(`${RAIZ}/config.json`);
+    let agente = { activo: false };
+    try { agente = await fsj(`${RAIZ}/datos/estado_agente.json`); } catch (e) {}
+    return { asignaturas: cfg.asignaturas || [], horario: cfg.horario || [], agente }; // nunca se leen los ajustes (clave de API)
+  },
+  async listar_clases() {
+    const dir = `${RAIZ}/datos/clases`;
+    let ents = [];
+    try { ents = await desktop.fs.readdir(dir); } catch (e) { if (!String(e.message).startsWith("ENOENT")) throw e; }
+    const out = [];
+    for (const en of ents.filter((x) => x.isFile && x.name.endsWith(".json")).sort((a, b) => b.name.localeCompare(a.name))) {
+      const ruta = `${dir}/${en.name}`;
+      try {
+        const st = await desktop.fs.stat(ruta);
+        let c = CACHE_FS.get(ruta);
+        if (!c || c.mtime !== st.mtimeMs) {
+          const d = await fsj(ruta), segs = d.segmentos || [];
+          delete d.segmentos;
+          d.n_segmentos = segs.length;
+          d.palabras = segs.reduce((n, x) => n + String(x.texto || "").split(/\s+/).filter(Boolean).length, 0);
+          d.duracion_s = segs.length ? Math.floor(segs[segs.length - 1].fin) : 0;
+          d.version = versionDe(d);
+          c = { mtime: st.mtimeMs, meta: d }; CACHE_FS.set(ruta, c);
+        }
+        out.push({ ...c.meta });
+      } catch (e) { /* archivo a medio escribir: se lee en la siguiente vuelta */ }
+    }
+    return { clases: out };
+  },
+  async leer_clase({ id, desde = 0 }) {
+    const d = await fsj(rutaClase(id)), segs = d.segmentos || [];
+    delete d.segmentos;
+    d.version = versionDe({ ...d, n_segmentos: segs.length });
+    return { clase: d, total: segs.length, desde, segmentos: segs.slice(desde, desde + 1500) };
+  },
+  guardar_resumen: ({ id, resumen }) => fsActualizar(id, { resumen, estado_resumen: "listo", error_resumen: null }),
+  marcar_estado_resumen: ({ id, estado, error }) => fsActualizar(id, { estado_resumen: estado, error_resumen: error ?? null }),
+  mover_clase: ({ id, asignatura }) => { const a = GEN.asignaturas.find((x) => x.id === asignatura); if (!a) throw new Error("asignatura desconocida"); return fsActualizar(id, { asignatura: a.id, nombre_asignatura: a.nombre }); },
+  async borrar_clase({ id }) { await desktop.shell.trashItem(rutaClase(id)); return { ok: true }; },
+};
+async function esCarpetaAgente(r) {
+  try { return (await desktop.fs.exists(`${r}/config.json`)) && (await desktop.fs.exists(`${r}/mcp_servidor.py`)); } catch (e) { return false; }
+}
+async function buscarCarpeta() {
+  if (RAIZ && await esCarpetaAgente(RAIZ)) return RAIZ;
+  for (const r of CANDIDATAS) if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); return r; }
+  return "";
+}
+let intervalo = null;
+function arrancarSync() { if (intervalo) return; sincronizar(); intervalo = setInterval(() => { if (!document.hidden) sincronizar(); }, 15000); }
+async function pasarAModoFs(conClick) {
+  if (!desktop?.fs) return false;
+  let st = "unavailable";
+  try { st = await desktop.permissions.state("full-access"); } catch (e) {}
+  if (st === "prompt" && conClick) {
+    try { st = (await desktop.permissions.request(["full-access"]))["full-access"]; } catch (e) {}
+  }
+  if (st === "prompt") {
+    hostMsg = "Para leer las clases que graba el agente, dale permiso a esta app para acceder a tus archivos.";
+    notaAccion = { texto: "Dar permiso", fn: () => pasarAModoFs(true) };
+    renderTodo(); return true;
+  }
+  if (st !== "granted") {
+    hostMsg = "Esta app no tiene permiso para leer tus archivos, así que no puede traer las clases del agente. Puedes activarlo en sus permisos.";
+    notaAccion = { texto: "Abrir permisos", fn: () => desktop.permissions.manage().then(() => pasarAModoFs(false)).catch(() => {}) };
+    renderTodo(); return true;
+  }
+  const r = await buscarCarpeta();
+  if (!r) {
+    hostMsg = "No encuentro la carpeta del Agente de clases. Escribe dónde está (la que tiene app.py), por ejemplo C:\\Users\\tu_usuario\\Downloads\\AgenteClases.";
+    notaAccion = { texto: "Indicar carpeta", fn: () => pedirCarpeta() };
+    renderTodo(); return true;
+  }
+  modo = "fs"; notaAccion = null; hostMsg = "";
+  await sincronizar();
+  arrancarSync();
+  return true;
+}
+function pedirCarpeta() {
+  const n = $("#syncNote");
+  n.textContent = "";
+  const i = document.createElement("input"); i.type = "text"; i.placeholder = "C:\\Users\\…\\AgenteClases"; i.value = RAIZ; i.style.flex = "1 1 260px";
+  const b = document.createElement("button"); b.className = "btn primary"; b.textContent = "Usar esta carpeta";
+  const m = document.createElement("span"); m.className = "meta-line";
+  b.onclick = async () => {
+    const r = i.value.trim().replace(/[\\/]+$/, "");
+    if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); pasarAModoFs(false); }
+    else m.textContent = "Ahí no está el agente (no encuentro config.json y mcp_servidor.py).";
+  };
+  n.append(i, b, m); i.focus();
+}
+async function ofrecerInstalar() {
+  try {
+    if ((await desktop?.install?.state()) !== "available") return;
+    puedeInstalar = true;
+    notaAccion = { texto: "Instalar como app", fn: (b) => desktop.install.request().then((r) => { if (r === "cancelled") b.disabled = false; }).catch(() => {}) };
+    if (!hostOK) hostMsg = "Para traer las clases del agente, instala este hub como app de Claude (botón de la derecha) y ábrelo desde ahí.";
+    renderTodo();
+  } catch (e) {}
+}
+async function sincronizar() {
+  if ((modo === "mcp" && !mcp) || !db || sincronizando) return;
+  sincronizando = true;
+  try {
+    const est = await host("estado");
+    hostOK = true; hostMsg = "";
+    const gen = { asignaturas: est.asignaturas || [], horario: est.horario || [], agente: est.agente || null };
+    const firma = JSON.stringify(gen);
+    if (firma !== ultimoGen) { ultimoGen = firma; GEN = { ...GEN, ...gen }; }
+    await db.doc("config/general").set({ ...gen, sincronizado: new Date().toISOString() });
+    const { clases } = await host("listar_clases");
+    for (const c of clases) {
+      const antes = MAPA[c.id];
+      if (antes && antes.version === c.version) continue;
+      await subirClase(c, antes);
+    }
+  } catch (e) {
+    hostOK = false;
+    if (modo === "mcp" && desktop?.fs) { setTimeout(() => pasarAModoFs(false), 0); return; }
+    if (modo === "fs") {
+      hostMsg = `No he podido leer la carpeta del agente (${RAIZ}): ${(e && e.message) || "error"}`;
+      notaAccion = { texto: "Cambiar carpeta", fn: () => pedirCarpeta() };
+      return;
+    }
+    hostMsg = e && (e.code === "server_not_connected" || e.code === "not_granted" || e.code === "unavailable") && puedeInstalar
+      ? `Para traer las clases del agente, instala este hub como app de Claude (botón de la derecha) y ábrelo desde ahí. [código: ${e.code}]`
+      : e && (e.code === "server_not_connected" || e.code === "not_granted" || e.code === "unavailable")
+      ? `Para traer clases nuevas, abre este hub en la app de Claude de tu ordenador (con el Agente de clases instalado). Desde aquí ves lo ya sincronizado. [código: ${e.code}]`
+      : e && e.code === "cancelled" ? "No se ha permitido leer las clases del ordenador. Vuelve a abrir el hub para intentarlo."
+      : `No he podido leer las clases del ordenador${e && e.message ? `: ${e.message}` : "."}`;
+  } finally {
+    sincronizando = false;
+    renderTodo();
+  }
+}
+async function subirClase(c, antes) {
+  const total = c.n_segmentos || 0, yaSubidos = antes ? (antes.n_segmentos || 0) : 0;
+  if (total !== yaSubidos || !antes) {
+    const desdeParte = antes && total > yaSubidos ? Math.floor(yaSubidos / POR_PARTE) : 0;
+    let segs = [], desde = desdeParte * POR_PARTE, meta = null;
+    while (true) {
+      const r = await host("leer_clase", { id: c.id, desde });
+      meta = r.clase; segs = segs.concat(r.segmentos);
+      desde += r.segmentos.length;
+      if (!r.segmentos.length || desde >= r.total) break;
+    }
+    for (let k = 0; k * POR_PARTE < segs.length; k++) {
+      const parte = desdeParte + k;
+      await db.doc(`clases/${c.id}/partes/p${String(parte).padStart(4, "0")}`).set({ k: parte, segmentos: segs.slice(k * POR_PARTE, (k + 1) * POR_PARTE) });
+    }
+  }
+  const resumen = c.resumen || antes?.resumen || null;
+  const doc = {
+    id: c.id, asignatura: c.asignatura, nombre_asignatura: c.nombre_asignatura || "", aula: c.aula || "", modo: c.modo || "",
+    fecha: c.fecha, inicio: c.inicio, fin: c.fin || null, en_curso: !!c.en_curso,
+    n_segmentos: total, palabras: c.palabras || 0, duracion_s: c.duracion_s || 0,
+    resumen, estado_resumen: resumen ? "listo" : c.estado_resumen, error_resumen: c.error_resumen || null,
+    version: c.version, n_partes: Math.ceil(total / POR_PARTE), sincronizado: new Date().toISOString(),
+  };
+  await db.doc("clases/" + c.id).set(doc);
+  MAPA[c.id] = doc;
+}
+
+async function leerTranscripcion(id) {
+  const s = await db.collection(`clases/${id}/partes`).get();
+  return s.docs.map((d) => d.data()).sort((a, b) => a.k - b.k).flatMap((p) => p.segmentos || []);
+}
+
+/* ---------- Resúmenes con Claude (desde el hub) ---------- */
+const resumiendo = new Set();
+let colaActiva = false, sumMsg = "";
+const pendientesResumen = () => CLASES.filter((c) => !c.en_curso && !c.resumen && (c.n_segmentos || 0) > 0 && c.estado_resumen !== "vacio");
+function renderResumenBar() {
+  const p = pendientesResumen(), bar = $("#sumBar");
+  if (!sample || !db || (!p.length && !colaActiva && !sumMsg)) { bar.hidden = true; return; }
+  bar.hidden = false;
+  $("#sumTxt").textContent = colaActiva ? sumMsg : sumMsg || `${p.length} ${p.length === 1 ? "clase sin resumir" : "clases sin resumir"}. Claude saca el resumen y lo importante de cada una.`;
+  $("#sumBtn").hidden = colaActiva || !p.length;
+  $("#autoSum").checked = lsGet("clases-auto-resumir") === "1";
+}
+$("#autoSum").onchange = (e) => lsSet("clases-auto-resumir", e.target.checked ? "1" : "0");
+$("#sumBtn").onclick = () => resumirPendientes();
+let autoHecho = false;
+function autoResumir() {
+  if (autoHecho || !cargado || !sample || lsGet("clases-auto-resumir") !== "1" || !pendientesResumen().length) return;
+  autoHecho = true; resumirPendientes();
+}
+
+const INSTRUCCIONES = `Eres el asistente de estudio de un estudiante universitario.
+Abajo tienes la transcripción automática de una clase grabada con el micrófono de su portátil. Tiene errores de reconocimiento, frases cortadas y ruido: interpreta con sentido común y no inventes nada que no se diga.
+
+Responde SOLO con un objeto JSON con esta forma exacta:
+{
+  "titulo": "tema principal de la clase en pocas palabras",
+  "resumen": "resumen COMPLETO de toda la clase (ver abajo), con \\n entre párrafos y líneas '## Tema' como títulos de sección",
+  "puntos_clave": ["..."],
+  "conceptos": [{"termino": "...", "explicacion": "..."}],
+  "destacados": [{"tipo": "examen|trabajo|entrega|fecha|aviso|comentario", "titulo": "...", "detalle": "...", "fecha_iso": "AAAA-MM-DD o cadena vacía", "importancia": "alta|media", "minuto": "[mm:ss]", "cita": "frase literal o casi del profesor"}],
+  "tareas": ["lo que el alumno tiene que hacer"],
+  "calidad_audio": "buena|regular|mala"
+}
+
+Resumen: tiene que cubrir TODA la clase, de principio a fin y en orden, para que pueda estudiar con él sin escuchar la grabación. Incluye cada tema que se explique, cómo se explica, los ejemplos, los ejercicios que se resuelvan, las preguntas de los alumnos con su respuesta y las digresiones con contenido. No te saltes partes ni lo reduzcas a una idea general. Organízalo por temas con una línea "## Nombre del tema" antes de cada bloque. La longitud va con la clase: una clase normal de 1 h 40 min suele necesitar entre 8 y 20 párrafos. Ignora charlas de alumnos que no sean de la clase.
+
+Lo importante va APARTE, en "destacados" (no basta con que esté en el resumen; puede estar en los dos).
+Destacados: TODO lo que pueda importar para la nota.
+- examen: exámenes, parciales, pruebas, qué entra, formato, si se puede llevar algo.
+- trabajo / entrega: prácticas, proyectos, entregas, requisitos, fechas límite, cómo se entrega.
+- fecha: fechas relevantes (clases que no hay, cambios de aula, tutorías…).
+- aviso: cambios, normas, cosas que pide el profe.
+- comentario: frases tipo "esto es importante", "esto entra", "fijaos bien", "esto lo pregunto siempre", pistas sobre el examen.
+Importancia "alta" para exámenes, entregas con fecha y lo que el profesor diga que entra o es importante. Si no hay destacados, lista vacía: no rellenes por rellenar.
+fecha_iso: convierte fechas relativas ("el jueves que viene", "dentro de dos semanas") usando la fecha de la clase; si no se puede saber, "".
+calidad_audio "mala" si gran parte es ininteligible. Escribe en español.`;
+
+const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const arr = (x) => Array.isArray(x) ? x : [];
+const str = (x) => typeof x === "string" ? x : x == null ? "" : String(x);
+function normalizar(r) {
+  if (!r || typeof r !== "object") throw new Error("respuesta vacía");
+  return {
+    titulo: str(r.titulo).slice(0, 200) || "Clase",
+    resumen: str(r.resumen),
+    puntos_clave: arr(r.puntos_clave).map(str).filter(Boolean),
+    conceptos: arr(r.conceptos).filter((k) => k && k.termino).map((k) => ({ termino: str(k.termino), explicacion: str(k.explicacion) })),
+    destacados: arr(r.destacados).filter((d) => d && d.titulo).map((d) => ({
+      tipo: TIPOS[d.tipo] ? d.tipo : "aviso", titulo: str(d.titulo), detalle: str(d.detalle),
+      fecha_iso: /^\d{4}-\d{2}-\d{2}$/.test(str(d.fecha_iso)) ? d.fecha_iso : "",
+      importancia: d.importancia === "alta" ? "alta" : "media", minuto: str(d.minuto), cita: str(d.cita),
+    })),
+    tareas: arr(r.tareas).map(str).filter(Boolean),
+    calidad_audio: ["buena", "regular", "mala"].includes(r.calidad_audio) ? r.calidad_audio : "regular",
+  };
+}
+async function resumirClase(c) {
+  const segs = await leerTranscripcion(c.id);
+  if (!segs.length) { await db.doc("clases/" + c.id).update({ estado_resumen: "vacio" }); return; }
+  const ini = new Date(c.inicio);
+  const texto = segs.map((s) => `[${mmss(s.ini)}] ${s.texto}`).join("\n");
+  const entrada = `${INSTRUCCIONES}\n\nAsignatura: ${c.nombre_asignatura || asig(c.asignatura).nombre}\nFecha de la clase: ${DIAS[ini.getDay()]} ${c.fecha}, empezó a las ${fmtHora(c.inicio)}\n\nTranscripción:\n${texto}`;
+  if (new Blob([entrada]).size > 250000) throw new Error("la transcripción es demasiado larga para resumirla de una vez");
+  const r = normalizar(await sample.json(entrada, { modelTier: "default" }));
+  r.generado = new Date().toISOString(); r.modelo = "Claude (hub)";
+  await db.doc("clases/" + c.id).update({ resumen: r, estado_resumen: "listo", error_resumen: null });
+  if (hostOK) host("guardar_resumen", { id: c.id, resumen: r }).catch(() => {});
+}
+async function resumirPendientes() {
+  if (colaActiva || !sample) return;
+  colaActiva = true;
+  const lista = pendientesResumen();
+  let ok = 0, fallos = 0;
+  for (let i = 0; i < lista.length; i++) {
+    const c = lista[i];
+    sumMsg = `Resumiendo ${i + 1} de ${lista.length}: ${asig(c.asignatura).nombre}, ${fmtFecha(c.fecha)}…`;
+    resumiendo.add(c.id); renderTodo();
+    try { await resumirClase(c); ok++; }
+    catch (e) {
+      resumiendo.delete(c.id);
+      if (e && (e.code === "not_granted")) { sumMsg = "No se ha dado permiso para usar Claude desde el hub."; break; }
+      if (e && e.code === "rate_limited") { sumMsg = "Claude está ocupado ahora mismo. Prueba en un rato."; break; }
+      fallos++;
+      db.doc("clases/" + c.id).update({ estado_resumen: "error", error_resumen: (e && e.message) || "error" }).catch(() => {});
+    }
+    resumiendo.delete(c.id);
+  }
+  colaActiva = false;
+  if (!sumMsg.startsWith("No se") && !sumMsg.startsWith("Claude está")) sumMsg = fallos ? `${ok} resumidas, ${fallos} con error. Puedes reintentarlo.` : "";
+  renderTodo();
+}
+
+/* ---------- Lector ---------- */
+let CLASE = null, SEGS = [], busq = "", segsVersion = "";
+async function abrirClase(id) {
+  lectorId = id; CLASE = MAPA[id] || null;
+  if (!CLASE) return;
+  $("#reader").hidden = false; document.body.style.overflow = "hidden";
+  if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
+  SEGS = []; segsVersion = "";
+  pintarLector(true);
+  $("#back").focus();
+  await cargarSegs();
+}
+async function cargarSegs() {
+  const c = MAPA[lectorId]; if (!c || !db) return;
+  const v = `${c.id}|${c.n_segmentos}`;
+  if (v === segsVersion) return;
+  try { SEGS = await leerTranscripcion(c.id); segsVersion = v; } catch (e) { SEGS = []; }
+  if (lectorId === c.id) pintarTrans();
+}
+function refrescarLector() {
+  const n = MAPA[lectorId]; if (!n) return;
+  const cambio = !CLASE || n.version !== CLASE.version || n.resumen !== CLASE.resumen;
+  CLASE = n;
+  if (cambio) { const y = $("#rbody").scrollTop; pintarLector(); $("#rbody").scrollTop = y; cargarSegs(); }
+}
+function cerrarLector(fromPop) {
+  if ($("#reader").hidden) return;
+  $("#reader").hidden = true; document.body.style.overflow = ""; lectorId = null; CLASE = null; busq = "";
+  if (!fromPop && location.hash) history.pushState(null, "", location.pathname + location.search);
+}
+$("#back").onclick = () => cerrarLector(false);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrarLector(false); });
+window.addEventListener("popstate", () => { const id = decodeURIComponent(location.hash.slice(1)); id && MAPA[id] ? abrirClase(id) : cerrarLector(true); });
+
+function pintarTrans() {
+  const t = $("#trans"); if (!t) return;
+  const q = busq.trim().toLowerCase();
+  const re = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi") : null;
+  const marcas = new Set((CLASE?.resumen?.destacados || []).map((d) => str(d.minuto).replace(/[\[\]\s]/g, "")).filter(Boolean));
+  const lista = q ? SEGS.filter((s) => s.texto.toLowerCase().includes(q)) : SEGS;
+  const abajo = t.scrollTop + t.clientHeight >= t.scrollHeight - 30;
+  t.innerHTML = lista.length ? lista.map((s) => `<div class="${marcas.has(mmss(s.ini)) ? "hl" : ""}"><time>${mmss(s.ini)}</time><span>${re ? esc(s.texto).replace(re, (m) => `<mark>${m}</mark>`) : esc(s.texto)}</span></div>`).join("")
+    : `<p class="empty">${q ? "No aparece en la transcripción." : CLASE?.n_segmentos ? "Cargando transcripción…" : "Todavía no hay texto."}</p>`;
+  if (abajo && CLASE?.en_curso) t.scrollTop = t.scrollHeight;
+  const n = $("#nseg"); if (n) n.textContent = `${SEGS.length} fragmentos`;
+}
+function pintarLector(scrollTop) {
+  const c = CLASE, a = asig(c.asignatura), r = c.resumen;
+  $("#reader").style.setProperty("--c", color(a.color));
+  $("#rsub").textContent = a.nombre;
+  $("#rtitle").textContent = `${fmtFecha(c.fecha)} · ${fmtHora(c.inicio)}`;
+  const ds = (r?.destacados || []).map((d, i) => ({ ...d, clase: c, clave: `${c.id}~${i}` }));
+  const estado = c.en_curso ? `<p>Esta clase se está grabando ahora. La transcripción se actualiza mientras tengas el hub abierto en la app de Clade del ordenador; el resumen se hace al terminar.</p>`.replace("Clade", "Claude")
+    : resumiendo.has(c.id) ? `<p>Claude está resumiendo esta clase…</p>`
+    : c.estado_resumen === "vacio" ? `<p>No se transcribió nada en esta clase (¿micrófono silenciado?).</p>`
+    : !r ? `<p>Sin resumen todavía.${c.error_resumen ? ` Último intento: ${esc(c.error_resumen)}` : ""}</p>` : "";
+  const puedeHost = hostOK;
+  $("#rbody").innerHTML = `<div class="page" style="--c:${color(a.color)}">
+    <div><span class="eb ct">${esc(a.nombre)}</span><h1>${esc(r?.titulo || (c.en_curso ? "Clase en curso" : "Clase sin resumen"))}</h1>
+      <div class="meta-line"><span>${esc(fmtFecha(c.fecha))}, ${esc(fmtHora(c.inicio))}${c.fin ? `–${esc(fmtHora(c.fin))}` : ""}</span>${c.duracion_s ? `<span>${fmtDur(c.duracion_s)} de audio</span>` : ""}<span>modo ${c.modo === "auto" ? "automático" : "manual"}</span>${r?.calidad_audio && r.calidad_audio !== "buena" ? `<span>audio ${esc(r.calidad_audio)}</span>` : ""}</div></div>
+    ${estado ? `<section>${estado}</section>` : ""}
+    ${r ? `<section><h2>Resumen de la clase</h2>${str(r.resumen).split(/\n+/).map((p) => p.trim()).filter(Boolean).map((p) => /^#{1,4}\s+/.test(p) ? `<h3>${esc(p.replace(/^#{1,4}\s+/, ""))}</h3>` : `<p>${esc(p)}</p>`).join("")}</section>` : ""}
+    ${ds.length ? `<div><h2>Lo importante de esta clase</h2><div class="dest">${ds.map((d) => cardHTML(d, false)).join("")}</div></div>` : ""}
+    ${r?.puntos_clave?.length ? `<section><h2>Puntos clave</h2><ul>${r.puntos_clave.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></section>` : ""}
+    ${r?.tareas?.length ? `<section><h2>Tienes que hacer</h2><ul>${r.tareas.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></section>` : ""}
+    ${r?.conceptos?.length ? `<section><h2>Conceptos</h2><div class="dl">${r.conceptos.map((k) => `<div><b>${esc(k.termino)}</b><span>${esc(k.explicacion)}</span></div>`).join("")}</div></section>` : ""}
+    <section><h2>Transcripción</h2>
+      <div class="trans-tools"><input id="buscar" type="search" placeholder="Buscar en la transcripción…" value="${esc(busq)}"><span class="meta-line" id="nseg"></span></div>
+      <div class="trans" id="trans"></div></section>
+    <div class="actions">
+      ${!c.en_curso && sample ? `<button class="btn" id="regen">${r ? "Rehacer resumen" : "Resumir con Claude"}</button>` : ""}
+      ${puedeHost ? `<label class="meta-line">Mover a <select id="mover">${GEN.asignaturas.map((x) => `<option value="${esc(x.id)}" ${x.id === c.asignatura ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
+      ${puedeHost && !c.en_curso ? `<button class="btn danger" id="borrar">Borrar clase</button>` : ""}
+      <span class="meta-line" id="accMsg">${puedeHost ? "" : "Mover o borrar clases solo se puede desde la app de Claude de tu ordenador."}</span>
+    </div>
+  </div>`;
+  pintarTrans();
+  bindCards($("#rbody"));
+  $("#buscar").oninput = (e) => { busq = e.target.value; pintarTrans(); };
+  const rg = $("#regen");
+  if (rg) rg.onclick = async () => {
+    rg.disabled = true; resumiendo.add(c.id); pintarLector();
+    try { await resumirClase(c); }
+    catch (e) { $("#accMsg") && ($("#accMsg").textContent = e && e.code === "not_granted" ? "No se ha dado permiso para usar Claude." : `No se pudo resumir: ${(e && e.message) || "error"}`); }
+    finally { resumiendo.delete(c.id); renderTodo(); }
+  };
+  const mv = $("#mover");
+  if (mv) mv.onchange = async (e) => {
+    const nueva = e.target.value;
+    try {
+      await host("mover_clase", { id: c.id, asignatura: nueva });
+      await db.doc("clases/" + c.id).update({ asignatura: nueva, nombre_asignatura: asig(nueva).nombre });
+      sincronizar();
+    } catch (err) { $("#accMsg").textContent = "No se pudo mover la clase."; mv.value = c.asignatura; }
+  };
+  const bo = $("#borrar");
+  if (bo) {
+    let armado = false;
+    bo.onclick = async () => {
+      if (!armado) { armado = true; bo.textContent = "Pulsa otra vez para borrarla del todo"; setTimeout(() => { armado = false; bo.textContent = "Borrar clase"; }, 4000); return; }
+      try {
+        await host("borrar_clase", { id: c.id });
+        const partes = await db.collection(`clases/${c.id}/partes`).get();
+        for (const p of partes.docs) await db.doc(`clases/${c.id}/partes/${p.id}`).delete();
+        await db.doc("clases/" + c.id).delete();
+        cerrarLector(false);
+      } catch (err) { $("#accMsg").textContent = "No se pudo borrar la clase."; }
+    };
+  }
+  if (scrollTop) $("#rbody").scrollTop = 0;
+}
+
+/* ---------- Arranque ---------- */
+renderTodo();
+(async () => {
+  db = await claude.use("db");
+  if (!db) { cargado = true; renderTodo(); return; }
+  suscribir();
+  sample = await claude.use("sample");
+  mcp = await claude.use("mcp");
+  desktop = await claude.use("desktop");
+  if (mcp) {
+    await sincronizar();
+    if (modo === "mcp") arrancarSync();
+  } else if (desktop?.fs) {
+    await pasarAModoFs(false);
+  } else {
+    hostMsg = "Para traer clases nuevas, abre este hub en la app de Claude de tu ordenador (con el Agente de clases instalado). Desde aquí ves lo ya sincronizado. [código: sin_mcp]";
+  }
+  if (!hostOK && !desktop?.fs) await ofrecerInstalar();
+  renderTodo();
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (id && MAPA[id]) abrirClase(id);
+})();
+</script>
