@@ -1,0 +1,20 @@
+# Datos y configuración personales
+config.json
+ajustes.json
+datos/
+grabaciones/
+*.wav
+*.mp3
+*.flac
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build
+build/
+dist/
+*.spec
+Output/
