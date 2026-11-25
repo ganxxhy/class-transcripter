@@ -92,12 +92,10 @@ def _formatear(segmentos):
 
 def generar(cid):
     """Genera el resumen de una clase y lo guarda. Lanza excepción si falla."""
-    import anthropic
-
     cfg = cargar()
     clave = api_key(cfg)
     if not clave:
-        raise RuntimeError("Falta la clave de la API de Claude (Ajustes en la app).")
+        raise RuntimeError("Falta la clave de la API (Ajustes en la app).")
     d = almacen.leer(cid)
     if not d["segmentos"]:
         almacen.actualizar(cid, estado_resumen="vacio", error_resumen="No se transcribió nada en esta clase.")
@@ -109,6 +107,19 @@ def generar(cid):
         f"Fecha de la clase: {DIAS[ini.weekday()]} {ini:%Y-%m-%d}, empezó a las {ini:%H:%M}\n\n"
         f"Transcripción:\n{_formatear(d['segmentos'])}"
     )
+    if cfg["ajustes"].get("proveedor") == "gemini":
+        texto, modelo = _con_gemini(cfg, clave, usuario)
+    else:
+        texto, modelo = _con_claude(cfg, clave, usuario)
+    res = json.loads(texto)
+    res["generado"] = datetime.now().isoformat(timespec="seconds")
+    res["modelo"] = modelo
+    almacen.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
+
+
+def _con_claude(cfg, clave, usuario):
+    import anthropic
+
     client = anthropic.Anthropic(api_key=clave)
     peticion = dict(
         model=cfg["ajustes"]["modelo_resumen"],
@@ -126,11 +137,54 @@ def generar(cid):
         raise RuntimeError("El modelo no ha querido resumir esta clase.")
     if r.stop_reason == "max_tokens":
         raise RuntimeError("El resumen se cortó por longitud.")
-    texto = next(b.text for b in r.content if b.type == "text")
-    res = json.loads(texto)
-    res["generado"] = datetime.now().isoformat(timespec="seconds")
-    res["modelo"] = r.model
-    almacen.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
+    return next(b.text for b in r.content if b.type == "text"), r.model
+
+
+def _sin_additional(esq):
+    """Gemini no acepta additionalProperties en el esquema."""
+    if isinstance(esq, dict):
+        return {k: _sin_additional(v) for k, v in esq.items() if k != "additionalProperties"}
+    if isinstance(esq, list):
+        return [_sin_additional(v) for v in esq]
+    return esq
+
+
+def _con_gemini(cfg, clave, usuario):
+    import urllib.error
+    import urllib.request
+
+    modelo = cfg["ajustes"].get("modelo_gemini") or "gemini-flash-latest"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+    cuerpo = {
+        "systemInstruction": {"parts": [{"text": sistema()}]},
+        "contents": [{"role": "user", "parts": [{"text": usuario}]}],
+        "generationConfig": {"responseMimeType": "application/json",
+                             "responseJsonSchema": _sin_additional(ESQUEMA), "maxOutputTokens": 16000},
+    }
+
+    def pedir(c):
+        req = urllib.request.Request(url, data=json.dumps(c).encode("utf-8"), method="POST",
+                                     headers={"Content-Type": "application/json", "x-goog-api-key": clave})
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return json.loads(r.read().decode("utf-8"))
+
+    try:
+        d = pedir(cuerpo)
+    except urllib.error.HTTPError as e:
+        if e.code != 400:
+            raise RuntimeError(f"Gemini respondió {e.code}: {e.read().decode('utf-8', 'replace')[:300]}")
+        # Versión de la API sin responseJsonSchema: pedimos JSON y el esquema va en las instrucciones
+        cuerpo["generationConfig"].pop("responseJsonSchema")
+        cuerpo["systemInstruction"]["parts"][0]["text"] += "\n\nResponde SOLO con un JSON que cumpla este esquema:\n" + json.dumps(ESQUEMA, ensure_ascii=False)
+        d = pedir(cuerpo)
+    cand = (d.get("candidates") or [{}])[0]
+    if cand.get("finishReason") == "MAX_TOKENS":
+        raise RuntimeError("El resumen se cortó por longitud.")
+    partes = (cand.get("content") or {}).get("parts") or []
+    texto = "".join(p.get("text", "") for p in partes).strip()
+    if not texto:
+        raise RuntimeError(f"Gemini no devolvió resumen ({cand.get('finishReason', 'sin motivo')}).")
+    return texto, d.get("modelVersion", modelo)
 
 
 def generar_seguro(cid, log=print):
