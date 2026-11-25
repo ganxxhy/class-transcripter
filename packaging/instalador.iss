@@ -71,6 +71,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 Filename: "{app}\{#Exe}"; Parameters: "--registrar-mcp"; StatusMsg: "Conectando con la app de Claude…"; Flags: runhidden waituntilterminated
 Filename: "{app}\{#Exe}"; Parameters: "--descargar-modelo"; StatusMsg: "Descargando el modelo de voz (unos 500 MB, puede tardar unos minutos)…"; Flags: runhidden waituntilterminated; BeforeInstall: BarraEnMovimiento
 Filename: "{app}\{#Exe}"; Description: "Abrir Agente de clases ahora"; Flags: postinstall nowait skipifsilent
+; Al actualizar desde la propia app (instalación silenciosa), vuelve a abrirla sola
+Filename: "{app}\{#Exe}"; Flags: nowait; Check: WizardSilent
 
 [UninstallRun]
 Filename: "{app}\{#Exe}"; Parameters: "--quitar-mcp"; Flags: runhidden waituntilterminated; RunOnceId: "QuitarMCP"

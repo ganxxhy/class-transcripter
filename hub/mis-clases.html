@@ -141,7 +141,7 @@ select { font: inherit; font-size: .82rem; border: 1px solid var(--line); backgr
 footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line); padding-top: 14px; }
 
 .note { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; background: var(--surface); border-color: var(--line); }
-#syncNote { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+#appNote, #syncNote { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
 .note-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: .82rem; cursor: pointer; }
 .mini span { color: var(--muted); }
@@ -158,6 +158,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
       </div>
     </div>
   </div>
+  <div class="note" id="appNote" hidden></div>
   <div class="note" id="syncNote" hidden></div>
   <div class="note" id="sumBar" hidden>
     <span id="sumTxt"></span>
@@ -486,6 +487,22 @@ function pedirCarpeta() {
   };
   n.append(i, b, m); i.focus();
 }
+// Recién creado el panel: proponer instalarlo como app de escritorio (lee las clases directamente
+// del ordenador y se abre como un programa). Instalar necesita un clic, así que es un aviso con botón.
+async function sugerirApp() {
+  try {
+    if (lsGet("clases-no-instalar") === "1" || (await desktop?.install?.state()) !== "available") return;
+  } catch (e) { return; }
+  const n = $("#appNote");
+  n.hidden = false; n.textContent = "";
+  const t = document.createElement("span");
+  t.textContent = "Instala Mis clases como app de escritorio: se abre como un programa más y lee tus clases directamente del ordenador.";
+  const si = document.createElement("button"); si.className = "btn primary"; si.textContent = "Instalar";
+  si.onclick = () => { si.disabled = true; desktop.install.request().then((r) => { if (r === "cancelled") si.disabled = false; else n.hidden = true; }).catch(() => { si.disabled = false; }); };
+  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Ahora no";
+  no.onclick = () => { lsSet("clases-no-instalar", "1"); n.hidden = true; };
+  n.append(t, si, no);
+}
 async function ofrecerInstalar() {
   try {
     if ((await desktop?.install?.state()) !== "available") return;
@@ -795,6 +812,7 @@ renderTodo();
     hostMsg = "Para traer clases nuevas, abre este hub en la app de Claude de tu ordenador (con el Agente de clases instalado). Desde aquí ves lo ya sincronizado. [código: sin_mcp]";
   }
   if (!hostOK && !desktop?.fs) await ofrecerInstalar();
+  await sugerirApp();
   renderTodo();
   const id = decodeURIComponent(location.hash.slice(1));
   if (id && MAPA[id]) abrirClase(id);
