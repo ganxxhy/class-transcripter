@@ -342,6 +342,13 @@ function renderEstado() {
       b.onclick = () => notaAccion.fn(b); n.appendChild(b);
     }
   }
+  else if (modo === "fs" && hostOK && RAIZ && !MOSTRAR_CARPETA_OCULTA) {
+    // Qué carpeta se está leyendo, para saber de qué agente vienen las clases
+    n.hidden = false; n.textContent = "";
+    const t = document.createElement("span"); t.className = "meta-line"; t.textContent = `Leyendo las clases de ${RAIZ}`; n.appendChild(t);
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Cambiar carpeta";
+    b.onclick = () => { MOSTRAR_CARPETA_OCULTA = true; pedirCarpeta(); }; n.appendChild(b);
+  }
   else n.hidden = true;
   renderResumenBar();
 }
@@ -371,6 +378,7 @@ async function host(tool, input) {
 
 /* ---------- Lectura directa de la carpeta del agente (hub instalado como app) ---------- */
 let RAIZ = lsGet("clases-carpeta") || "";
+let MOSTRAR_CARPETA_OCULTA = false;
 const CANDIDATAS = ["~/Documents/AgenteClases", "~/OneDrive/Documents/AgenteClases", "~/OneDrive/Documentos/AgenteClases",
   "~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Desktop/AgenteClases", "~/AgenteClases"];
 const fsj = async (ruta) => JSON.parse(await desktop.fs.readFile(ruta, "utf8"));
@@ -425,6 +433,12 @@ async function esCarpetaAgente(r) {
   try { return (await desktop.fs.exists(`${r}/config.json`)) && ((await desktop.fs.exists(`${r}/datos`)) || (await desktop.fs.exists(`${r}/mcp_servidor.py`))); } catch (e) { return false; }
 }
 async function buscarCarpeta() {
+  // La app instalada deja anotado dónde guarda sus datos (~/.agente-clases.json): manda sobre todo lo demás
+  try {
+    const p = await fsj("~/.agente-clases.json");
+    const c = String(p.carpeta || "").replace(/[\\/]+$/, "");
+    if (c && c !== RAIZ && !lsGet("clases-carpeta-manual") && await esCarpetaAgente(c)) { RAIZ = c; lsSet("clases-carpeta", c); return c; }
+  } catch (e) {}
   if (RAIZ && await esCarpetaAgente(RAIZ)) return RAIZ;
   for (const r of CANDIDATAS) if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); return r; }
   return "";
@@ -467,7 +481,7 @@ function pedirCarpeta() {
   const m = document.createElement("span"); m.className = "meta-line";
   b.onclick = async () => {
     const r = i.value.trim().replace(/[\\/]+$/, "");
-    if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); pasarAModoFs(false); }
+    if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); lsSet("clases-carpeta-manual", "1"); pasarAModoFs(false); }
     else m.textContent = "Ahí no está el agente (no encuentro su config.json). Con la app instalada suele estar en Documentos\\AgenteClases.";
   };
   n.append(i, b, m); i.focus();

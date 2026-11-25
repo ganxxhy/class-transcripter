@@ -68,6 +68,19 @@ COLORES = ["#2f5bd3", "#c25a1f", "#0f8a6a", "#8a3fb8", "#b07e00", "#c2366b", "#0
            "#3d4fa8", "#a8432e"]
 
 
+# Archivo en la carpeta del usuario que dice dónde están los datos, para que el panel
+# "Mis clases" (instalado como app) encuentre la carpeta aunque Documentos esté en OneDrive.
+RUTA_PUNTERO = os.path.join(os.path.expanduser("~"), ".agente-clases.json")
+
+
+def escribir_puntero():
+    try:
+        with open(RUTA_PUNTERO, "w", encoding="utf-8") as f:
+            json.dump({"carpeta": RAIZ.replace("\\", "/")}, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
 def existe():
     return os.path.exists(RUTA_CONFIG)
 
@@ -100,6 +113,7 @@ def guardar(cfg):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
         os.replace(tmp, RUTA_CONFIG)
+    escribir_puntero()
 
 
 def api_key(cfg):
