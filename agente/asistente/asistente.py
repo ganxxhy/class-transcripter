@@ -57,10 +57,12 @@ def _hardware():
 
 class Api:
     def __init__(self):
+        # Ojo: pywebview expone a la página todo atributo público de esta clase, recorriéndolo
+        # entero. La ventana tiene que ser privada (_ventana): si no, al recorrerla se queda colgado.
         self._stream = None
         self._nivel = 0.0
-        self.ventana = None
-        self.terminado = None  # "agente" | "hub" | None
+        self._ventana = None
+        self._terminado = None  # "agente" | None
 
     # ----- datos -----
     def estado_inicial(self):
@@ -80,6 +82,8 @@ class Api:
             "colores": config.COLORES,
             "hardware": _hardware(),
             "prompt_horario": PROMPT_HORARIO,
+            # Prueba automática (GitHub Actions): la página se cierra sola en cuanto arranca
+            "prueba": bool(os.environ.get("AGENTE_CLASES_PRUEBA")),
         }
 
     def guardar(self, datos):
@@ -160,9 +164,13 @@ class Api:
 
     def terminar(self, siguiente=None):
         self.parar_medidor()
-        self.terminado = siguiente or "agente"
-        if self.ventana:
-            threading.Timer(0.1, self.ventana.destroy).start()
+        self._terminado = siguiente or "agente"
+        if siguiente == "prueba":
+            os.makedirs(config.RAIZ, exist_ok=True)
+            with open(os.path.join(config.RAIZ, "prueba-asistente.ok"), "w", encoding="utf-8") as f:
+                f.write("ok")
+        if self._ventana:
+            threading.Timer(0.1, self._ventana.destroy).start()
 
 
 def html():
@@ -175,11 +183,11 @@ def ejecutar():
     import webview
 
     api = Api()
-    api.ventana = webview.create_window("Agente de clases", html=html(), js_api=api, width=1000, height=700,
+    api._ventana = webview.create_window("Agente de clases", html=html(), js_api=api, width=1000, height=700,
                                         min_size=(900, 640), background_color="#F6F6F3")
     webview.start()
     api.parar_medidor()
-    return api.terminado
+    return api._terminado
 
 
 if __name__ == "__main__":

@@ -693,6 +693,7 @@ document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.
   if (s.ajustes.url_hub) $("#urlHub").value = s.ajustes.url_hub;
   if (s.ajustes.tiene_clave) { document.querySelector('input[name=modo][value=clave]').checked = true; $("#clave").placeholder = "Ya tienes una clave guardada (déjalo vacío para mantenerla)"; }
   irA(1);
+  if (s.prueba) { irA(2); irA(3); await api("parar_medidor"); api("terminar", "prueba"); }
 })();
 </script>
 </body>

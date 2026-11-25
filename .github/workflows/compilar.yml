@@ -91,6 +91,19 @@ jobs:
           echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' | dist/AgenteClases/agente-mcp.exe | tee salida.txt
           grep -q agente_clases salida.txt
 
+      - name: Prueba del asistente (abre la ventana y se cierra sola)
+        shell: pwsh
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}\datos-asistente
+          AGENTE_CLASES_PRUEBA: "1"
+        run: |
+          $p = Start-Process dist\AgenteClases\AgenteClases.exe -ArgumentList "--asistente" -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill(); Write-Error "El asistente se ha quedado colgado"; exit 1 }
+          if (-not (Test-Path "$env:AGENTE_CLASES_DATOS\prueba-asistente.ok")) {
+            Get-Content "$env:AGENTE_CLASES_DATOS\error.log" -ErrorAction SilentlyContinue
+            Write-Error "El asistente no ha llegado a cargar"; exit 1
+          }
+
       - name: Instalador (Inno Setup)
         shell: pwsh
         run: |

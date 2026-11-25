@@ -431,5 +431,22 @@ def main():
     root.mainloop()
 
 
+def _registrar_error():
+    """En el .exe no hay consola: si algo revienta, que quede escrito en error.log."""
+    import traceback
+    from nucleo.config import RAIZ
+    try:
+        os.makedirs(RAIZ, exist_ok=True)
+        with open(os.path.join(RAIZ, "error.log"), "a", encoding="utf-8") as f:
+            f.write(f"\n[{datetime.now():%Y-%m-%d %H:%M:%S}] {' '.join(sys.argv[1:])}\n")
+            traceback.print_exc(file=f)
+    except Exception:
+        pass
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        _registrar_error()
+        raise
