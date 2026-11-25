@@ -72,6 +72,57 @@ def notas_de(version):
         return None
 
 
+RAW = f"https://raw.githubusercontent.com/{REPO}"
+GUIA_PANEL = "hub/PUBLICAR.md"
+HTML_PANEL = "hub/mis-clases.html"
+
+
+def _notas_panel(notas):
+    """Las líneas de la sección '### Panel' de las notas, si la hay."""
+    out, dentro = [], False
+    for linea in notas.replace("\r", "").split("\n"):
+        if re.match(r"^#{2,3}\s", linea):
+            dentro = linea.strip().lower().lstrip("#").strip() == "panel"
+            continue
+        if linea.strip() == "---":
+            break
+        if dentro and linea.strip():
+            out.append(linea.strip().lstrip("-* ").strip())
+    return out
+
+
+def revisar_panel(info=None):
+    """Apunta en datos/panel.json la versión del panel "Mis clases" de la última release.
+    El panel lo lee (por el conector o leyendo la carpeta) y, si la suya es más vieja,
+    ofrece actualizarlo con un clic. Sin internet no toca nada."""
+    info = info or buscar()
+    if not info or not info.get("version"):
+        return None
+    tag = "v" + info["version"]
+    try:
+        req = urllib.request.Request(f"{RAW}/{tag}/{HTML_PANEL}", headers={"User-Agent": "AgenteClases"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            html = r.read().decode("utf-8", "replace")
+        m = re.search(r'VERSION_PANEL\s*=\s*"([^"]+)"', html)
+        if not m:
+            return None
+        panel = {
+            "version": m.group(1),
+            "release": info["version"],
+            "html": f"{RAW}/{tag}/{HTML_PANEL}",
+            "guia": f"{RAW}/{tag}/{GUIA_PANEL}",
+            "notas": _notas_panel(info.get("notas", "")),
+        }
+        os.makedirs(config.RUTA_DATOS, exist_ok=True)
+        ruta = os.path.join(config.RUTA_DATOS, "panel.json")
+        with open(ruta + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(panel, f, ensure_ascii=False, indent=1)
+        os.replace(ruta + ".tmp", ruta)
+        return panel
+    except Exception:
+        return None
+
+
 def _ajuste(clave, valor=None):
     cfg = config.cargar()
     if valor is None:
@@ -159,6 +210,7 @@ def _ventana(info, modo):
 def comprobar_y_avisar(forzar=False):
     """--buscar-actualizacion: abre la ventana solo si hay algo nuevo que no se haya saltado."""
     info = buscar()
+    revisar_panel(info)
     if not info or not es_mas_nueva(info["version"]):
         return
     if not forzar and _ajuste("version_saltada") == info["version"]:

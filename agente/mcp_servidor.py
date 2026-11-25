@@ -29,7 +29,12 @@ def t_estado(_):
             agente = json.load(f)
     except Exception:
         agente = {"activo": False}
-    return {"asignaturas": cfg["asignaturas"], "horario": cfg["horario"], "agente": agente}
+    try:  # última versión del panel publicada (la apunta la app al buscar actualizaciones)
+        with open(os.path.join(RUTA_DATOS, "panel.json"), encoding="utf-8") as f:
+            panel = json.load(f)
+    except Exception:
+        panel = None
+    return {"asignaturas": cfg["asignaturas"], "horario": cfg["horario"], "agente": agente, "panel": panel}
 
 
 def t_listar(_):
