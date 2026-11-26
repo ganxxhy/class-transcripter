@@ -202,8 +202,8 @@ def _ventana(info, modo):
     api = Api(info, modo)
     with open(os.path.join(AQUI, "asistente", "actualizacion.html"), encoding="utf-8") as f:
         html = f.read()
-    api._ventana = webview.create_window("Agente de clases", html=html, js_api=api, width=640, height=600,
-                                         min_size=(520, 480), background_color="#F6F6F3")
+    api._ventana = webview.create_window("Estudio", html=html, js_api=api, width=640, height=600,
+                                         min_size=(520, 480), background_color="#CFE6FF")
     webview.start()
 
 
