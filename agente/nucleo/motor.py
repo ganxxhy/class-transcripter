@@ -8,6 +8,7 @@ Hilos:
 import json
 import os
 import queue
+import sys
 import threading
 import time
 import wave
@@ -36,8 +37,8 @@ def _a_16k(bloque, sr_in):
 
 
 def microfonos(refrescar=False):
-    """Entradas de audio de la API por defecto (en Windows, MME).
-    Con refrescar=True vuelve a preguntar a Windows (para micros conectados después de abrir la app)."""
+    """Entradas de audio de la API por defecto (en Windows, MME; en Linux, ALSA).
+    Con refrescar=True vuelve a preguntar al sistema (para micros conectados después de abrir la app)."""
     import sounddevice as sd
     if refrescar:
         try:
@@ -54,17 +55,33 @@ def microfonos(refrescar=False):
     for i, d in enumerate(sd.query_devices()):
         if d["max_input_channels"] > 0 and d["hostapi"] == api_def:
             out.append({"indice": i, "nombre": d["name"], "defecto": i == por_defecto})
+    if sys.platform.startswith("linux"):  # sound servers first, raw ALSA (hw:…) after
+        out.sort(key=lambda m: SERVIDORES_SONIDO.index(m["nombre"]) if m["nombre"] in SERVIDORES_SONIDO else len(SERVIDORES_SONIDO))
     return out
 
 
+# On Linux, PortAudio only exposes ALSA (and JACK). PipeWire and PulseAudio are reached through
+# their ALSA plugin devices, so they are preferred by name and raw ALSA is the last resort.
+SERVIDORES_SONIDO = ("pipewire", "pulse")
+
+
+def _microfono_linux(lista):
+    """Index of the PipeWire device, else PulseAudio, else None (the system default)."""
+    for nombre in SERVIDORES_SONIDO:
+        m = next((m for m in lista if m["nombre"] == nombre), None)
+        if m:
+            return m["indice"]
+    return None
+
+
 def buscar_microfono(eleccion, log=print):
-    """Convierte lo guardado en config (nombre del micro, o None = el de Windows) en un índice."""
+    """Convierte lo guardado en config (nombre del micro, o None = el del sistema) en un índice."""
     if eleccion is None or eleccion == "":
-        return None
+        return _microfono_linux(microfonos()) if sys.platform.startswith("linux") else None
     for m in microfonos():
         if m["nombre"] == eleccion or m["indice"] == eleccion:
             return m["indice"]
-    log(f"No encuentro el micrófono «{eleccion}»; uso el predeterminado de Windows.")
+    log(f"No encuentro el micrófono «{eleccion}»; uso el predeterminado del sistema.")
     return None
 
 

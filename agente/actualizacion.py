@@ -7,6 +7,7 @@
 - AgenteClases.exe --novedades: después de actualizar, enseña qué ha cambiado (una vez).
 Actualizar = descargar el instalador de la versión nueva y ejecutarlo en modo silencioso:
 cierra el agente, instala encima conservando clases y ajustes, y lo vuelve a abrir.
+En Linux (AppImage) se descarga el AppImage nuevo, se pone encima del actual y se vuelve a abrir.
 """
 import json
 import os
@@ -23,6 +24,9 @@ from version import VERSION
 REPO = "ganxxhy/class-transcripter"
 API = f"https://api.github.com/repos/{REPO}/releases"
 AQUI = os.path.dirname(os.path.abspath(__file__))
+ES_LINUX = sys.platform.startswith("linux")
+# Release asset that matches this platform
+SUFIJO_ASSET = "-x86_64.appimage" if ES_LINUX else "-instalador.exe"
 
 
 def _tupla(v):
@@ -45,7 +49,7 @@ def _get(url):
 
 
 def _resumen(release):
-    asset = next((a for a in release.get("assets", []) if a["name"].lower().endswith("-instalador.exe")), None)
+    asset = next((a for a in release.get("assets", []) if a["name"].lower().endswith(SUFIJO_ASSET)), None)
     return {
         "version": release.get("tag_name", "").lstrip("v"),
         "titulo": release.get("name") or release.get("tag_name", ""),
@@ -169,6 +173,8 @@ class Api:
             url = self._info.get("instalador")
             if not url:
                 raise RuntimeError("Esta versión no tiene instalador.")
+            if ES_LINUX:
+                return self._actualizar_appimage(url)
             destino = os.path.join(tempfile.gettempdir(), f"Estudio-{self._info['version']}-instalador.exe")
             req = urllib.request.Request(url, headers={"User-Agent": "AgenteClases"})
             with urllib.request.urlopen(req, timeout=60) as r, open(destino + ".part", "wb") as f:
@@ -189,6 +195,35 @@ class Api:
             e["estado"] = "error"
             e["error"] = str(ex)[:300]
 
+    def _actualizar_appimage(self, url):
+        """Linux: download next to the current AppImage, make it executable, swap it in and relaunch."""
+        e = self._estado
+        actual = os.environ.get("APPIMAGE")
+        if not actual:
+            self.abrir_web()  # running from source: there is nothing to replace
+            raise RuntimeError("Estás ejecutando Estudio desde el código: actualiza con git pull.")
+        parte = actual + ".part"
+        req = urllib.request.Request(url, headers={"User-Agent": "AgenteClases"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r, open(parte, "wb") as f:
+                e["total"] = int(r.headers.get("Content-Length") or e["total"] or 0)
+                while True:
+                    bloque = r.read(256 * 1024)
+                    if not bloque:
+                        break
+                    f.write(bloque)
+                    e["hecho"] += len(bloque)
+            os.chmod(parte, 0o755)
+            e["estado"] = "instalando"
+            os.replace(parte, actual)  # the running copy keeps its own inode, so this is safe
+        except PermissionError:
+            raise RuntimeError("No puedo escribir en la carpeta del AppImage. Descarga la versión nueva a mano.")
+        finally:
+            if os.path.exists(parte):
+                os.remove(parte)
+        subprocess.Popen([actual], start_new_session=True)
+        threading.Timer(1.0, self._cerrar).start()
+
     def cerrar(self):
         self._cerrar()
 
@@ -204,7 +239,7 @@ def _ventana(info, modo):
         html = f.read()
     api._ventana = webview.create_window("Estudio", html=html, js_api=api, width=640, height=600,
                                          min_size=(520, 480), background_color="#CFE6FF")
-    webview.start()
+    webview.start(gui="qt" if sys.platform.startswith("linux") else None)
 
 
 def comprobar_y_avisar(forzar=False):

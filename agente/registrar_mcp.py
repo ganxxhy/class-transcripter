@@ -14,17 +14,28 @@ RAIZ = os.path.dirname(os.path.abspath(__file__))
 
 def entrada():
     """Cómo arranca la app de Claude el servidor MCP."""
-    if getattr(sys, "frozen", False):
+    if os.environ.get("APPIMAGE"):
+        # AppImage: sys.executable vive en un montaje temporal que cambia en cada arranque
+        entry = {"command": os.environ["APPIMAGE"], "args": ["--mcp"]}
+    elif getattr(sys, "frozen", False):
         # App instalada: agente-mcp.exe va junto a AgenteClases.exe
-        return {"command": os.path.join(os.path.dirname(sys.executable), "agente-mcp.exe"), "args": []}
-    py = os.path.join(RAIZ, ".venv", "Scripts", "python.exe")
-    if not os.path.exists(py):
-        py = sys.executable
-    return {"command": py, "args": [os.path.join(RAIZ, "mcp_servidor.py")]}
+        entry = {"command": os.path.join(os.path.dirname(sys.executable), "agente-mcp.exe"), "args": []}
+    else:
+        sub = ("Scripts", "python.exe") if sys.platform == "win32" else ("bin", "python")
+        py = os.path.join(RAIZ, ".venv", *sub)
+        if not os.path.exists(py):
+            py = sys.executable
+        entry = {"command": py, "args": [os.path.join(RAIZ, "mcp_servidor.py")]}
+    if os.environ.get("AGENTE_CLASES_DATOS"):
+        entry["env"] = {"AGENTE_CLASES_DATOS": os.environ["AGENTE_CLASES_DATOS"]}
+    return entry
 
 
 def configs_claude():
     candidatas = []
+    if sys.platform.startswith("linux"):
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+        candidatas.append(os.path.join(base, "Claude", "claude_desktop_config.json"))
     appdata = os.environ.get("APPDATA")
     local = os.environ.get("LOCALAPPDATA")
     if appdata:

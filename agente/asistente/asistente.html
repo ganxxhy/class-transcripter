@@ -260,7 +260,7 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight
         <div class="logo"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF9A55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
         <div>
           <h1 id="tituloFin" style="font-size:34px">Todo listo</h1>
-          <p style="margin:10px auto 0;font-size:15px;line-height:1.6;color:var(--fg2);max-width:520px">Estudio se queda junto al reloj de Windows y empezará a escuchar solo en tu próxima clase.</p>
+          <p style="margin:10px auto 0;font-size:15px;line-height:1.6;color:var(--fg2);max-width:520px" id="textoFin">Estudio se queda junto al reloj de Windows y empezará a escuchar solo en tu próxima clase.</p>
         </div>
         <div class="proxima" id="proxima">
           <div class="barra"></div>
@@ -589,7 +589,7 @@ let medidor = null, maxNivel = 0;
 async function cargarMicros(refrescar) {
   const lista = await api("listar_micros", refrescar);
   const sel = $("#mic");
-  sel.innerHTML = '<option value="">El de Windows (predeterminado)</option>';
+  sel.innerHTML = '<option value="">' + (E.so === "win32" ? "El de Windows" : "El del sistema") + ' (predeterminado)</option>';
   if (Array.isArray(lista)) for (const m of lista) { const o = document.createElement("option"); o.value = m.nombre; o.textContent = m.nombre; sel.append(o); }
   if (E.microfono && [...sel.options].some((o) => o.value === E.microfono)) sel.value = E.microfono;
 }
@@ -685,6 +685,8 @@ document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.
   E.horario = s.horario || [];
   E.colores = s.colores || [];
   E.microfono = s.ajustes.microfono || "";
+  E.so = s.so || "win32";
+  if (E.so !== "win32") $("#textoFin").textContent = "Estudio se queda abierto en segundo plano y empezará a escuchar solo en tu próxima clase.";
   $("#nombre").value = (s.perfil && s.perfil.nombre) || "";
   $("#estudios").value = (s.perfil && s.perfil.estudios) || "";
   $("#hw").textContent = s.hardware.texto || "";

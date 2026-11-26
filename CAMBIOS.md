@@ -4,6 +4,17 @@ Cada versión publicada en Releases toma sus notas de aquí (la sección `## X.Y
 
 Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nuevo en una sección `### Panel`: los paneles con una versión más vieja avisan y lo enseñan.
 
+## 1.2.0
+
+### Novedades
+- Estudio funciona en **Linux**: AppImage de 64 bits, con lanzador en el menú y arranque con la sesión.
+- En Linux los datos van en `~/.local/share/estudio` y la configuración en `~/.config/estudio`.
+- El micrófono por defecto es PipeWire, después PulseAudio y solo al final ALSA directo.
+- La app se actualiza sola también en Linux.
+
+### Panel
+- Encuentra la configuración aunque no esté junto a los datos (Linux).
+
 ## 1.1.0
 
 ### Novedades

@@ -60,9 +60,9 @@ def _elegir(root, opciones, defecto):
 
 class Fuentes:
     def __init__(self, root):
-        disp = _elegir(root, ["Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI"], "TkDefaultFont")
-        ui = _elegir(root, ["Figtree", "Segoe UI Variable Text", "Segoe UI"], "TkDefaultFont")
-        mono = _elegir(root, ["JetBrains Mono", "Cascadia Mono", "Consolas"], "TkFixedFont")
+        disp = _elegir(root, ["Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", "Cantarell", "Noto Sans", "DejaVu Sans"], "TkDefaultFont")
+        ui = _elegir(root, ["Figtree", "Segoe UI Variable Text", "Segoe UI", "Cantarell", "Noto Sans", "DejaVu Sans"], "TkDefaultFont")
+        mono = _elegir(root, ["JetBrains Mono", "Cascadia Mono", "Consolas", "DejaVu Sans Mono"], "TkFixedFont")
         self.titulo = (disp, 15, "bold")
         self.marca = (disp, 15, "bold")
         self.seccion = (disp, 11, "bold")
