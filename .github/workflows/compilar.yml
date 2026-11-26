@@ -131,8 +131,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: AgenteClases-${{ steps.version.outputs.v }}-instalador
-          path: dist/AgenteClases-*-instalador.exe
+          name: Estudio-${{ steps.version.outputs.v }}-instalador
+          path: dist/Estudio-*-instalador.exe
           if-no-files-found: error
 
       - name: Publicar en Releases
@@ -149,5 +149,5 @@ jobs:
             rango=${anterior:+$anterior..}$GITHUB_REF_NAME
             notas=$(git log "$rango" --merges --pretty='- %b' | grep -v '^- $' || true)
           fi
-          printf '%s\n\n---\nDescarga **AgenteClases-%s-instalador.exe**, ábrelo y sigue los pasos (Windows 10 u 11 de 64 bits). Si ya lo tienes, la app te avisará y se actualizará sola.\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" > notas.md
-          gh release create "$GITHUB_REF_NAME" dist/AgenteClases-*-instalador.exe --title "Agente de clases $v" --notes-file notas.md
+          printf '%s\n\n---\nDescarga **Estudio-%s-instalador.exe**, ábrelo y sigue los pasos (Windows 10 u 11 de 64 bits). Si ya lo tienes, la app te avisará y se actualizará sola.\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" > notas.md
+          gh release create "$GITHUB_REF_NAME" dist/Estudio-*-instalador.exe --title "Estudio $v" --notes-file notas.md

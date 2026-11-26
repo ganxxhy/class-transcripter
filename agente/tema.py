@@ -177,7 +177,7 @@ def icono(tam=64):
     r = s * 20 / 64
     cx, cy = s / 2, s * 46 / 64
     d.arc((cx - r, cy - r, cx + r, cy + r), 180, 360, fill="#CFE6FF", width=int(s * 5 / 64))
-    sx, sy, sr = s * 46.1 / 64, s * 31.9 / 64, s * 7 / 64
-    d.ellipse((sx - sr - s * 3 / 64, sy - sr - s * 3 / 64, sx + sr + s * 3 / 64, sy + sr + s * 3 / 64), fill="#FFFFFF")
+    sx, sy, sr = s * 46.1 / 64, s * 31.9 / 64, s * 6.25 / 64
+    d.ellipse((sx - sr - s * 1.75 / 64, sy - sr - s * 1.75 / 64, sx + sr + s * 1.75 / 64, sy + sr + s * 1.75 / 64), fill="#FFFFFF")
     d.ellipse((sx - sr, sy - sr, sx + sr, sy + sr), fill=SUN)
     return img.resize((tam, tam), Image.LANCZOS)

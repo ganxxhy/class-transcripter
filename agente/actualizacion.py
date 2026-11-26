@@ -169,7 +169,7 @@ class Api:
             url = self._info.get("instalador")
             if not url:
                 raise RuntimeError("Esta versión no tiene instalador.")
-            destino = os.path.join(tempfile.gettempdir(), f"AgenteClases-{self._info['version']}-instalador.exe")
+            destino = os.path.join(tempfile.gettempdir(), f"Estudio-{self._info['version']}-instalador.exe")
             req = urllib.request.Request(url, headers={"User-Agent": "AgenteClases"})
             with urllib.request.urlopen(req, timeout=60) as r, open(destino + ".part", "wb") as f:
                 e["total"] = int(r.headers.get("Content-Length") or e["total"] or 0)

@@ -1,11 +1,11 @@
-; Instalador de Agente de clases (Inno Setup 6)
+; Instalador de Estudio (antes "Agente de clases"), con Inno Setup 6
 ; Lo compila GitHub Actions: iscc /DVersion=1.0.0 packaging\instalador.iss
 ; Espera el programa en dist\AgenteClases\ y las imágenes en packaging\build\
 
 #ifndef Version
   #define Version "0.0.0"
 #endif
-#define Nombre "Agente de clases"
+#define Nombre "Estudio"
 #define Exe "AgenteClases.exe"
 #define Img "build\"
 
@@ -26,7 +26,7 @@ DisableReadyPage=no
 UninstallDisplayIcon={app}\{#Exe}
 UninstallDisplayName={#Nombre}
 OutputDir=..\dist
-OutputBaseFilename=AgenteClases-{#Version}-instalador
+OutputBaseFilename=Estudio-{#Version}-instalador
 SetupIconFile={#Img}icono.ico
 WizardStyle=modern
 WizardSizePercent=110
@@ -45,10 +45,10 @@ Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Messages]
 es.WelcomeLabel1=Te damos la bienvenida al instalador
-es.WelcomeLabel2=Agente de clases graba tus clases, las transcribe en tu ordenador y te prepara un resumen de cada una, con exámenes y entregas aparte.%n%n✓  No necesitas instalar nada más%n✓  El audio nunca sale de tu ordenador%n✓  Descarga el modelo de voz (de 0,5 a 1,6 GB según tu ordenador)%n%nPulsa Siguiente para continuar.
+es.WelcomeLabel2=Estudio graba tus clases, las transcribe en tu ordenador y te prepara un resumen de cada una, con exámenes y entregas aparte.%n%n✓  No necesitas instalar nada más%n✓  El audio nunca sale de tu ordenador%n✓  Descarga el modelo de voz (de 0,5 a 1,6 GB según tu ordenador)%n%nPulsa Siguiente para continuar.
 es.FinishedHeadingLabel=Todo listo
-es.FinishedLabelNoIcons=Agente de clases está instalado. La primera vez que lo abras te ayudará a poner tus asignaturas y tu horario en un par de minutos.%n%nSi tienes la app de Claude abierta, ciérrala y vuelve a abrirla para que vea tus clases.
-es.FinishedLabel=Agente de clases está instalado. La primera vez que lo abras te ayudará a poner tus asignaturas y tu horario en un par de minutos.%n%nSi tienes la app de Claude abierta, ciérrala y vuelve a abrirla para que vea tus clases.
+es.FinishedLabelNoIcons=Estudio está instalado. La primera vez que lo abras te ayudará a poner tus asignaturas y tu horario en un par de minutos.%n%nSi tienes la app de Claude abierta, ciérrala y vuelve a abrirla para que vea tus clases.
+es.FinishedLabel=Estudio está instalado. La primera vez que lo abras te ayudará a poner tus asignaturas y tu horario en un par de minutos.%n%nSi tienes la app de Claude abierta, ciérrala y vuelve a abrirla para que vea tus clases.
 es.ClickFinish=
 es.WizardInstalling=Instalando
 es.InstallingLabel=Esto tarda un par de minutos.
@@ -70,7 +70,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 [Run]
 Filename: "{app}\{#Exe}"; Parameters: "--registrar-mcp"; StatusMsg: "Conectando con la app de Claude…"; Flags: runhidden waituntilterminated
 Filename: "{app}\{#Exe}"; Parameters: "--descargar-modelo"; StatusMsg: "Descargando el modelo de voz (hasta 1,6 GB la primera vez, puede tardar unos minutos)…"; Flags: runhidden waituntilterminated; BeforeInstall: BarraEnMovimiento
-Filename: "{app}\{#Exe}"; Description: "Abrir Agente de clases ahora"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\{#Exe}"; Description: "Abrir Estudio ahora"; Flags: postinstall nowait skipifsilent
 ; Al actualizar desde la propia app (instalación silenciosa), vuelve a abrirla sola
 Filename: "{app}\{#Exe}"; Flags: nowait; Check: WizardSilent
 
@@ -125,11 +125,11 @@ begin
     Desde := '';
     if VersionInstalada <> '' then
       Desde := ' (tienes la ' + VersionInstalada + ')';
-    WizardForm.PageNameLabel.Caption := 'Actualizar Agente de clases';
+    WizardForm.PageNameLabel.Caption := 'Actualizar Estudio';
     WizardForm.PageDescriptionLabel.Caption := 'Ya lo tienes instalado' + Desde + '.';
     WizardForm.ReadyLabel.Caption := 'Se instalará la versión {#Version} encima de la que tienes.' + #13#10 + #13#10 +
       'Tus clases, tu horario y tus ajustes se quedan como están.' + #13#10 +
-      'Si el agente está abierto, se cerrará para actualizarlo.';
+      'Si Estudio está abierto, se cerrará para actualizarlo.';
     WizardForm.ReadyMemo.Visible := False;
     WizardForm.NextButton.Caption := 'Actualizar';
   end;
