@@ -4,6 +4,14 @@ Cada versión publicada en Releases toma sus notas de aquí (la sección `## X.Y
 
 Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nuevo en una sección `### Panel`: los paneles con una versión más vieja avisan y lo enseñan.
 
+## 1.3.0
+
+### Novedades
+- Resúmenes con cualquier modelo compatible con OpenAI: ChatGPT, Ollama, LM Studio, llama.cpp o Gemma 4 en Cloudflare Workers AI. Se configura en el asistente, con ayuda para cada servicio.
+- Con modelos en tu ordenador no hace falta clave.
+- Si el modelo devuelve el resumen incompleto, se le pide otra vez; si sigue mal, verás el motivo.
+- El asistente avisa de que, con un servicio externo, el texto de las clases sale del ordenador (el audio no).
+
 ## 1.2.0
 
 ### Novedades

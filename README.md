@@ -21,7 +21,7 @@ La primera vez que abras la app, un asistente te ayuda a:
 1. Poner tu nombre y aceptar el aviso de permiso para grabar.
 2. Añadir tus asignaturas y tu horario (a mano o leyendo una captura con Claude).
 3. Elegir el micrófono y probarlo.
-4. Decidir cómo hacer los resúmenes: con tu cuenta de Claude Pro o Max (recomendado) o con una clave de API de Claude o Gemini.
+4. Decidir cómo hacer los resúmenes: con tu cuenta de Claude Pro o Max (recomendado) o con una clave de API de Claude o Gemini, o con cualquier modelo compatible con OpenAI (ChatGPT, Ollama, LM Studio, Cloudflare…).
 
 Después Estudio se queda junto al reloj y graba solo según tu horario.
 
@@ -29,8 +29,35 @@ Después Estudio se queda junto al reloj y graba solo según tu horario.
 
 - **Transcripción en local:** el audio nunca sale de tu ordenador.
 - **Resúmenes con tu cuenta de Claude:** publicas tu propio panel "Mis clases" en Claude ([instrucciones](hub/PUBLICAR.md)) y los resúmenes se hacen con tu suscripción. Ves tus clases desde el móvil o cualquier ordenador.
-- **Resúmenes con clave de API (opcional):** si pones una clave de Claude o Gemini, el resumen se hace solo en tu ordenador al acabar la clase.
+- **Resúmenes con clave de API (opcional):** si pones una clave de Claude o Gemini, o configuras un modelo compatible con OpenAI, el resumen se hace solo en tu ordenador al acabar la clase.
+- **Privacidad:** el audio y la transcripción se quedan siempre en tu ordenador. Con un servicio externo (Claude, Gemini, OpenAI, Cloudflare…) el texto de la transcripción sí se envía a ese servicio para resumirlo; con un modelo local (Ollama, LM Studio…) no sale nada. Enviar el contenido de las clases a un tercero también puede estar sujeto a las normas de tu universidad.
 - Tus datos se guardan en `Documentos\AgenteClases` (Windows) o en `~/.local/share/estudio`, con la configuración en `~/.config/estudio` (Linux).
+
+## Resúmenes con otros modelos
+
+En el asistente (o en `config.json`, dentro de `ajustes`) elige el proveedor `openai`: sirve cualquier servicio con endpoint `/chat/completions` al estilo de OpenAI.
+
+| Servicio | `openai_base_url` | `modelo_openai` (ejemplo) | Clave |
+|---|---|---|---|
+| OpenAI | `https://api.openai.com/v1` | el que quieras | Sí |
+| Ollama | `http://localhost:11434/v1` | el que hayas descargado | No |
+| LM Studio | `http://localhost:1234/v1` | el que hayas cargado | No |
+| llama.cpp | `http://localhost:8080/v1` | el que sirvas | No |
+| Cloudflare Workers AI | `https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1` | `@cf/google/gemma-4-26b-a4b-it` | Token con permisos Workers AI (Read y Edit) |
+
+```json
+"ajustes": {
+  "proveedor": "openai",
+  "openai_base_url": "http://localhost:11434/v1",
+  "modelo_openai": "el-modelo-que-sea",
+  "openai_api_key": ""
+}
+```
+
+- La clave también puede ir en la variable de entorno `OPENAI_API_KEY`. Con modelos locales puede quedar vacía.
+- Los modelos pequeños no siempre devuelven JSON válido: Estudio lo pide en las instrucciones, comprueba que estén todos los campos y, si no, pide la respuesta otra vez una vez. Si sigue mal, la clase queda con el error y se reintenta más tarde (la transcripción no se pierde).
+- Los servidores locales suelen recortar el contexto sin avisar: sube `num_ctx` en Ollama o "Context Length" en LM Studio, porque una clase son muchos tokens.
+- Cloudflare: el plan gratuito da 10.000 neurons al día, que se reinician a las 00:00 UTC. Si se agotan, el mensaje de error muestra lo que responde el servicio.
 
 ## Aviso legal
 
@@ -43,7 +70,7 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 - `docs/`: la web de la app (GitHub Pages), con la guía de diseño "Jornada" en `docs/DISENO.md`.
 - `packaging/`: icono, imágenes y script del instalador (Inno Setup), y `linux/install.sh` para instalar desde el código en Linux.
 - `CAMBIOS.md`: novedades de cada versión (salen en Releases y en el aviso de actualización).
-- `tests/`: pruebas (`python tests/test_horario.py` y `python tests/test_linux.py`).
+- `tests/`: pruebas (`python tests/test_horario.py`, `python tests/test_linux.py` y `python tests/test_resumen.py`).
 
 Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, y PortAudio).
 
