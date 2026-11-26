@@ -9,6 +9,7 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 ### Novedades
 - Resúmenes con cualquier modelo compatible con OpenAI: ChatGPT, Ollama, LM Studio, llama.cpp o Gemma 4 en Cloudflare Workers AI. Se configura en el asistente, con ayuda para cada servicio.
 - Con modelos en tu ordenador no hace falta clave.
+- Funciona igual en Windows y en Linux.
 - Si el modelo devuelve el resumen incompleto, se le pide otra vez; si sigue mal, verás el motivo.
 - El asistente avisa de que, con un servicio externo, el texto de las clases sale del ordenador (el audio no).
 

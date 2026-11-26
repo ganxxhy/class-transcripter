@@ -35,7 +35,7 @@ Después Estudio se queda junto al reloj y graba solo según tu horario.
 
 ## Resúmenes con otros modelos
 
-En el asistente (o en `config.json`, dentro de `ajustes`) elige el proveedor `openai`: sirve cualquier servicio con endpoint `/chat/completions` al estilo de OpenAI.
+En el asistente (o en `config.json`, dentro de `ajustes`; en Linux está en `~/.config/estudio`) elige el proveedor `openai`: sirve cualquier servicio con endpoint `/chat/completions` al estilo de OpenAI.
 
 | Servicio | `openai_base_url` | `modelo_openai` (ejemplo) | Clave |
 |---|---|---|---|
