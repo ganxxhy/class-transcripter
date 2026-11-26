@@ -344,7 +344,27 @@ jobs:
             printf '%s\n\nWindows: Estudio-%s-instalador.exe\n\nLinux: Estudio-%s-x86_64.AppImage (chmod +x).\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" "$v" > notas.md
             gh release create "$TAG" --verify-tag --draft --title "Estudio $v" --notes-file notas.md
           fi
-          gh release upload "$TAG" entrega/* --clobber
+          gh release view "$TAG" --json name,body > metadata.json
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          tag = os.environ["TAG"]
+          version = tag[1:]
+          base = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/releases"
+          metadata = json.loads(Path("metadata.json").read_text())
+          manifest = {"schema": 1, "version": version, "titulo": metadata["name"],
+                      "notas": metadata["body"], "url": f"{base}/tag/{tag}"}
+          for platform, name in (("windows", f"Estudio-{version}-instalador.exe"),
+                                 ("linux", f"Estudio-{version}-x86_64.AppImage")):
+              path = Path("entrega") / name
+              with path.open("rb") as stream:
+                  digest = hashlib.file_digest(stream, "sha256").hexdigest()
+              manifest[platform] = {"url": f"{base}/download/{tag}/{name}",
+                                    "sha256": digest, "size": path.stat().st_size}
+          Path("entrega/update.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+          PY
+          gh release upload "$TAG" entrega/*.exe entrega/*.AppImage entrega/SHA256SUMS.txt --clobber
+          gh release upload "$TAG" entrega/update.json --clobber
           gh release view "$TAG" --json assets > assets.json
           for archivo in entrega/*; do
             nombre=$(basename "$archivo")
