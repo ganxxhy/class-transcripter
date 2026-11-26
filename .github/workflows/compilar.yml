@@ -20,18 +20,54 @@ on:
       - "tests/**"
       - ".github/workflows/compilar.yml"
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Etiqueta existente para recuperar una release (vacío: prueba)'
+        required: false
+        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.ref.outputs.tag }}
+      ref: ${{ steps.ref.outputs.ref }}
+      version: ${{ steps.ref.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validar referencia y versión
+        id: ref
+        env:
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        run: |
+          tag="$REQUESTED_TAG"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            if [[ -n "$tag" && "$tag" != "$GITHUB_REF_NAME" ]]; then exit 1; fi
+            tag="$GITHUB_REF_NAME"
+          fi
+          ref="$GITHUB_SHA"
+          version="0.0.$GITHUB_RUN_NUMBER"
+          if [[ -n "$tag" ]]; then
+            [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+            ref=$(git rev-parse --verify "refs/tags/$tag^{commit}")
+            version="${tag#v}"
+          fi
+          printf 'tag=%s\nref=%s\nversion=%s\n' "$tag" "$ref" "$version" >> "$GITHUB_OUTPUT"
+
   windows:
+    needs: preparar
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # las etiquetas hacen falta para las notas de la versión
+          fetch-depth: 0
+          ref: ${{ needs.preparar.outputs.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -45,15 +81,17 @@ jobs:
           pip install -r agente/requirements.txt pyinstaller
 
       - name: Pruebas
+        shell: bash
         run: |
           python tests/test_horario.py
           python tests/test_resumen.py
+          if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
       - name: Versión
         id: version
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.${GITHUB_RUN_NUMBER}"; fi
+          v="${{ needs.preparar.outputs.version }}"
           echo "v=$v" >> "$GITHUB_OUTPUT"
 
       - name: Escribir la versión en la app
@@ -139,12 +177,14 @@ jobs:
           if-no-files-found: error
 
   linux:
+    needs: preparar
     runs-on: ubuntu-22.04  # una glibc antigua: así el AppImage funciona en más distribuciones
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.preparar.outputs.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -169,11 +209,12 @@ jobs:
           python tests/test_horario.py
           python tests/test_linux.py
           python tests/test_resumen.py
+          if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
       - name: Versión
         id: version
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.${GITHUB_RUN_NUMBER}"; fi
+          v="${{ needs.preparar.outputs.version }}"
           echo "v=$v" >> "$GITHUB_OUTPUT"
           printf 'VERSION = "%s"\n' "$v" > agente/version.py
 
@@ -218,7 +259,13 @@ jobs:
           EOF
           printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/usr/lib/estudio/Estudio" "$@"\n' > AppDir/AppRun
           chmod +x AppDir/AppRun
-          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          # Versión estable y verificación de integridad; reintentar errores transitorios (p. ej. HTTP 504).
+          curl --fail --silent --show-error --location \
+            --retry 5 --retry-connrefused --retry-max-time 300 \
+            --connect-timeout 20 --max-time 120 \
+            --output appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          echo "ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  appimagetool" | sha256sum --check
           chmod +x appimagetool
           ARCH=x86_64 ./appimagetool --appimage-extract-and-run AppDir "Estudio-$v-x86_64.AppImage"
 
@@ -253,29 +300,80 @@ jobs:
           if-no-files-found: error
 
   publicar:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, linux]
+    if: needs.preparar.outputs.tag != ''
+    needs: [preparar, windows, linux]
+    permissions:
+      contents: write
+    concurrency:
+      group: release-${{ needs.preparar.outputs.tag }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # las etiquetas hacen falta para las notas de la versión
-
+          fetch-depth: 0
+          ref: ${{ needs.preparar.outputs.ref }}
       - uses: actions/download-artifact@v4
         with:
           path: artefactos
-
+      - name: Validar instaladores y generar checksums
+        env:
+          VERSION: ${{ needs.preparar.outputs.version }}
+        run: |
+          mkdir entrega
+          cp "artefactos/Estudio-$VERSION-instalador/Estudio-$VERSION-instalador.exe" entrega/
+          cp "artefactos/Estudio-$VERSION-appimage/Estudio-$VERSION-x86_64.AppImage" entrega/
+          cd entrega
+          test -s "Estudio-$VERSION-instalador.exe"
+          test -s "Estudio-$VERSION-x86_64.AppImage"
+          sha256sum *.exe *.AppImage > SHA256SUMS.txt
       - name: Publicar en Releases
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.preparar.outputs.tag }}
+          SOURCE_SHA: ${{ needs.preparar.outputs.ref }}
         run: |
-          v="${GITHUB_REF_NAME#v}"
-          # Notas: la sección "## v" de CAMBIOS.md; si no hay, los títulos de las PR desde la versión anterior
-          notas=$(awk -v v="## $v" '$0==v{f=1;next} /^## /{f=0} f' CAMBIOS.md | sed '/./,$!d')
-          if [ -z "$notas" ]; then
-            anterior=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
-            rango=${anterior:+$anterior..}$GITHUB_REF_NAME
-            notas=$(git log "$rango" --merges --pretty='- %b' | grep -v '^- $' || true)
+          v="${TAG#v}"
+          # Confirmar que la etiqueta no ha cambiado desde la compilación.
+          git fetch origin "refs/tags/$TAG:refs/tags/$TAG"
+          test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$SOURCE_SHA"
+          if ! gh release view "$TAG" --json isDraft > release.json; then
+            notas=$(awk -v v="## $v" '$0==v{f=1;next} /^## /{f=0} f' CAMBIOS.md | sed '/./,$!d')
+            if [ -z "$notas" ]; then
+              anterior=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
+              rango=${anterior:+$anterior..}$TAG
+              notas=$(git log "$rango" --merges --pretty='- %b' | grep -v '^- $' || true)
+            fi
+            printf '%s\n\nWindows: Estudio-%s-instalador.exe\n\nLinux: Estudio-%s-x86_64.AppImage (chmod +x).\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" "$v" > notas.md
+            gh release create "$TAG" --verify-tag --draft --title "Estudio $v" --notes-file notas.md
           fi
-          printf '%s\n\n---\n**Windows:** descarga **Estudio-%s-instalador.exe**, ábrelo y sigue los pasos (Windows 10 u 11 de 64 bits).\n\n**Linux:** descarga **Estudio-%s-x86_64.AppImage**, hazlo ejecutable (`chmod +x`) y ábrelo.\n\nSi ya lo tienes, la app te avisará y se actualizará sola.\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" "$v" > notas.md
-          gh release create "$GITHUB_REF_NAME" artefactos/*/*.exe artefactos/*/*.AppImage --title "Estudio $v" --notes-file notas.md
+          gh release view "$TAG" --json name,body > metadata.json
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          tag = os.environ["TAG"]
+          version = tag[1:]
+          base = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/releases"
+          metadata = json.loads(Path("metadata.json").read_text())
+          manifest = {"schema": 1, "version": version, "titulo": metadata["name"],
+                      "notas": metadata["body"], "url": f"{base}/tag/{tag}"}
+          for platform, name in (("windows", f"Estudio-{version}-instalador.exe"),
+                                 ("linux", f"Estudio-{version}-x86_64.AppImage")):
+              path = Path("entrega") / name
+              with path.open("rb") as stream:
+                  digest = hashlib.file_digest(stream, "sha256").hexdigest()
+              manifest[platform] = {"url": f"{base}/download/{tag}/{name}",
+                                    "sha256": digest, "size": path.stat().st_size}
+          Path("entrega/update.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+          PY
+          gh release upload "$TAG" entrega/*.exe entrega/*.AppImage entrega/SHA256SUMS.txt --clobber
+          gh release upload "$TAG" entrega/update.json --clobber
+          gh release view "$TAG" --json assets > assets.json
+          for archivo in entrega/*; do
+            nombre=$(basename "$archivo")
+            tamano=$(stat -c %s "$archivo")
+            jq -e --arg n "$nombre" --argjson s "$tamano" '.assets | any(.name == $n and .size == $s)' assets.json
+          done
+          if [[ "$(gh release view "$TAG" --json isDraft --jq .isDraft)" == true ]]; then
+            gh release edit "$TAG" --draft=false
+          fi

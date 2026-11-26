@@ -9,6 +9,9 @@ Actualizar = descargar el instalador de la versión nueva y ejecutarlo en modo s
 cierra el agente, instala encima conservando clases y ajustes, y lo vuelve a abrir.
 En Linux (AppImage) se descarga el AppImage nuevo, se pone encima del actual y se vuelve a abrir.
 """
+import hashlib
+import time
+import urllib.error
 import json
 import os
 import re
@@ -23,6 +26,9 @@ from version import VERSION
 
 REPO = "ganxxhy/class-transcripter"
 API = f"https://api.github.com/repos/{REPO}/releases"
+MANIFEST = f"https://github.com/{REPO}/releases/latest/download/update.json"
+ultimo_error = ""
+_cache = None
 AQUI = os.path.dirname(os.path.abspath(__file__))
 ES_LINUX = sys.platform.startswith("linux")
 # Release asset that matches this platform
@@ -61,12 +67,64 @@ def _resumen(release):
     }
 
 
-def buscar():
-    """Última versión publicada, o None si no hay ninguna (o no hay internet)."""
+def _manifest_info(data):
+    version = data["version"]
+    if data["schema"] != 1 or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+        raise ValueError("Manifiesto inválido")
+    asset = data["linux" if ES_LINUX else "windows"]
+    name = f"Estudio-{version}-x86_64.AppImage" if ES_LINUX else f"Estudio-{version}-instalador.exe"
+    url = f"https://github.com/{REPO}/releases/download/v{version}/{name}"
+    if asset["url"] != url or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]) or type(asset["size"]) is not int or asset["size"] <= 0:
+        raise ValueError("Instalador inválido")
+    return {"version": version, "titulo": data.get("titulo") or version,
+            "notas": data.get("notas") or "", "fecha": "",
+            "url": f"https://github.com/{REPO}/releases/tag/v{version}",
+            "instalador": url, "tamano": asset["size"], "sha256": asset["sha256"]}
+
+
+def _registrar_error(ex):
     try:
-        return _resumen(_get(API + "/latest"))
-    except Exception:
-        return None
+        os.makedirs(config.RUTA_DATOS, exist_ok=True)
+        with open(os.path.join(config.RUTA_DATOS, "actualizacion.log"), "a", encoding="utf-8") as f:
+            f.write(time.strftime("%Y-%m-%d %H:%M:%S") + " " + repr(ex) + "\n")
+    except OSError:
+        pass
+
+
+def buscar(forzar=False):
+    """Manifiesto público primero; API REST para releases antiguas."""
+    global _cache, ultimo_error
+    ultimo_error = ""
+    if not forzar and _cache and time.monotonic() - _cache[0] < 300:
+        return _cache[1]
+    try:
+        info = _manifest_info(_get(MANIFEST))
+    except Exception as ex:
+        _registrar_error(ex)
+        try:
+            info = _resumen(_get(API + "/latest"))
+        except Exception as error:
+            _registrar_error(error)
+            ultimo_error = "No se pudo consultar GitHub. Inténtalo más tarde."
+            if isinstance(error, urllib.error.HTTPError) and error.code in (403, 429):
+                ultimo_error = "GitHub ha limitado las consultas. Inténtalo más tarde o visita Releases."
+            return None
+    _cache = (time.monotonic(), info)
+    return info
+
+
+def _verificar_descarga(path, info):
+    size = info.get("tamano")
+    if size and os.path.getsize(path) != size:
+        raise RuntimeError("La descarga está incompleta.")
+    digest = info.get("sha256")
+    if digest:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for block in iter(lambda: f.read(1024 * 1024), b""):
+                h.update(block)
+        if h.hexdigest() != digest:
+            raise RuntimeError("El checksum del instalador no coincide.")
 
 
 def notas_de(version):
@@ -185,6 +243,7 @@ class Api:
                         break
                     f.write(bloque)
                     e["hecho"] += len(bloque)
+            _verificar_descarga(destino + ".part", self._info)
             os.replace(destino + ".part", destino)
             e["estado"] = "instalando"
             # El instalador cierra el agente, actualiza y lo vuelve a abrir solo
@@ -213,6 +272,7 @@ class Api:
                         break
                     f.write(bloque)
                     e["hecho"] += len(bloque)
+            _verificar_descarga(parte, self._info)
             os.chmod(parte, 0o755)
             e["estado"] = "instalando"
             os.replace(parte, actual)  # the running copy keeps its own inode, so this is safe
@@ -246,7 +306,7 @@ def comprobar_y_avisar(forzar=False):
     """--buscar-actualizacion: abre la ventana solo si hay algo nuevo que no se haya saltado."""
     info = buscar()
     revisar_panel(info)
-    if not info or not es_mas_nueva(info["version"]):
+    if not info or not info.get("instalador") or not es_mas_nueva(info["version"]):
         return
     if not forzar and _ajuste("version_saltada") == info["version"]:
         return

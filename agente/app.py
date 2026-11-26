@@ -91,13 +91,13 @@ class App:
         import actualizacion
 
         def hilo():
-            info = actualizacion.buscar()
+            info = actualizacion.buscar(forzar=True)
             actualizacion.revisar_panel(info)
             def responder():
                 if info and actualizacion.es_mas_nueva(info["version"]):
                     subprocess.Popen(_comando("--buscar-actualizacion", "--forzar"))
                 elif info is None:
-                    messagebox.showinfo("Actualizaciones", "No he podido comprobarlo. Revisa la conexión a internet.")
+                    messagebox.showinfo("Actualizaciones", actualizacion.ultimo_error or "No he podido comprobar las actualizaciones.")
                 else:
                     messagebox.showinfo("Actualizaciones", f"Ya tienes la última versión ({VERSION}).")
             self.root.after(0, responder)
