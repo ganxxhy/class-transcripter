@@ -51,6 +51,17 @@ def test_claude_config_path_linux():
         assert os.path.join(t, "Claude", "claude_desktop_config.json") in r
 
 
+def test_desktop_files():
+    with tempfile.TemporaryDirectory() as t:
+        r = _run("import os, json, linux_desktop as l; l.install(); p = l._paths(); "
+                 "out = {k: os.path.exists(v) for k, v in p.items()}; "
+                 "out['exec'] = [x for x in open(p['autostart'], encoding='utf-8').read().splitlines() if x.startswith('Exec=')][0]; "
+                 "l.uninstall(); out['gone'] = not os.path.exists(p['autostart']); print(json.dumps(out))",
+                 XDG_DATA_HOME=t + "/d", XDG_CONFIG_HOME=t + "/c", APPIMAGE="/home/u/Mi Estudio.AppImage")
+        assert r["launcher"] and r["autostart"] and r["gone"]
+        assert r["exec"] == 'Exec="/home/u/Mi Estudio.AppImage" --inicio'
+
+
 def test_mcp_mode_answers_initialize():
     msg = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
            "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}}
@@ -62,5 +73,5 @@ def test_mcp_mode_answers_initialize():
 
 if __name__ == "__main__":
     test_xdg_paths(); test_data_env_wins(); test_source_mode_unchanged()
-    test_mcp_entry_appimage(); test_claude_config_path_linux(); test_mcp_mode_answers_initialize()
+    test_mcp_entry_appimage(); test_claude_config_path_linux(); test_desktop_files(); test_mcp_mode_answers_initialize()
     print("OK")

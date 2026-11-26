@@ -4,6 +4,8 @@ Opciones (las usa el instalador):
   --asistente       abre el asistente de configuración
   --inicio          arranque con la sesión: escucha en automático y se queda junto al reloj
   --mcp             arranca el servidor MCP por stdio (lo usa la app de Claude con el AppImage)
+  --integrar        (Linux) crea el lanzador del menú y el arranque con la sesión
+  --quitar-integracion  (Linux) los borra
   --registrar-mcp   conecta el agente con la app de escritorio de Claude
   --quitar-mcp      lo desconecta (al desinstalar)
   --descargar-modelo  descarga el modelo de voz que toca para este ordenador
@@ -328,7 +330,11 @@ class App:
             )
             self.icono = pystray.Icon("agente_clases", img, "Estudio", menu)
             self.icono.run_detached()
-        self.root.withdraw()
+        if sys.platform.startswith("linux"):
+            # The tray icon may not show (Wayland, GNOME without AppIndicator): keep the window in the taskbar
+            self.root.iconify()
+        else:
+            self.root.withdraw()
         return True
 
     def _mostrar(self):
@@ -454,6 +460,10 @@ def main():
         import mcp_servidor
         mcp_servidor.main()
         return
+    if "--integrar" in args or "--quitar-integracion" in args:
+        import linux_desktop
+        (linux_desktop.uninstall if "--quitar-integracion" in args else linux_desktop.install)()
+        return
     if "--asistente" in args:
         from asistente.asistente import ejecutar
         ejecutar()
@@ -481,6 +491,9 @@ def main():
             return  # cerró el asistente sin terminar
     from nucleo.config import escribir_puntero
     escribir_puntero()
+    if sys.platform.startswith("linux"):
+        import linux_desktop
+        linux_desktop.refresh_if_stale()
     root = tk.Tk()
     App(root, inicio="--inicio" in args)
     root.mainloop()

@@ -204,7 +204,7 @@ def _ventana(info, modo):
         html = f.read()
     api._ventana = webview.create_window("Estudio", html=html, js_api=api, width=640, height=600,
                                          min_size=(520, 480), background_color="#CFE6FF")
-    webview.start()
+    webview.start(gui="qt" if sys.platform.startswith("linux") else None)
 
 
 def comprobar_y_avisar(forzar=False):
