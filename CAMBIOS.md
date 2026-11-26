@@ -15,6 +15,7 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 - Con modelos en tu ordenador no hace falta clave.
 - Si el modelo devuelve el resumen incompleto, se le pide otra vez; si sigue mal, verás el motivo.
 - El asistente avisa de que, con un servicio externo, el texto de las clases sale del ordenador (el audio no).
+- Al leer el horario de una captura puedes copiar el mensaje y pegarlo en la IA que prefieras, no solo en Claude.
 
 ### Panel
 - Encuentra la configuración aunque no esté junto a los datos (Linux).

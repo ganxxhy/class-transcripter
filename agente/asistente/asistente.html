@@ -354,8 +354,13 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight
     <h2>Leer el horario de una captura</h2>
     <p style="color:var(--fg2)">1. Abre Claude con las instrucciones ya escritas, adjunta la captura de tu horario y envíalo.</p>
     <div><button type="button" class="btn oscuro" id="btnAbrirHorario">Abrir Claude<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></button></div>
+    <div class="fila" style="gap:8px;flex-wrap:wrap">
+      <span class="ayuda">¿No usas Claude? Copia el mensaje y pégaselo a la IA que quieras (ChatGPT, Gemini…) junto con la captura.</span>
+      <button type="button" class="btn-texto acento" id="btnCopiarHorario" style="height:32px">Copiar mensaje</button>
+    </div>
+    <textarea id="promptManual" readonly hidden aria-label="Mensaje para copiar" style="height:90px"></textarea>
     <p style="color:var(--fg2)">2. Copia lo que te conteste y pégalo aquí.</p>
-    <textarea id="capturaTexto" aria-label="Respuesta de Claude" placeholder='{"asignaturas": [...], "horario": [...]}'></textarea>
+    <textarea id="capturaTexto" aria-label="Respuesta de la IA" placeholder='{"asignaturas": [...], "horario": [...]}'></textarea>
     <div class="error" id="capturaError" hidden></div>
     <div class="dlg-pie"><div class="der"><button type="button" class="btn-texto" data-cerrar>Cancelar</button><button class="btn" value="ok" style="height:40px">Importar</button></div></div>
   </form>
@@ -381,7 +386,7 @@ function simulada() {
   return {
     estado_inicial: async () => ({ perfil: {}, asignaturas: [], horario: [], ajustes: { modelo_whisper: "auto", proveedor: "claude", openai_base_url: "", modelo_openai: "" },
       colores: ["#2f5bd3", "#c25a1f", "#0f8a6a", "#8a3fb8", "#b07e00", "#c2366b", "#0e7c8c", "#5a6b1f"],
-      hardware: { texto: "Vista previa en el navegador." }, prompt_horario: "" }),
+      hardware: { texto: "Vista previa en el navegador." }, prompt_horario: "Mensaje de ejemplo para la vista previa." }),
     listar_micros: async () => [{ indice: 1, nombre: "Micrófono del portátil", defecto: true }, { indice: 2, nombre: "Auriculares USB", defecto: false }],
     iniciar_medidor: async () => ({ ok: true }), parar_medidor: async () => {},
     nivel: async () => { n += 0.4; return Math.abs(Math.sin(n)) * 0.8; },
@@ -392,7 +397,7 @@ function simulada() {
 }
 
 // ---------- estado ----------
-const E = { paso: 1, asignaturas: [], horario: [], colores: [], micros: [], urlHub: "" };
+const E = { paso: 1, asignaturas: [], horario: [], colores: [], micros: [], urlHub: "", promptHorario: "" };
 
 function pintarPasos() {
   $("#pasos").innerHTML = "";
@@ -577,8 +582,25 @@ $("#formClase").addEventListener("submit", (ev) => {
 });
 $("#claseBorrar").onclick = () => { E.horario = E.horario.filter((c) => c !== claseEditando); $("#dlgClase").close(); pintarHorario(); };
 
-$("#btnCaptura").onclick = () => { $("#capturaTexto").value = ""; $("#capturaError").hidden = true; $("#dlgCaptura").showModal(); };
+$("#btnCaptura").onclick = () => { $("#capturaTexto").value = ""; $("#capturaError").hidden = true; $("#promptManual").hidden = true; $("#dlgCaptura").showModal(); };
 $("#btnAbrirHorario").onclick = () => api("abrir_claude_horario");
+$("#btnCopiarHorario").onclick = async () => {
+  const boton = $("#btnCopiarHorario");
+  let ok = false;
+  try { ok = !!(await api("copiar", E.promptHorario)); } catch (e) { /* not available */ }
+  if (!ok) { try { await navigator.clipboard.writeText(E.promptHorario); ok = true; } catch (e) { /* the webview may block it */ } }
+  if (!ok) {
+    const t = document.createElement("textarea");
+    t.value = E.promptHorario; document.body.append(t); t.select();
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    t.remove();
+  }
+  // Last resort: show the text selected so it can be copied by hand
+  $("#promptManual").hidden = ok;
+  if (!ok) { $("#promptManual").value = E.promptHorario; $("#promptManual").focus(); $("#promptManual").select(); }
+  boton.textContent = ok ? "¡Copiado!" : "Cópialo a mano (Ctrl+C)";
+  setTimeout(() => { boton.textContent = "Copiar mensaje"; }, 3000);
+};
 $("#formCaptura").addEventListener("submit", (ev) => {
   try {
     const txt = $("#capturaTexto").value;
@@ -601,7 +623,7 @@ $("#formCaptura").addEventListener("submit", (ev) => {
     pintarHorario();
   } catch (e) {
     ev.preventDefault();
-    $("#capturaError").textContent = "No entiendo lo que has pegado. Copia la respuesta entera de Claude, con las llaves { }.";
+    $("#capturaError").textContent = "No entiendo lo que has pegado. Copia la respuesta entera de la IA, con las llaves { }.";
     $("#capturaError").hidden = false;
   }
 });
@@ -749,6 +771,7 @@ document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.
   E.asignaturas = s.asignaturas || [];
   E.horario = s.horario || [];
   E.colores = s.colores || [];
+  E.promptHorario = s.prompt_horario || "";
   E.microfono = s.ajustes.microfono || "";
   E.so = s.so || "win32";
   if (E.so !== "win32") $("#textoFin").textContent = "Estudio se queda abierto en segundo plano y empezará a escuchar solo en tu próxima clase.";

@@ -7,6 +7,7 @@ Se lanza con: AgenteClases.exe --asistente   (o python app.py --asistente)
 import json
 import os
 import shutil
+import subprocess
 import sys
 import threading
 import urllib.parse
@@ -167,6 +168,20 @@ class Api:
 
     def abrir_claude_panel(self):
         webbrowser.open("https://claude.ai/new?q=" + urllib.parse.quote(PROMPT_HUB))
+
+    def copiar(self, texto):
+        """Copy text with the system's clipboard tool (the embedded browser often blocks its own on Linux)."""
+        if not isinstance(texto, str) or not sys.platform.startswith("linux"):
+            return False
+        for cmd in (["wl-copy"], ["xclip", "-selection", "clipboard"], ["xsel", "--clipboard", "--input"]):
+            if shutil.which(cmd[0]):
+                try:
+                    subprocess.run(cmd, input=texto.encode("utf-8"), check=True, timeout=5,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    return True
+                except Exception:
+                    continue
+        return False
 
     def abrir(self, url):
         if isinstance(url, str) and url.startswith("https://"):
