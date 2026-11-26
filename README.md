@@ -14,7 +14,7 @@ Descarga `Estudio-…-x86_64.AppImage`, hazlo ejecutable (`chmod +x Estudio-*.Ap
 
 - Al acabar el asistente crea su lanzador en el menú y arranca con tu sesión. Si mueves el AppImage, se corrige solo al abrirlo.
 - En GNOME hace falta la extensión AppIndicator para ver el icono junto al reloj; si no, la ventana se minimiza.
-- No hay app de escritorio oficial de Claude para Linux que yo sepa, así que en Linux lo más sencillo es hacer los resúmenes con una clave de API de Claude o Gemini (paso «Resúmenes» del asistente). El panel «Mis clases» funciona con las apps de la comunidad que usen `~/.config/Claude`.
+- Si no tienes la app de escritorio de Claude (en Linux no hay una versión oficial confirmada), lo más sencillo es hacer los resúmenes con una clave de API de Claude o Gemini (paso «Resúmenes» del asistente). El panel «Mis clases» se conecta con las versiones de la comunidad que usen `~/.config/Claude`.
 
 La primera vez que abras la app, un asistente te ayuda a:
 
