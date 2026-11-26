@@ -34,7 +34,8 @@ def t_estado(_):
             panel = json.load(f)
     except Exception:
         panel = None
-    return {"asignaturas": cfg["asignaturas"], "horario": cfg["horario"], "agente": agente, "panel": panel}
+    return {"asignaturas": cfg["asignaturas"], "horario": cfg["horario"], "agente": agente, "panel": panel,
+            "nombre": (cfg.get("perfil") or {}).get("nombre", "")}
 
 
 def t_listar(_):
