@@ -80,6 +80,9 @@ class Api:
                 "modelo_whisper": aj.get("modelo_whisper", "auto"),
                 "proveedor": aj.get("proveedor", "claude"),
                 "tiene_clave": bool(config.api_key(cfg)),
+                "resumen_en_pc": config.resumen_en_pc(cfg),
+                "openai_base_url": aj.get("openai_base_url", ""),
+                "modelo_openai": aj.get("modelo_openai", ""),
                 "url_hub": aj.get("url_hub", ""),
             },
             "colores": config.COLORES,
@@ -101,10 +104,13 @@ class Api:
         aj["modelo_whisper"] = datos.get("modelo_whisper") or "auto"
         prov = datos.get("proveedor")
         clave = (datos.get("clave") or "").strip()
-        if prov in ("claude", "gemini"):
+        if prov in ("claude", "gemini", "openai"):
             aj["proveedor"] = prov
+            if prov == "openai":
+                aj["openai_base_url"] = (datos.get("base_url") or "").strip()
+                aj["modelo_openai"] = (datos.get("modelo_openai") or "").strip()
             if clave:
-                aj["gemini_api_key" if prov == "gemini" else "anthropic_api_key"] = clave
+                aj[{"gemini": "gemini_api_key", "openai": "openai_api_key"}.get(prov, "anthropic_api_key")] = clave
         if datos.get("url_hub"):
             aj["url_hub"] = datos["url_hub"].strip()
         aj["permiso_grabar"] = bool(datos.get("permiso"))

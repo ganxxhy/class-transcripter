@@ -243,13 +243,36 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight
         <label class="modo">
           <input type="radio" name="modo" value="clave">
           <div class="cuerpo">
-            <div class="t">Con una clave de API</div>
-            <div style="font-size:13px;line-height:1.55;color:var(--muted)">Si no tienes Claude Pro. El resumen se hace solo en tu ordenador al acabar cada clase. Vale una clave de Claude o de Gemini.</div>
+            <div class="t">Con una clave de API o un modelo propio</div>
+            <div style="font-size:13px;line-height:1.55;color:var(--muted)">Si no tienes Claude Pro. El resumen se hace solo en tu ordenador al acabar cada clase. Vale Claude, Gemini, ChatGPT o un modelo en tu propio ordenador (Ollama, LM Studio…).</div>
             <div class="fila">
-              <select id="proveedor" aria-label="Proveedor"><option value="claude">Claude</option><option value="gemini">Gemini</option></select>
+              <select id="proveedor" aria-label="Proveedor"><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="openai">Otro (compatible con OpenAI)</option></select>
               <input type="password" id="clave" aria-label="Clave de API" placeholder="Pega aquí tu clave" style="flex:1" autocomplete="off">
             </div>
+            <div id="bloqueOpenai" hidden style="display:flex;flex-direction:column;gap:10px">
+              <div class="campo">
+                <label for="servicio">Servicio</label>
+                <select id="servicio" aria-label="Servicio">
+                  <option value="openai">OpenAI (ChatGPT)</option>
+                  <option value="ollama">Ollama</option>
+                  <option value="lmstudio">LM Studio</option>
+                  <option value="llamacpp">llama.cpp</option>
+                  <option value="cloudflare">Cloudflare (Gemma 4)</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="baseUrl">Dirección del servidor</label>
+                <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1" autocomplete="off">
+              </div>
+              <div class="campo">
+                <label for="modeloOpenai">Modelo</label>
+                <input type="text" id="modeloOpenai" placeholder="Nombre del modelo" autocomplete="off">
+              </div>
+              <div class="ayuda" id="servicioAyuda"></div>
+            </div>
             <div class="ayuda" id="claveAyuda"></div>
+            <div class="aviso" id="avisoPrivacidad" hidden><div class="txt" style="font-size:13px;line-height:1.5">El audio no sale de tu ordenador, pero el texto de cada clase se enviará a este servicio para resumirlo. Comprueba que lo permiten las normas de tu universidad.</div></div>
           </div>
         </label>
         <div class="ayuda">Puedes usar las dos cosas a la vez, o dejarlo para más tarde en Ajustes.</div>
@@ -356,7 +379,7 @@ async function api(nombre, ...args) { const a = await apiPromesa; return a[nombr
 function simulada() {
   let n = 0;
   return {
-    estado_inicial: async () => ({ perfil: {}, asignaturas: [], horario: [], ajustes: { modelo_whisper: "auto", proveedor: "claude" },
+    estado_inicial: async () => ({ perfil: {}, asignaturas: [], horario: [], ajustes: { modelo_whisper: "auto", proveedor: "claude", openai_base_url: "", modelo_openai: "" },
       colores: ["#2f5bd3", "#c25a1f", "#0f8a6a", "#8a3fb8", "#b07e00", "#c2366b", "#0e7c8c", "#5a6b1f"],
       hardware: { texto: "Vista previa en el navegador." }, prompt_horario: "" }),
     listar_micros: async () => [{ indice: 1, nombre: "Micrófono del portátil", defecto: true }, { indice: 2, nombre: "Auriculares USB", defecto: false }],
@@ -622,9 +645,49 @@ $("#btnPanel").onclick = (ev) => { ev.preventDefault(); document.querySelector('
 const AYUDA_CLAVE = {
   claude: 'Consíguela en console.anthropic.com, en "API keys". Se guarda solo en tu ordenador.',
   gemini: 'Consíguela gratis en aistudio.google.com, en "Get API key". Se guarda solo en tu ordenador.',
+  openai: "La clave es opcional con modelos en tu ordenador. Se guarda solo en tu ordenador.",
 };
-$("#proveedor").onchange = () => { $("#claveAyuda").textContent = AYUDA_CLAVE[$("#proveedor").value]; };
-$("#clave").addEventListener("input", () => { if ($("#clave").value) document.querySelector('input[name=modo][value=clave]').checked = true; });
+const SERVICIOS = {
+  openai: { url: "https://api.openai.com/v1", modelo: "" },
+  ollama: { url: "http://localhost:11434/v1", modelo: "" },
+  lmstudio: { url: "http://localhost:1234/v1", modelo: "" },
+  llamacpp: { url: "http://localhost:8080/v1", modelo: "" },
+  cloudflare: { url: "https://api.cloudflare.com/client/v4/accounts/TU_ID_DE_CUENTA/ai/v1", modelo: "@cf/google/gemma-4-26b-a4b-it" },
+};
+const LOCAL_AYUDA = "No hace falta clave. El servidor tiene que estar abierto al acabar la clase. Sube el contexto del modelo (en Ollama, num_ctx; en LM Studio, Context Length): una clase son muchos tokens y, si no caben, se recortan sin avisar.";
+const AYUDA_SERVICIO = {
+  openai: "Consigue la clave en platform.openai.com, en «API keys». La suscripción de ChatGPT no incluye la API: se paga aparte. Escribe el nombre del modelo que quieras usar.",
+  ollama: LOCAL_AYUDA + " Escribe el nombre del modelo que hayas descargado.",
+  lmstudio: LOCAL_AYUDA,
+  llamacpp: LOCAL_AYUDA,
+  cloudflare: "Cambia TU_ID_DE_CUENTA por el ID de tu cuenta de Cloudflare. Crea un token de API con permisos de Workers AI (Read y Edit) y pégalo como clave. El plan gratuito da 10.000 neurons al día, que se reinician a las 00:00 UTC.",
+  otro: "Cualquier servicio que acepte el formato de OpenAI (/chat/completions).",
+};
+function esLocal(url) {
+  try { return ["localhost", "127.0.0.1", "[::1]", "0.0.0.0"].includes(new URL(url).hostname); } catch (e) { return false; }
+}
+function actualizarProveedor() {
+  const p = $("#proveedor").value;
+  $("#claveAyuda").textContent = AYUDA_CLAVE[p];
+  $("#bloqueOpenai").hidden = p !== "openai";
+  $("#clave").placeholder = p === "openai" ? "Pega aquí tu clave (opcional con modelos locales)" : "Pega aquí tu clave";
+  $("#servicioAyuda").textContent = AYUDA_SERVICIO[$("#servicio").value] || "";
+  $("#avisoPrivacidad").hidden = p === "openai" && esLocal($("#baseUrl").value.trim());
+}
+$("#proveedor").onchange = actualizarProveedor;
+$("#baseUrl").addEventListener("input", () => { actualizarProveedor(); marcarClave(); });
+$("#modeloOpenai").addEventListener("input", marcarClave);
+$("#servicio").onchange = () => {
+  const s = SERVICIOS[$("#servicio").value];
+  if (s) { $("#baseUrl").value = s.url; $("#modeloOpenai").value = s.modelo; }
+  actualizarProveedor();
+};
+function marcarClave() { document.querySelector('input[name=modo][value=clave]').checked = true; }
+function servicioPorUrl(url) {
+  const k = Object.keys(SERVICIOS).find((x) => SERVICIOS[x].url === url);
+  return k || (url.includes("api.cloudflare.com") ? "cloudflare" : "otro");
+}
+$("#clave").addEventListener("input", () => { if ($("#clave").value) marcarClave(); });
 
 // ---------- paso 5 ----------
 function proximaClase() {
@@ -664,6 +727,8 @@ async function terminarAsistente() {
     modelo_whisper: document.querySelector("input[name=calidad]:checked").value,
     proveedor: modo === "clave" ? $("#proveedor").value : null,
     clave: modo === "clave" ? $("#clave").value : "",
+    base_url: modo === "clave" ? $("#baseUrl").value.trim() : "",
+    modelo_openai: modo === "clave" ? $("#modeloOpenai").value.trim() : "",
     url_hub: E.urlHub,
   });
   if (!r || !r.ok) { $("#errorGuardar").textContent = "No he podido guardar la configuración: " + ((r && r.error) || "error desconocido"); $("#errorGuardar").hidden = false; }
@@ -693,9 +758,13 @@ document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.
   const cal = document.querySelector(`input[name=calidad][value="${s.ajustes.modelo_whisper}"]`);
   if (cal) cal.checked = true;
   $("#proveedor").value = s.ajustes.proveedor || "claude";
+  $("#baseUrl").value = s.ajustes.openai_base_url || SERVICIOS.openai.url;
+  $("#modeloOpenai").value = s.ajustes.modelo_openai || "";
+  $("#servicio").value = servicioPorUrl($("#baseUrl").value);
   $("#proveedor").onchange();
   if (s.ajustes.url_hub) $("#urlHub").value = s.ajustes.url_hub;
-  if (s.ajustes.tiene_clave) { document.querySelector('input[name=modo][value=clave]').checked = true; $("#clave").placeholder = "Ya tienes una clave guardada (déjalo vacío para mantenerla)"; }
+  if (s.ajustes.resumen_en_pc || s.ajustes.tiene_clave) { document.querySelector('input[name=modo][value=clave]').checked = true; }
+  if (s.ajustes.tiene_clave) $("#clave").placeholder = "Ya tienes una clave guardada (déjalo vacío para mantenerla)";
   irA(1);
   if (s.prueba) { irA(2); irA(3); await api("parar_medidor"); api("terminar", "prueba"); }
 })();
