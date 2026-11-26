@@ -5,7 +5,7 @@ name: Compilar Estudio
 # - También se puede lanzar a mano desde la pestaña Actions.
 on:
   push:
-    branches: [main]
+    branches: [main, fix/release-build-pipeline]
     tags: ["v*"]
     paths:
       - "agente/**"
@@ -218,7 +218,13 @@ jobs:
           EOF
           printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/usr/lib/estudio/Estudio" "$@"\n' > AppDir/AppRun
           chmod +x AppDir/AppRun
-          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          # Versión estable y verificación de integridad; reintentar errores transitorios (p. ej. HTTP 504).
+          curl --fail --silent --show-error --location \
+            --retry 5 --retry-connrefused --retry-max-time 300 \
+            --connect-timeout 20 --max-time 120 \
+            --output appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          echo "ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  appimagetool" | sha256sum --check
           chmod +x appimagetool
           ARCH=x86_64 ./appimagetool --appimage-extract-and-run AppDir "Estudio-$v-x86_64.AppImage"
 
