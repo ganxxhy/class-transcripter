@@ -36,8 +36,8 @@ def _a_16k(bloque, sr_in):
 
 
 def microfonos(refrescar=False):
-    """Entradas de audio de la API por defecto (en Windows, MME).
-    Con refrescar=True vuelve a preguntar a Windows (para micros conectados después de abrir la app)."""
+    """Entradas de audio de la API por defecto (en Windows, MME; en Linux, ALSA).
+    Con refrescar=True vuelve a preguntar al sistema (para micros conectados después de abrir la app)."""
     import sounddevice as sd
     if refrescar:
         try:
@@ -58,13 +58,13 @@ def microfonos(refrescar=False):
 
 
 def buscar_microfono(eleccion, log=print):
-    """Convierte lo guardado en config (nombre del micro, o None = el de Windows) en un índice."""
+    """Convierte lo guardado en config (nombre del micro, o None = el del sistema) en un índice."""
     if eleccion is None or eleccion == "":
         return None
     for m in microfonos():
         if m["nombre"] == eleccion or m["indice"] == eleccion:
             return m["indice"]
-    log(f"No encuentro el micrófono «{eleccion}»; uso el predeterminado de Windows.")
+    log(f"No encuentro el micrófono «{eleccion}»; uso el predeterminado del sistema.")
     return None
 
 

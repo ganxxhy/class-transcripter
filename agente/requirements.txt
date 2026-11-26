@@ -4,4 +4,5 @@ numpy
 anthropic>=2.13
 pystray
 pillow
-pywebview>=5.0
+pywebview>=5.0; sys_platform != "linux"
+pywebview[qt]>=5.0; sys_platform == "linux"

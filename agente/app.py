@@ -2,7 +2,8 @@
 
 Opciones (las usa el instalador):
   --asistente       abre el asistente de configuración
-  --inicio          arranque con Windows: escucha en automático y se queda junto al reloj
+  --inicio          arranque con la sesión: escucha en automático y se queda junto al reloj
+  --mcp             arranca el servidor MCP por stdio (lo usa la app de Claude con el AppImage)
   --registrar-mcp   conecta el agente con la app de escritorio de Claude
   --quitar-mcp      lo desconecta (al desinstalar)
   --descargar-modelo  descarga el modelo de voz que toca para este ordenador
@@ -185,7 +186,7 @@ class App:
 
         r.protocol("WM_DELETE_WINDOW", self.al_cerrar)
 
-    POR_DEFECTO = "Predeterminado de Windows"
+    POR_DEFECTO = "Predeterminado de Windows" if sys.platform == "win32" else "Predeterminado del sistema"
 
     def _cargar_mics(self, refrescar):
         """Rellena la lista de entradas. ↻ vuelve a buscar micros conectados después de abrir la app."""
@@ -449,6 +450,10 @@ class DialogoAjustes(tk.Toplevel):
 
 def main():
     args = sys.argv[1:]
+    if "--mcp" in args:
+        import mcp_servidor
+        mcp_servidor.main()
+        return
     if "--asistente" in args:
         from asistente.asistente import ejecutar
         ejecutar()
