@@ -39,8 +39,14 @@
     "dispositivo": "auto",
     "microfono": null,
     "idioma": "es",
+    "proveedor": "claude",
     "modelo_resumen": "claude-opus-5-5",
     "anthropic_api_key": "",
+    "modelo_gemini": "gemini-flash-latest",
+    "gemini_api_key": "",
+    "openai_base_url": "",
+    "modelo_openai": "",
+    "openai_api_key": "",
     "guardar_audio": false,
     "url_hub": ""
   }

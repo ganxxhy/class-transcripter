@@ -64,12 +64,16 @@ AJUSTES_POR_DEFECTO = {
     "dispositivo": "auto",
     "microfono": None,
     "idioma": "es",
-    # Resúmenes en el PC (opcional): "claude" o "gemini", cada uno con su clave
+    # Resúmenes en el PC (opcional): "claude", "gemini" u "openai" (cualquier servicio compatible
+    # con OpenAI: ChatGPT, Ollama, LM Studio, Cloudflare...), cada uno con su clave
     "proveedor": "claude",
     "modelo_resumen": "claude-opus-5-5",
     "anthropic_api_key": "",
     "modelo_gemini": "gemini-flash-latest",
     "gemini_api_key": "",
+    "openai_base_url": "",
+    "modelo_openai": "",
+    "openai_api_key": "",
     "guardar_audio": False,
     "url_hub": "",
 }
@@ -134,7 +138,17 @@ def api_key(cfg):
     aj = cfg["ajustes"]
     if aj.get("proveedor") == "gemini":
         return (aj.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or "").strip()
+    if aj.get("proveedor") == "openai":
+        return (aj.get("openai_api_key") or os.environ.get("OPENAI_API_KEY") or "").strip()
     return (aj.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY") or "").strip()
+
+
+def resumen_en_pc(cfg):
+    """True if summaries are generated on this PC (the OpenAI-compatible provider needs no key)."""
+    aj = cfg["ajustes"]
+    if aj.get("proveedor") == "openai":
+        return bool((aj.get("openai_base_url") or "").strip() and (aj.get("modelo_openai") or "").strip())
+    return bool(api_key(cfg))
 
 
 def nombre_asignatura(cfg, aid):
