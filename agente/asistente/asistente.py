@@ -1,6 +1,6 @@
 """Asistente de la primera vez: perfil, asignaturas y horario, micrófono, resúmenes.
 
-Es una ventana web (pywebview, con el motor Edge que ya trae Windows) para que se vea
+Es una ventana web (pywebview: Edge en Windows, Qt en Linux) para que se vea
 bien. La interfaz está en asistente.html y llama a la clase Api de aquí.
 Se lanza con: AgenteClases.exe --asistente   (o python app.py --asistente)
 """
@@ -16,6 +16,9 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(AQUI))
 
 from nucleo import config  # noqa: E402
+
+# On Linux the web windows use Qt: its wheels come from pip, so the AppImage carries everything
+GUI = "qt" if sys.platform.startswith("linux") else None
 
 REPO = "ganxxhy/class-transcripter"
 URL_HUB_HTML = f"https://raw.githubusercontent.com/{REPO}/main/hub/mis-clases.html"
@@ -83,6 +86,7 @@ class Api:
             "hardware": _hardware(),
             "prompt_horario": PROMPT_HORARIO,
             # Prueba automática (GitHub Actions): la página se cierra sola en cuanto arranca
+            "so": sys.platform,
             "prueba": bool(os.environ.get("AGENTE_CLASES_PRUEBA")),
         }
 
@@ -165,6 +169,15 @@ class Api:
     def terminar(self, siguiente=None):
         self.parar_medidor()
         self._terminado = siguiente or "agente"
+        if sys.platform.startswith("linux") and siguiente != "prueba":
+            # What the Windows installer does: launcher + autostart, and connect Claude's desktop app
+            try:
+                import linux_desktop
+                import registrar_mcp
+                linux_desktop.install()
+                registrar_mcp.registrar(log=lambda *_: None)
+            except Exception:
+                pass
         if siguiente == "prueba":
             os.makedirs(config.RAIZ, exist_ok=True)
             with open(os.path.join(config.RAIZ, "prueba-asistente.ok"), "w", encoding="utf-8") as f:
@@ -185,7 +198,7 @@ def ejecutar():
     api = Api()
     api._ventana = webview.create_window("Estudio", html=html(), js_api=api, width=1000, height=700,
                                         min_size=(900, 640), background_color="#CFE6FF")
-    webview.start()
+    webview.start(gui=GUI)
     api.parar_medidor()
     return api._terminado
 

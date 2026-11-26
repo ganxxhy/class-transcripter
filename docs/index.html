@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Estudio · tus clases grabadas y resumidas</title>
-<meta name="description" content="Estudio graba tus clases según tu horario, las transcribe en tu ordenador y te deja un resumen por temas con lo importante aparte. Gratis y de código abierto, para Windows.">
+<meta name="description" content="Estudio graba tus clases según tu horario, las transcribe en tu ordenador y te deja un resumen por temas con lo importante aparte. Gratis y de código abierto, para Windows y Linux.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..750&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
@@ -299,8 +299,8 @@ footer a{color:#fff}
       <span class="tag"><i></i>Gratis · código abierto · hecho para la universidad</span>
       <h1>Tus clases grabadas, resumidas y en orden</h1>
       <p class="lede">Estudio graba cada clase de tu horario, la transcribe en tu propio ordenador y te deja un resumen por temas, con los exámenes, entregas y avisos aparte.</p>
-      <div class="cta"><a class="btn sun" href="#descargar"><i data-i="win"></i>Descargar para Windows</a><a class="btn sec" href="#como">Cómo funciona<i data-i="arrow"></i></a></div>
-      <p class="platforms"><span><b>Windows</b> disponible</span><span>Linux, próximamente</span><span>macOS, en estudio</span></p>
+      <div class="cta"><a class="btn sun" href="#descargar"><i data-i="down"></i>Descargar</a><a class="btn sec" href="#como">Cómo funciona<i data-i="arrow"></i></a></div>
+      <p class="platforms"><span><b>Windows</b> disponible</span><span><b>Linux</b> disponible</span><span>macOS, en estudio</span></p>
     </div>
     <div class="stage">
       <div class="chip a" style="--c:var(--c-calc)"><span class="ico"><i data-i="spark"></i></span><span><b>Resumen listo</b><small>Cálculo II · por temas</small></span></div>
@@ -386,7 +386,7 @@ footer a{color:#fff}
         </div>
         <div>
           <h2 class="h2" id="horario-h">Pasa tu horario una vez y la app se encarga</h2>
-          <p class="lead">El asistente de primera vez te pide tus asignaturas y tu horario. Lo escribes a mano o haces una captura y Claude lo lee por ti. Después la app se queda junto al reloj de Windows y trabaja sola.</p>
+          <p class="lead">El asistente de primera vez te pide tus asignaturas y tu horario. Lo escribes a mano o haces una captura y Claude lo lee por ti. Después la app se queda junto al reloj (en Linux, abierta en segundo plano) y trabaja sola.</p>
           <div class="formats"><span>captura .png / .jpg</span><span>a mano</span></div>
         </div>
       </div>
@@ -427,16 +427,16 @@ footer a{color:#fff}
     <section class="chap wrap" id="descargar" aria-labelledby="dl-h">
       <div class="dl">
         <h2 class="h2" id="dl-h">Descarga Estudio</h2>
-        <p class="lead">Gratis, para Windows 10 y 11 de 64 bits. La versión para Linux está prevista y estamos valorando llevarla a macOS.</p>
+        <p class="lead">Gratis, para Windows 10 y 11 de 64 bits y para Linux de 64 bits. Estamos valorando llevarla a macOS.</p>
         <div class="dl-grid">
           <article class="os ready"><span class="st">Disponible</span><h3><i data-i="win"></i>Windows</h3><p>Instalador sin permisos de administrador. Si ya la tienes, solo se actualiza. <span class="ver" id="ver"></span></p><a class="btn sun" href="https://github.com/ganxxhy/class-transcripter/releases/latest"><i data-i="down"></i>Descargar para Windows</a></article>
-          <article class="os"><span class="st soon">Próximamente</span><h3><i data-i="linux"></i>Linux</h3><p>Prevista para más adelante. Sigue el repositorio para enterarte cuando salga.</p></article>
+          <article class="os ready"><span class="st">Disponible</span><h3><i data-i="linux"></i>Linux</h3><p>Un AppImage: descárgalo, hazlo ejecutable (<code>chmod +x</code>) y ábrelo. Se actualiza solo.</p><a class="btn sun" href="https://github.com/ganxxhy/class-transcripter/releases/latest"><i data-i="down"></i>Descargar para Linux</a></article>
           <article class="os"><span class="st maybe">En estudio</span><h3><i data-i="apple"></i>macOS</h3><p>Estamos valorando una versión para Mac. Si la necesitas, <a href="https://github.com/ganxxhy/class-transcripter/issues">cuéntanoslo en GitHub</a>.</p></article>
         </div>
         <div class="notes">
-          <div class="note"><h4>Qué necesitas</h4><ul><li>Windows 10 u 11 de 64 bits</li><li>Un micrófono (el del portátil vale)</li><li>Hasta 1,6 GB libres para el modelo de transcripción</li><li>Una cuenta de Claude para el panel</li></ul></div>
+          <div class="note"><h4>Qué necesitas</h4><ul><li>Windows 10 u 11 de 64 bits, o Linux de 64 bits</li><li>Un micrófono (el del portátil vale)</li><li>Hasta 1,6 GB libres para el modelo de transcripción</li><li>Una cuenta de Claude para el panel</li></ul></div>
           <div class="note"><h4>"Windows protegió tu PC"</h4><p>La app no está firmada, así que Windows puede avisarte al abrir el instalador. Pulsa <b>Más información</b> y luego <b>Ejecutar de todas formas</b>. El código es público para que veas qué instalas.</p></div>
-          <div class="note"><h4>Antes de grabar</h4><p>Pide permiso al profesorado y comprueba las normas de tu universidad. Tú eres responsable del uso de las grabaciones. Tus datos se guardan en <code>Documentos\AgenteClases</code>.</p></div>
+          <div class="note"><h4>Antes de grabar</h4><p>Pide permiso al profesorado y comprueba las normas de tu universidad. Tú eres responsable del uso de las grabaciones. Tus datos se guardan en <code>Documentos\AgenteClases</code> (Windows) o en <code>~/.local/share/estudio</code> (Linux).</p></div>
         </div>
       </div>
     </section>
@@ -463,7 +463,7 @@ footer a{color:#fff}
 
   <section class="close wrap" aria-labelledby="close-h">
     <h2 class="h2" id="close-h">Sal de clase con el resumen hecho</h2>
-    <div class="cta"><a class="btn sun" href="#descargar"><i data-i="win"></i>Descargar para Windows</a><a class="btn sec" href="https://github.com/ganxxhy/class-transcripter"><i data-i="gh"></i>Ver en GitHub</a></div>
+    <div class="cta"><a class="btn sun" href="#descargar"><i data-i="down"></i>Descargar</a><a class="btn sec" href="https://github.com/ganxxhy/class-transcripter"><i data-i="gh"></i>Ver en GitHub</a></div>
   </section>
 </main>
 

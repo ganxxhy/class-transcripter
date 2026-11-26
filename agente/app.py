@@ -2,7 +2,10 @@
 
 Opciones (las usa el instalador):
   --asistente       abre el asistente de configuración
-  --inicio          arranque con Windows: escucha en automático y se queda junto al reloj
+  --inicio          arranque con la sesión: escucha en automático y se queda junto al reloj
+  --mcp             arranca el servidor MCP por stdio (lo usa la app de Claude con el AppImage)
+  --integrar        (Linux) crea el lanzador del menú y el arranque con la sesión
+  --quitar-integracion  (Linux) los borra
   --registrar-mcp   conecta el agente con la app de escritorio de Claude
   --quitar-mcp      lo desconecta (al desinstalar)
   --descargar-modelo  descarga el modelo de voz que toca para este ordenador
@@ -31,6 +34,14 @@ from nucleo.config import CONGELADA, RUTA_DATOS, api_key, cargar, existe, guarda
 from nucleo.motor import Motor, microfonos  # noqa: E402
 import tema  # noqa: E402
 from version import VERSION  # noqa: E402
+
+if sys.platform.startswith("linux") and CONGELADA:
+    # PortAudio travels inside the bundle and ctypes cannot find it by name
+    _portaudio = os.path.join(getattr(sys, "_MEIPASS", ""), "libportaudio.so.2")
+    if os.path.exists(_portaudio):
+        import ctypes.util
+        _find_library = ctypes.util.find_library
+        ctypes.util.find_library = lambda n: _portaudio if n == "portaudio" else _find_library(n)
 
 os.makedirs(RUTA_DATOS, exist_ok=True)
 RUTA_LOG = os.path.join(RUTA_DATOS, "agente.log")
@@ -185,7 +196,7 @@ class App:
 
         r.protocol("WM_DELETE_WINDOW", self.al_cerrar)
 
-    POR_DEFECTO = "Predeterminado de Windows"
+    POR_DEFECTO = "Predeterminado de Windows" if sys.platform == "win32" else "Predeterminado del sistema"
 
     def _cargar_mics(self, refrescar):
         """Rellena la lista de entradas. ↻ vuelve a buscar micros conectados después de abrir la app."""
@@ -327,7 +338,11 @@ class App:
             )
             self.icono = pystray.Icon("agente_clases", img, "Estudio", menu)
             self.icono.run_detached()
-        self.root.withdraw()
+        if sys.platform.startswith("linux"):
+            # The tray icon may not show (Wayland, GNOME without AppIndicator): keep the window in the taskbar
+            self.root.iconify()
+        else:
+            self.root.withdraw()
         return True
 
     def _mostrar(self):
@@ -449,6 +464,14 @@ class DialogoAjustes(tk.Toplevel):
 
 def main():
     args = sys.argv[1:]
+    if "--mcp" in args:
+        import mcp_servidor
+        mcp_servidor.main()
+        return
+    if "--integrar" in args or "--quitar-integracion" in args:
+        import linux_desktop
+        (linux_desktop.uninstall if "--quitar-integracion" in args else linux_desktop.install)()
+        return
     if "--asistente" in args:
         from asistente.asistente import ejecutar
         ejecutar()
@@ -476,6 +499,9 @@ def main():
             return  # cerró el asistente sin terminar
     from nucleo.config import escribir_puntero
     escribir_puntero()
+    if sys.platform.startswith("linux"):
+        import linux_desktop
+        linux_desktop.refresh_if_stale()
     root = tk.Tk()
     App(root, inicio="--inicio" in args)
     root.mainloop()

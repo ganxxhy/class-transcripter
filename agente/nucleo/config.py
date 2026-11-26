@@ -3,6 +3,8 @@
 Dónde se guardan los datos:
 - App instalada (.exe): en Documentos\\AgenteClases del usuario, porque la carpeta del
   programa (Archivos de programa) no se puede escribir. El hub "Mis clases" la busca ahí.
+- App empaquetada en Linux (AppImage): config en ~/.config/estudio y datos en
+  ~/.local/share/estudio (XDG, respetando XDG_CONFIG_HOME y XDG_DATA_HOME).
 - Desde el código fuente: junto al código, como siempre.
 - La variable de entorno AGENTE_CLASES_DATOS manda sobre las dos.
 """
@@ -12,6 +14,7 @@ import sys
 import threading
 
 CONGELADA = bool(getattr(sys, "frozen", False))
+ES_LINUX = sys.platform.startswith("linux")
 # Carpeta del programa (donde están el .exe o app.py y los recursos)
 if CONGELADA:
     PROGRAMA = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
@@ -34,14 +37,21 @@ def _documentos():
     return os.path.join(os.path.expanduser("~"), "Documents")
 
 
+def _xdg(variable, por_defecto):
+    """Carpeta XDG del usuario (las rutas relativas no valen, según la especificación)."""
+    ruta = os.environ.get(variable, "")
+    return ruta if os.path.isabs(ruta) else os.path.join(os.path.expanduser("~"), por_defecto)
+
+
 if os.environ.get("AGENTE_CLASES_DATOS"):
     RAIZ = os.environ["AGENTE_CLASES_DATOS"]
-elif CONGELADA:
-    RAIZ = os.path.join(_documentos(), "AgenteClases")
+    RUTA_CONFIG = os.path.join(RAIZ, "config.json")
+elif CONGELADA and ES_LINUX:
+    RAIZ = os.path.join(_xdg("XDG_DATA_HOME", ".local/share"), "estudio")
+    RUTA_CONFIG = os.path.join(_xdg("XDG_CONFIG_HOME", ".config"), "estudio", "config.json")
 else:
-    RAIZ = PROGRAMA
-
-RUTA_CONFIG = os.path.join(RAIZ, "config.json")
+    RAIZ = os.path.join(_documentos(), "AgenteClases") if CONGELADA else PROGRAMA
+    RUTA_CONFIG = os.path.join(RAIZ, "config.json")
 RUTA_DATOS = os.path.join(RAIZ, "datos")
 
 _lock = threading.Lock()
@@ -77,7 +87,9 @@ RUTA_PUNTERO = os.path.join(os.path.expanduser("~"), ".agente-clases.json")
 def escribir_puntero():
     try:
         with open(RUTA_PUNTERO, "w", encoding="utf-8") as f:
-            json.dump({"carpeta": RAIZ.replace("\\", "/")}, f, ensure_ascii=False)
+            # "config" es nuevo: en Linux la config y los datos están en carpetas distintas
+            json.dump({"carpeta": RAIZ.replace("\\", "/"), "config": RUTA_CONFIG.replace("\\", "/")},
+                      f, ensure_ascii=False)
     except Exception:
         pass
 
@@ -109,7 +121,7 @@ def cargar():
 
 def guardar(cfg):
     with _lock:
-        os.makedirs(RAIZ, exist_ok=True)
+        os.makedirs(os.path.dirname(RUTA_CONFIG), exist_ok=True)
         tmp = RUTA_CONFIG + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)

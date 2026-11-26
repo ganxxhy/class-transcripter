@@ -40,7 +40,17 @@ def _cpu_potente():
 
 
 def _preparar_dlls_cuda():
-    """En Windows, las DLL de CUDA instaladas por pip (nvidia-cublas/cudnn) no se encuentran solas."""
+    """Las bibliotecas CUDA instaladas por pip (nvidia-cublas/cudnn) no se encuentran solas (Windows y Linux)."""
+    if sys.platform.startswith("linux"):
+        # Linux: preload the pip-installed CUDA libraries so ctranslate2 finds them
+        import ctypes
+        for base in sys.path:
+            for lib in sorted(glob.glob(os.path.join(base, "nvidia", "*", "lib", "lib*.so*"))):
+                try:
+                    ctypes.CDLL(lib, mode=ctypes.RTLD_GLOBAL)
+                except OSError:
+                    pass
+        return
     if sys.platform != "win32":
         return
     for base in sys.path:

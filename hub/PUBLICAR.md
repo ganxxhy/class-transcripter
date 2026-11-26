@@ -24,4 +24,4 @@ Cuando sale una versión nueva, el panel lo avisa y su botón **Actualizar el pa
 ## Si algo no funciona
 
 - **"Sin sincronizar"**: abre el panel dentro de la app de escritorio de Claude (no en el navegador) y comprueba que la app se reinició después de instalar Estudio.
-- **No encuentra el agente**: los datos están en `Documentos\AgenteClases` (o `OneDrive\Documentos\AgenteClases`).
+- **No encuentra el agente**: los datos están en `Documentos\AgenteClases` (o `OneDrive\Documentos\AgenteClases`) en Windows, y en `~/.local/share/estudio` en Linux.
