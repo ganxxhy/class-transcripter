@@ -30,7 +30,7 @@ from tkinter import messagebox, ttk
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from nucleo import almacen, horario, resumen  # noqa: E402
-from nucleo.config import CONGELADA, RUTA_DATOS, api_key, cargar, existe, guardar, nombre_asignatura  # noqa: E402
+from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre_asignatura, resumen_en_pc  # noqa: E402
 from nucleo.motor import Motor, microfonos  # noqa: E402
 import tema  # noqa: E402
 from version import VERSION  # noqa: E402
@@ -130,7 +130,7 @@ class App:
         for cid in almacen.clases_abiertas_huerfanas():
             almacen.cerrar(cid)
             self.log(f"Recuperada clase sin cerrar: {cid}")
-        if api_key(self.cfg):
+        if resumen_en_pc(self.cfg):
             for cid in resumen.pendientes():
                 resumen.en_segundo_plano(cid, self.log)
 
@@ -256,7 +256,7 @@ class App:
             self.txt.insert("end", lineas)
             self.txt.see("end")
             self.txt.configure(state="disabled")
-        self.lbl_pie.configure(text="Resúmenes: " + ("aquí, con tu clave" if api_key(cargar()) else "desde Mis clases"))
+        self.lbl_pie.configure(text="Resúmenes: " + ("al acabar cada clase" if resumen_en_pc(cargar()) else "desde Mis clases"))
         self.root.after(500, self._tick)
 
     # ---------- acciones ----------
@@ -456,7 +456,7 @@ class DialogoAjustes(tk.Toplevel):
         guardar(self.cfg)
         if cambio_modelo:
             messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
-        if aj["anthropic_api_key"]:
+        if resumen_en_pc(self.cfg):
             for cid in resumen.pendientes():
                 resumen.en_segundo_plano(cid)
         self.destroy()
