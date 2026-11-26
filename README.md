@@ -57,6 +57,10 @@ En el asistente (o en `config.json`, dentro de `ajustes`) elige el proveedor `op
 - La clave también puede ir en la variable de entorno `OPENAI_API_KEY`. Con modelos locales puede quedar vacía.
 - Los modelos pequeños no siempre devuelven JSON válido: Estudio lo pide en las instrucciones, comprueba que estén todos los campos y, si no, pide la respuesta otra vez una vez. Si sigue mal, la clase queda con el error y se reintenta más tarde (la transcripción no se pierde).
 - Los servidores locales suelen recortar el contexto sin avisar: sube `num_ctx` en Ollama o "Context Length" en LM Studio, porque una clase son muchos tokens.
+- Cloudflare, cómo conseguir los datos (el panel puede cambiar de nombres):
+  1. Crea una cuenta gratuita en [dash.cloudflare.com](https://dash.cloudflare.com).
+  2. **ID de cuenta:** en *Workers & Pages* aparece como *Account ID*; también está en la dirección del panel (`dash.cloudflare.com/<ID>/…`). Sustituye `{ACCOUNT_ID}` en la dirección del servidor por ese ID.
+  3. **Clave:** en [Mi perfil → API Tokens](https://dash.cloudflare.com/profile/api-tokens) pulsa *Create Token*, usa la plantilla *Workers AI* (o un token personalizado con los permisos de cuenta *Workers AI: Read* y *Edit*) y copia el token al crearlo: no se vuelve a mostrar. Ese token es la clave.
 - Cloudflare: el plan gratuito da 10.000 neurons al día, que se reinician a las 00:00 UTC. Si se agotan, el mensaje de error muestra lo que responde el servicio.
 
 ## Aviso legal
