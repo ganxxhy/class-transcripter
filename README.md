@@ -1,12 +1,12 @@
-# Agente de clases
+# Estudio
 
-Aplicación de escritorio para Windows que graba tus clases, las transcribe en tu propio ordenador (Whisper) y genera un resumen por asignatura: primero la clase entera en orden y por temas, y aparte los exámenes, trabajos y fechas importantes.
+(Antes "Agente de clases".) Aplicación de escritorio para Windows que graba tus clases, las transcribe en tu propio ordenador (Whisper) y genera un resumen por asignatura: primero la clase entera en orden y por temas, y aparte los exámenes, trabajos y fechas importantes.
 
 **Web:** https://ganxxhy.github.io/class-transcripter/
 
 ## Descargar
 
-Ve a [Releases](../../releases), descarga `AgenteClases-…-instalador.exe` y ábrelo. Funciona en Windows 10 y 11 de 64 bits, no pide permisos de administrador y no necesitas instalar nada más.
+Ve a [Releases](../../releases), descarga `Estudio-…-instalador.exe` y ábrelo. Funciona en Windows 10 y 11 de 64 bits, no pide permisos de administrador y no necesitas instalar nada más.
 
 La primera vez que abras la app, un asistente te ayuda a:
 
@@ -15,7 +15,7 @@ La primera vez que abras la app, un asistente te ayuda a:
 3. Elegir el micrófono y probarlo.
 4. Decidir cómo hacer los resúmenes: con tu cuenta de Claude Pro o Max (recomendado) o con una clave de API de Claude o Gemini.
 
-Después el agente se queda junto al reloj y graba solo según tu horario.
+Después Estudio se queda junto al reloj y graba solo según tu horario.
 
 ## Cómo funciona
 
@@ -32,7 +32,7 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 
 - `agente/`: la aplicación (grabación, transcripción con faster-whisper, resúmenes, asistente y servidor MCP para el panel). `config.ejemplo.json` es una plantilla; tu `config.json` real nunca se sube.
 - `hub/`: el panel "Mis clases".
-- `docs/`: la web de la app (GitHub Pages), con su guía de marca en `docs/MARCA.md`.
+- `docs/`: la web de la app (GitHub Pages), con la guía de diseño "Jornada" en `docs/DISENO.md`.
 - `packaging/`: icono, imágenes y script del instalador (Inno Setup).
 - `CAMBIOS.md`: novedades de cada versión (salen en Releases y en el aviso de actualización).
 - `tests/`: pruebas (`python tests/test_horario.py`).

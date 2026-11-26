@@ -2,7 +2,7 @@
 
 El panel "Mis clases" es un artefacto de Claude. Cada persona publica **su propia copia** en su cuenta (Claude Pro o Max): así los resúmenes se hacen con tu suscripción y tus clases solo las ves tú.
 
-La forma fácil: en el asistente de Agente de clases pulsa **Crear mi panel en Claude**. Se abre Claude con la petición ya escrita.
+La forma fácil: en el asistente de Estudio (antes "Agente de clases") pulsa **Crear mi panel en Claude**. Se abre Claude con la petición ya escrita.
 
 ## Instrucciones para Claude
 
@@ -23,5 +23,5 @@ Cuando sale una versión nueva, el panel lo avisa y su botón **Actualizar el pa
 
 ## Si algo no funciona
 
-- **"Sin sincronizar"**: abre el panel dentro de la app de escritorio de Claude (no en el navegador) y comprueba que la app se reinició después de instalar Agente de clases.
+- **"Sin sincronizar"**: abre el panel dentro de la app de escritorio de Claude (no en el navegador) y comprueba que la app se reinició después de instalar Estudio.
 - **No encuentra el agente**: los datos están en `Documentos\AgenteClases` (o `OneDrive\Documentos\AgenteClases`).

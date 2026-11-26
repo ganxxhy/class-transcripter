@@ -1,4 +1,4 @@
-"""Agente de clases: ventana pequeña para iniciar/parar la escucha y abrir el hub.
+"""Estudio: ventana pequeña para iniciar/parar la escucha y abrir el panel "Mis clases".
 
 Opciones (las usa el instalador):
   --asistente       abre el asistente de configuración
@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from nucleo import almacen, horario, resumen  # noqa: E402
 from nucleo.config import CONGELADA, RUTA_DATOS, api_key, cargar, existe, guardar, nombre_asignatura  # noqa: E402
 from nucleo.motor import Motor, microfonos  # noqa: E402
+import tema  # noqa: E402
 from version import VERSION  # noqa: E402
 
 os.makedirs(RUTA_DATOS, exist_ok=True)
@@ -125,60 +126,62 @@ class App:
     # ---------- interfaz ----------
     def _construir(self):
         r = self.root
-        r.title("Agente de clases")
-        r.geometry("520x560")
-        r.minsize(440, 460)
-        st = ttk.Style()
+        r.title("Estudio")
+        r.geometry("540x620")
+        r.minsize(460, 520)
+        self.f = tema.aplicar(r)
         try:
-            st.theme_use("vista" if sys.platform == "win32" else "clam")
-        except tk.TclError:
+            from PIL import ImageTk
+            self._ico = ImageTk.PhotoImage(tema.icono(64))
+            r.iconphoto(True, self._ico)
+        except Exception:
             pass
-        st.configure("Estado.TLabel", font=("Segoe UI", 13, "bold"))
-        st.configure("Sub.TLabel", foreground="#5d6676")
 
-        f = ttk.Frame(r, padding=14)
+        self.cab = tema.Cabecera(r, self.f)
+        self.cab.pack(fill="x")
+        f = ttk.Frame(r, padding=(14, 12, 14, 10))
         f.pack(fill="both", expand=True)
-        self.lbl_estado = ttk.Label(f, text="Parado", style="Estado.TLabel", wraplength=480)
-        self.lbl_estado.pack(anchor="w")
-        self.lbl_sub = ttk.Label(f, text="", style="Sub.TLabel", wraplength=480)
-        self.lbl_sub.pack(anchor="w", pady=(2, 10))
 
-        fila = ttk.Frame(f)
+        c = tema.tarjeta(f, fill="x")
+        fila = ttk.Frame(c, style="Card.TFrame")
         fila.pack(fill="x")
-        self.btn_ini = ttk.Button(fila, text="▶  Iniciar", command=self.iniciar)
+        self.btn_ini = ttk.Button(fila, text="Iniciar", style="Pri.TButton", command=self.iniciar)
         self.btn_ini.pack(side="left")
-        self.btn_parar = ttk.Button(fila, text="■  Parar", command=self.parar, state="disabled")
+        self.btn_parar = ttk.Button(fila, text="Parar", command=self.parar, state="disabled")
         self.btn_parar.pack(side="left", padx=6)
         self.btn_cambiar = ttk.Button(fila, text="Cambiar asignatura", command=self.cambiar, state="disabled")
         self.btn_cambiar.pack(side="left")
-        ttk.Button(fila, text="Abrir hub", command=lambda: webbrowser.open(self.url_hub)).pack(side="right")
+        ttk.Button(fila, text="Abrir Mis clases", command=lambda: webbrowser.open(self.url_hub)).pack(side="right")
 
-        mic = ttk.Frame(f)
-        mic.pack(fill="x", pady=(12, 4))
-        ttk.Label(mic, text="Entrada de audio").pack(side="left")
+        c = tema.tarjeta(f, fill="x", pady=(10, 0))
+        ttk.Label(c, text="Micrófono", style="Seccion.TLabel").pack(anchor="w")
+        mic = ttk.Frame(c, style="Card.TFrame")
+        mic.pack(fill="x", pady=(6, 0))
         self.mics = []
         self.var_mic = tk.StringVar()
         self.cmb_mic = ttk.Combobox(mic, textvariable=self.var_mic, state="readonly")
-        self.cmb_mic.pack(side="left", fill="x", expand=True, padx=8)
+        self.cmb_mic.pack(side="left", fill="x", expand=True)
         self.cmb_mic.bind("<<ComboboxSelected>>", self._mic_cambiado)
-        ttk.Button(mic, text="↻", width=3, command=lambda: self._cargar_mics(True)).pack(side="left")
+        ttk.Button(mic, text="Buscar", command=lambda: self._cargar_mics(True)).pack(side="left", padx=(8, 0))
         self._cargar_mics(False)
-        self.barra = ttk.Progressbar(f, maximum=100)
-        self.barra.pack(fill="x", pady=(2, 10))
+        self.barra = ttk.Progressbar(c, maximum=100, style="Nivel.Horizontal.TProgressbar")
+        self.barra.pack(fill="x", pady=(10, 2))
 
-        ttk.Label(f, text="Lo último que he oído", style="Sub.TLabel").pack(anchor="w")
-        self.txt = tk.Text(f, height=10, wrap="word", relief="flat", font=("Segoe UI", 10),
-                           background="#f6f7f9", padx=8, pady=6)
-        self.txt.pack(fill="both", expand=True, pady=(2, 8))
+        c = tema.tarjeta(f, fill="both", expand=True, pady=(10, 0))
+        ttk.Label(c, text="Lo último que he oído", style="Seccion.TLabel").pack(anchor="w")
+        self.txt = tk.Text(c, height=8, wrap="word", relief="flat", font=self.f.texto, background=tema.PAPER,
+                           foreground=tema.INK, padx=10, pady=8, highlightthickness=0, bd=0,
+                           selectbackground="#FFD2A8", selectforeground=tema.INK)
+        self.txt.pack(fill="both", expand=True, pady=(6, 0))
         self.txt.configure(state="disabled")
 
         pie = ttk.Frame(f)
-        pie.pack(fill="x")
+        pie.pack(fill="x", pady=(8, 0))
         self.lbl_pie = ttk.Label(pie, text="", style="Sub.TLabel")
         self.lbl_pie.pack(side="left")
-        ttk.Button(pie, text="Ajustes", command=self.ajustes).pack(side="right")
-        ttk.Button(pie, text="Asignaturas y horario", command=self.reconfigurar).pack(side="right", padx=(6, 0))
-        ttk.Button(pie, text="Registro", command=self.ver_log).pack(side="right", padx=6)
+        ttk.Button(pie, text="Ajustes", style="Link.TButton", command=self.ajustes).pack(side="right")
+        ttk.Button(pie, text="Asignaturas y horario", style="Link.TButton", command=self.reconfigurar).pack(side="right")
+        ttk.Button(pie, text="Registro", style="Link.TButton", command=self.ver_log).pack(side="right")
 
         r.protocol("WM_DELETE_WINDOW", self.al_cerrar)
 
@@ -218,11 +221,11 @@ class App:
     def _tick(self):
         m = self.motor
         if m.activo:
-            self.lbl_estado.configure(text=m.estado_texto)
+            estado = m.estado_texto
         elif m.transcribiendo():
-            self.lbl_estado.configure(text=f"Terminando de transcribir… ({m.pendientes()} fragmentos)")
+            estado = f"Terminando de transcribir… ({m.pendientes()} fragmentos)"
         else:
-            self.lbl_estado.configure(text="Parado")
+            estado = "En pausa"
             self.btn_ini.configure(state="normal")
         sub = []
         if m.cargando_modelo:
@@ -233,7 +236,7 @@ class App:
             sub.append(f"Oyendo por: {m.microfono_actual}")
         if m.activo and m.pendientes() > 3:
             sub.append(f"{m.pendientes()} fragmentos en cola")
-        self.lbl_sub.configure(text=" · ".join(sub))
+        self.cab.poner(estado, " · ".join(sub), grabando=bool(m.activo and getattr(m, "clase_id", None)))
         self.barra["value"] = m.nivel * 100
         lineas = "\n".join(m.ultimas_lineas[-12:])
         if self.txt.get("1.0", "end").strip() != lineas.strip():
@@ -242,7 +245,7 @@ class App:
             self.txt.insert("end", lineas)
             self.txt.see("end")
             self.txt.configure(state="disabled")
-        self.lbl_pie.configure(text="Resúmenes: " + ("aquí, con tu clave" if api_key(cargar()) else "desde el hub"))
+        self.lbl_pie.configure(text="Resúmenes: " + ("aquí, con tu clave" if api_key(cargar()) else "desde Mis clases"))
         self.root.after(500, self._tick)
 
     # ---------- acciones ----------
@@ -293,7 +296,8 @@ class App:
         w = tk.Toplevel(self.root)
         w.title("Registro")
         w.geometry("640x360")
-        t = tk.Text(w, wrap="word", font=("Consolas", 9))
+        t = tk.Text(w, wrap="word", font=self.f.mono, background=tema.CARD, foreground=tema.INK, padx=10, pady=8,
+                    relief="flat", highlightthickness=0)
         t.pack(fill="both", expand=True)
         t.insert("end", "\n".join(self.logs))
         t.see("end")
@@ -311,21 +315,17 @@ class App:
         """Oculta la ventana y deja un icono junto al reloj (si pystray está instalado)."""
         try:
             import pystray
-            from PIL import Image, ImageDraw
+            import PIL  # noqa: F401
         except Exception:
             return False
         if self.icono is None:
-            img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-            dr = ImageDraw.Draw(img)
-            dr.ellipse((4, 4, 60, 60), fill=(47, 91, 211))
-            dr.rounded_rectangle((24, 14, 40, 38), radius=8, fill="white")
-            dr.rectangle((30, 40, 34, 50), fill="white")
+            img = tema.icono(64)
             menu = pystray.Menu(
                 pystray.MenuItem("Mostrar", lambda: self.root.after(0, self._mostrar), default=True),
-                pystray.MenuItem("Abrir hub", lambda: webbrowser.open(self.url_hub)),
+                pystray.MenuItem("Abrir Mis clases", lambda: webbrowser.open(self.url_hub)),
                 pystray.MenuItem("Parar y salir", lambda: self.root.after(0, self._parar_y_salir)),
             )
-            self.icono = pystray.Icon("agente_clases", img, "Agente de clases", menu)
+            self.icono = pystray.Icon("agente_clases", img, "Estudio", menu)
             self.icono.run_detached()
         self.root.withdraw()
         return True
@@ -357,7 +357,9 @@ class DialogoModo(tk.Toplevel):
         self.title("¿Cómo quieres que funcione?" if not solo_manual else "Cambiar asignatura")
         self.transient(padre)
         self.resizable(False, False)
-        f = ttk.Frame(self, padding=16)
+        self.configure(background=tema.CARD)
+        fu = tema.Fuentes(self)
+        f = ttk.Frame(self, style="Card.TFrame", padding=20)
         f.pack(fill="both", expand=True)
         fr, prox = horario.asignatura_actual(cfg, datetime.now())
         if not solo_manual:
@@ -367,14 +369,14 @@ class DialogoModo(tk.Toplevel):
                 ahora = f"Ahora no hay clase. La próxima es {nombre_asignatura(cfg, prox['asignatura'])} a las {prox['inicio']}."
             else:
                 ahora = "Hoy no quedan clases en tu horario."
-            ttk.Label(f, text="Automático", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-            ttk.Label(f, text="Uso tu horario y la hora para guardar cada clase en su asignatura, "
+            ttk.Label(f, text="Automático", style="Seccion.TLabel").pack(anchor="w")
+            ttk.Label(f, style="CardSub.TLabel", font=fu.texto, text="Uso tu horario y la hora para guardar cada clase en su asignatura, "
                               "y cambio solo cuando empieza la siguiente. " + ahora,
                       wraplength=380).pack(anchor="w", pady=(2, 6))
-            ttk.Button(f, text="Empezar en automático", command=self._auto).pack(anchor="w", pady=(0, 14))
+            ttk.Button(f, text="Empezar en automático", style="Pri.TButton", command=self._auto).pack(anchor="w", pady=(0, 14))
             ttk.Separator(f).pack(fill="x", pady=(0, 10))
-            ttk.Label(f, text="Manual", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-            ttk.Label(f, text="Elige tú la asignatura. Todo lo que oiga irá ahí hasta que pares o la cambies.",
+            ttk.Label(f, text="Manual", style="Seccion.TLabel").pack(anchor="w")
+            ttk.Label(f, style="CardSub.TLabel", font=fu.texto, text="Elige tú la asignatura. Todo lo que oiga irá ahí hasta que pares o la cambies.",
                       wraplength=380).pack(anchor="w", pady=(2, 6))
         self.var = tk.StringVar(value=(fr or {}).get("asignatura") or cfg["asignaturas"][0]["id"])
         for a in cfg["asignaturas"]:
@@ -402,30 +404,31 @@ class DialogoAjustes(tk.Toplevel):
         self.title("Ajustes")
         self.transient(padre)
         self.resizable(False, False)
+        self.configure(background=tema.CARD)
         self.cfg = cargar()
         aj = self.cfg["ajustes"]
-        f = ttk.Frame(self, padding=16)
+        f = ttk.Frame(self, style="Card.TFrame", padding=20)
         f.pack(fill="both", expand=True)
-        ttk.Label(f, text="Clave de la API de Claude (opcional)").pack(anchor="w")
+        ttk.Label(f, text="Clave de la API de Claude (opcional)", style="Card.TLabel").pack(anchor="w")
         self.var_clave = tk.StringVar(value=aj.get("anthropic_api_key", ""))
         ttk.Entry(f, textvariable=self.var_clave, show="•", width=52).pack(anchor="w", pady=(2, 2))
-        ttk.Label(f, text="Sin clave, los resúmenes se hacen desde el hub con tu cuenta de Claude. Con clave, se hacen aquí solos al acabar cada clase. Se guarda solo en config.json.",
-                  foreground="#5d6676", wraplength=380).pack(anchor="w", pady=(0, 10))
-        ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)").pack(anchor="w")
+        ttk.Label(f, text="Sin clave, los resúmenes se hacen desde tu panel Mis clases con tu cuenta de Claude. Con clave, se hacen aquí solos al acabar cada clase. Se guarda solo en config.json.",
+                  style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(0, 10))
+        ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)", style="Card.TLabel").pack(anchor="w")
         self.var_mod = tk.StringVar(value=aj.get("modelo_whisper", "auto"))
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
-        ttk.Label(f, text="El horario y los márgenes se cambian en config.json.",
-                  foreground="#5d6676").pack(anchor="w", pady=(10, 0))
-        ver = ttk.Frame(f)
+        ttk.Label(f, text="Las asignaturas y el horario se cambian con «Asignaturas y horario» en la ventana principal.",
+                  style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(10, 0))
+        ver = ttk.Frame(f, style="Card.TFrame")
         ver.pack(fill="x", pady=(12, 0))
-        ttk.Label(ver, text=f"Versión {VERSION}", foreground="#5d6676").pack(side="left")
+        ttk.Label(ver, text=f"Versión {VERSION}", style="CardSub.TLabel").pack(side="left")
         if buscar_actualizacion:
             ttk.Button(ver, text="Buscar actualizaciones", command=buscar_actualizacion).pack(side="right")
-        fila = ttk.Frame(f)
-        fila.pack(fill="x", pady=(12, 0))
-        ttk.Button(fila, text="Guardar", command=self._guardar).pack(side="right")
+        fila = ttk.Frame(f, style="Card.TFrame")
+        fila.pack(fill="x", pady=(14, 0))
+        ttk.Button(fila, text="Guardar", style="Pri.TButton", command=self._guardar).pack(side="right")
         ttk.Button(fila, text="Cancelar", command=self.destroy).pack(side="right", padx=6)
         self.grab_set()
 
@@ -437,7 +440,7 @@ class DialogoAjustes(tk.Toplevel):
         aj["guardar_audio"] = self.var_audio.get()
         guardar(self.cfg)
         if cambio_modelo:
-            messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir el agente.")
+            messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
         if aj["anthropic_api_key"]:
             for cid in resumen.pendientes():
                 resumen.en_segundo_plano(cid)

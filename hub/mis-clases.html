@@ -1,249 +1,409 @@
 <title>Mis clases</title>
 <script type="application/json" id="claude-artifacts-manifest">{"permissions": ["full-access"]}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..750&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
-/* Mismo diseño que "Mis asignaturas": mesa con un libro por asignatura y doble página con el índice de clases. */
-:root {
-  --bg: #eef0f3; --surface: #ffffff; --fg: #161a22; --muted: #5d6676; --line: #d9dde5;
-  --desk: #d9cdb8; --desk-edge: #b9a98d; --paper: #fbfaf6; --accent: #2f5bd3;
-  --alta: #c4372f; --ok: #0f8a6a; --mix: 0%;
-  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
-  color-scheme: light;
+/* Estudio · panel "Mis clases" con el diseño "Jornada": el cielo sigue la hora real, tarjetas blancas y el día como un arco con el sol. */
+@property --bg-a{syntax:'<color>';inherits:true;initial-value:#8EC5FF}
+@property --bg-b{syntax:'<color>';inherits:true;initial-value:#CFE6FF}
+@property --bg-c{syntax:'<color>';inherits:true;initial-value:#F3F8FF}
+:root{--ink:#0D2340;--mute:#54657B;--paper:#F5F9FE;--card:#FFFFFF;--line:#E3EBF4;--sun:#FF7A2F;--blue:#2563EB;--sky-c:#F3F8FF;
+ --ok:#16A34A;--ok-bg:#E8F7EE;--ok-ink:#14632F;--now:#E0560F;--warn-bg:#FFF4E5;--warn-ink:#8A4B00;--danger:#B42318;--danger-bg:#FFF5F4;
+ --on-sky:#0D2340;--on-sky-mute:#3F5068;--stars:0;--ease:cubic-bezier(.2,.8,.2,1);
+ --disp:"Bricolage Grotesque","Segoe UI",ui-sans-serif,system-ui,sans-serif;--ui:"Figtree","Segoe UI",ui-sans-serif,system-ui,sans-serif;--mono:"JetBrains Mono",Consolas,ui-monospace,monospace;
+ transition:--bg-a 1.2s,--bg-b 1.2s,--bg-c 1.2s;color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{min-height:100%;background:var(--bg-c)}
+body{margin:0;min-height:100dvh;font-family:var(--ui);font-size:14.5px;line-height:1.45;color:var(--ink);background:linear-gradient(180deg,var(--bg-a) 0,var(--bg-b) 50%,var(--bg-c) 100%) fixed}
+body::after{content:"";position:fixed;inset:0 0 40% 0;pointer-events:none;z-index:-1;opacity:var(--stars);transition:opacity 1.2s;
+ background-image:radial-gradient(1.2px 1.2px at 12% 18%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 27% 8%,#fff 50%,transparent 51%),radial-gradient(1.4px 1.4px at 41% 26%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 58% 12%,#fff 50%,transparent 51%),radial-gradient(1.3px 1.3px at 73% 22%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 86% 6%,#fff 50%,transparent 51%),radial-gradient(1.1px 1.1px at 93% 30%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 5% 38%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 35% 44%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 66% 40%,#fff 50%,transparent 51%)}
+::selection{background:#FFD2A8;color:#0D2340}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+h1,h2,h3,p{margin:0}
+ul,ol{list-style:none;margin:0;padding:0}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--mute)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Barra superior */
+.top{display:flex;align-items:center;gap:16px;padding-block:18px}
+.brand{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-.03em;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--on-sky)}
+.brand i{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#FFD2A8 0,var(--sun) 55%,#F25F1A 100%);box-shadow:0 0 18px rgba(255,122,47,.6)}
+.brand small{font-family:var(--ui);font-weight:550;font-size:14px;letter-spacing:0;color:var(--on-sky-mute)}
+.dock{margin:0 auto;display:flex;gap:4px;background:var(--card);border-radius:999px;padding:5px;box-shadow:0 1px 2px rgba(13,35,64,.06),0 8px 24px -12px rgba(13,35,64,.25)}
+.dock a,.tabbar a{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;text-decoration:none;color:var(--mute);font-weight:550;transition:background .15s,color .15s}
+.dock a:hover{color:var(--ink);background:var(--sky-c)}
+.dock a[aria-current="page"],.tabbar a[aria-current="page"]{background:var(--ink);color:#fff}
+.me{display:flex;align-items:center;gap:10px;font-weight:550}
+.live{display:inline-flex;align-items:center;gap:8px;background:var(--card);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;box-shadow:0 8px 24px -14px rgba(13,35,64,.35);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live i{width:8px;height:8px;border-radius:50%;background:#9AA9BC;flex:none}
+.live.on i{background:#E5484D;box-shadow:0 0 0 0 rgba(229,72,77,.5);animation:ping 1.6s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px rgba(229,72,77,0)}}
+.av{width:34px;height:34px;border-radius:50%;background:var(--card);color:var(--ink);display:grid;place-items:center;font-size:12px;font-weight:700;box-shadow:0 0 0 2px #fff,0 4px 10px -4px rgba(13,35,64,.3);flex:none}
+.tabbar{display:none}
+
+/* Avisos */
+.notes{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.note{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;padding:12px 14px 12px 16px;border-radius:16px;background:var(--card);font-size:13.5px;box-shadow:0 1px 2px rgba(13,35,64,.05),0 18px 40px -30px rgba(13,35,64,.35)}
+.note.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.note.info{background:#EAF2FF}
+.note input[type=text]{border:1px solid var(--line);border-radius:12px;padding:9px 12px;min-height:40px;background:#fff;color:var(--ink)}
+.note-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chk-inline{display:inline-flex;gap:6px;align-items:center;color:var(--mute);font-size:13px;cursor:pointer}
+.chk-inline input{accent-color:var(--ink);width:16px;height:16px}
+
+/* Genérico */
+.page{padding-bottom:48px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 0 22px}
+.head h1{font-family:var(--disp);font-weight:650;font-size:clamp(30px,4vw,44px);letter-spacing:-.035em;line-height:1.02;text-wrap:balance;color:var(--on-sky)}
+.head p{color:var(--on-sky-mute);margin-top:6px;max-width:60ch}
+.crumb{display:inline-flex;align-items:center;gap:6px;color:var(--on-sky-mute);text-decoration:none;font-weight:550;margin-bottom:10px}
+.crumb:hover{color:var(--on-sky)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:var(--card);border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(13,35,64,.05),0 18px 40px -28px rgba(13,35,64,.35);min-width:0}
+.span2{grid-column:span 2}.span3{grid-column:1/-1}
+.card h2{font-family:var(--disp);font-weight:650;font-size:19px;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:14px}
+.card h2 span,.card h2 a{font-family:var(--ui);font-size:13px;font-weight:500;color:var(--mute);letter-spacing:0;text-decoration:none}
+.card h2 a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:999px;font-weight:650;transition:transform .12s,background .15s,box-shadow .15s;white-space:nowrap;min-height:44px;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--ink);color:#fff;box-shadow:0 8px 18px -10px rgba(13,35,64,.7)}
+.btn.pri:hover{background:#17365F}
+.btn.sec{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(13,35,64,.08),inset 0 0 0 1px var(--line)}
+.btn.sec:hover{background:var(--sky-c)}
+.btn.sm{padding:7px 14px;min-height:38px;font-size:13.5px}
+.btn.danger{color:var(--danger)}
+.btn.danger:hover{background:var(--danger-bg);box-shadow:inset 0 0 0 1px #F4C7C3}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg.i{width:16px;height:16px}
+.pill{display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c,#54657B) 14%,white);color:color-mix(in srgb,var(--c,#54657B) 60%,#0D2340);white-space:nowrap}
+.pill.hot{--c:#E0560F}.pill.ok{--c:#16A34A}.pill.red{--c:#B42318}
+.empty{padding:22px;text-align:center;color:var(--mute);border:1.5px dashed var(--line);border-radius:16px}
+.t-sub{font-size:12.5px;color:var(--mute);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.t-sub a{color:inherit;text-underline-offset:2px}
+
+/* Arco del día */
+.hero{text-align:center;position:relative;padding-top:4px}
+.arc{width:100%;max-width:980px;height:auto;display:block;margin:0 auto;overflow:visible}
+.arc .seg{fill:none;stroke-width:18;stroke-linecap:round}
+.arc .seg.todo{opacity:.32}
+.arc .track{fill:none;stroke:rgba(255,255,255,.7);stroke-width:18;stroke-linecap:round}
+.arc text{font-family:var(--mono);font-size:13px;fill:var(--on-sky-mute)}
+.arc .lab{font-family:var(--ui);font-weight:600;fill:var(--on-sky)}
+.sun{animation:glow 4s ease-in-out infinite}@keyframes glow{50%{opacity:.75}}
+.hero-copy{position:absolute;left:50%;top:52%;transform:translate(-50%,-30%);width:min(560px,72%);display:flex;flex-direction:column;align-items:center;gap:10px}
+.now{font-size:13.5px;color:var(--on-sky-mute);font-weight:550;display:flex;align-items:center;gap:8px}
+.now i{width:8px;height:8px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 4px rgba(255,122,47,.2)}
+.hero h1{font-family:var(--disp);font-weight:650;font-size:clamp(28px,4.2vw,50px);line-height:1.02;letter-spacing:-.035em;text-wrap:balance;color:var(--on-sky)}
+.timer{font-family:var(--mono);font-size:14px;color:var(--on-sky-mute)}
+.timer b{color:var(--on-sky);font-weight:600}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.legend{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;padding:8px 0 24px;color:var(--on-sky);font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+
+/* Tareas (lo importante que se dice en clase) */
+.task{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.task:first-child{border-top:0;padding-top:0}
+.chk{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--c);display:grid;place-items:center;color:#fff;transition:background .15s}
+.chk svg.i{width:13px;height:13px;opacity:0}
+.task.done .chk{background:var(--c)}.task.done .chk svg.i{opacity:1}
+.chk:disabled{cursor:default;opacity:.6}
+.task.done .t-title{text-decoration:line-through;color:var(--mute)}
+.t-title{font-weight:600;overflow-wrap:anywhere}
+.t-det{font-size:13px;color:var(--mute);margin-top:2px;overflow-wrap:anywhere}
+.cita{font-size:13px;color:var(--mute);font-style:italic;margin-top:4px;padding-left:8px;border-left:2px solid var(--line)}
+.seg-ctl{display:inline-flex;flex-wrap:wrap;background:var(--card);border-radius:999px;padding:4px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg-ctl button{padding:7px 14px;border-radius:999px;font-weight:600;color:var(--mute);min-height:36px}
+.seg-ctl button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--mute);font-weight:600}
+.field input,.field select{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;min-height:44px;color:var(--ink);font-weight:500;font-size:14.5px}
+.opt-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.opt-row:first-child{border-top:0;padding-top:0}
+
+/* Clases de hoy */
+.cls{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.cls:first-child{border-top:0;padding-top:0}
+.cls time{font-family:var(--mono);font-size:12.5px;color:var(--mute);line-height:1.35}
+.cls time b{display:block;color:var(--ink);font-weight:600;font-size:13.5px}
+.cls .nm{font-weight:650;display:flex;align-items:center;gap:8px}
+.cls .nm::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.cls.is-past .nm,.cls.is-past time b{color:var(--mute)}
+.cls.is-now{background:var(--sky-c);margin:0 -12px;padding:11px 12px;border-radius:14px;border-top-color:transparent}
+.cls.is-now + .cls{border-top-color:transparent}
+
+/* Asignaturas y clases */
+.subjects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.subj{display:flex;flex-direction:column;gap:12px;text-decoration:none;transition:transform .2s var(--ease),box-shadow .2s}
+.subj:hover{transform:translateY(-2px);box-shadow:0 1px 2px rgba(13,35,64,.05),0 22px 44px -26px rgba(13,35,64,.45)}
+.subj-top{display:flex;align-items:center;gap:12px;min-width:0}
+.code{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:12px;color:#fff;background:var(--c);flex:none}
+.code.sm{width:34px;height:34px;border-radius:10px;font-size:11px}
+.subj h3{font-family:var(--disp);font-size:20px;font-weight:650;letter-spacing:-.02em;line-height:1.1;overflow-wrap:anywhere}
+.subj small{color:var(--mute);font-size:13px}
+.bar{display:block;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:var(--w);background:var(--c);border-radius:99px}
+.subj-meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute)}
+.subj-meta b{color:var(--ink)}
+.rec{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:14px 12px;margin:0 -12px;border-radius:14px;text-decoration:none;transition:background .15s}
+.rec + .rec{border-top:1px solid var(--line)}
+.rec > span{min-width:0}
+.rec:hover{background:var(--sky-c)}
+.rec .date{width:52px;text-align:center;border-radius:12px;background:var(--sky-c);padding:6px 0;line-height:1.1}
+.rec .date b{display:block;font-family:var(--disp);font-size:20px}
+.rec .date span{font-size:11.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.rec h3{font-size:15.5px;font-weight:650;overflow-wrap:anywhere}
+.rec p{font-size:13px;color:var(--mute)}
+.state{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.state i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.state.wait i{background:#E0A100}.state.live i{background:#E5484D}.state.err i{background:var(--danger)}.state.none i{background:#9AA9BC}
+.chev{color:var(--mute)}
+
+/* Resumen de una clase */
+.sum-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.prose{font-size:15.5px;line-height:1.6;max-width:70ch}
+.prose h3{font-family:var(--disp);font-size:18px;letter-spacing:-.015em;margin:22px 0 8px}
+.prose h3:first-child{margin-top:0}
+.prose p{margin:0 0 10px}
+.prose ul{display:flex;flex-direction:column;gap:8px}
+.prose li{padding-left:18px;position:relative}
+.prose li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--c)}
+.terms dt{font-weight:650;margin-top:12px}.terms dt:first-child{margin-top:0}
+.terms dd{margin:2px 0 0;color:var(--mute)}
+.meta-list li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+.meta-list li:first-child{border-top:0;padding-top:0}
+.meta-list span{color:var(--mute)}
+.meta-list b{font-weight:600;text-align:right}
+.acts{display:flex;flex-direction:column;gap:10px}
+.acts .field select{min-height:40px}
+.trans-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.trans-tools input{flex:1;min-width:160px;border:1px solid var(--line);border-radius:999px;padding:9px 14px;background:#fff;color:var(--ink)}
+.trans{display:grid;gap:4px;font-size:14px;max-height:70vh;overflow:auto;padding-right:4px}
+.trans div{display:grid;grid-template-columns:56px 1fr;gap:8px;padding:3px 6px;border-radius:8px}
+.trans time{font-family:var(--mono);font-size:12px;color:var(--mute);padding-top:2px}
+.trans mark{background:#FFD2A8;color:inherit;border-radius:3px}
+.trans .hl{background:color-mix(in srgb,var(--c) 12%,white)}
+
+/* Calendario */
+.tt-wrap{overflow-x:auto;overflow-y:hidden;padding:8px 0 4px}
+.tt{display:grid;min-width:640px}
+.tt .hd{font-weight:650;padding:0 8px 10px;font-size:13.5px}
+.tt .hd.today{color:var(--now)}
+.tt .hours,.tt .tcol{position:relative}
+.tt .hours span{position:absolute;font-family:var(--mono);font-size:11.5px;color:var(--mute);transform:translateY(-50%)}
+.tt .tcol{border-left:1px solid var(--line);background:repeating-linear-gradient(to bottom,transparent 0,transparent 43px,var(--line) 43px,var(--line) 44px)}
+.tt .tcol.today{background-color:rgba(255,122,47,.05)}
+.blk{position:absolute;left:5px;right:5px;border:0;text-align:left;cursor:pointer;border-radius:10px;padding:6px 8px;font-size:12px;line-height:1.25;overflow:hidden;background:color-mix(in srgb,var(--c) 14%,white);color:color-mix(in srgb,var(--c) 70%,#0D2340);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 30%,white);transition:box-shadow .15s,transform .12s}
+.blk:hover{box-shadow:inset 0 0 0 1.5px var(--c)}
+.blk.sel{box-shadow:inset 0 0 0 2px var(--c),0 6px 16px -8px rgba(13,35,64,.4)}
+.blk b{display:block;font-weight:700}
+.nowline{position:absolute;left:0;right:0;height:2px;background:var(--sun);z-index:2}
+.nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--sun)}
+.cls-detail{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--c) 10%,white);margin-bottom:14px}
+.cls-detail b{font-family:var(--disp);font-size:17px}
+.hint{font-size:13px;margin:-6px 0 12px;color:var(--mute)}
+.dayview{display:none}
+.daytabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:var(--sky-c);border-radius:999px;padding:4px;margin-bottom:12px}
+.daytabs button{border-radius:999px;padding:8px 0;font-weight:650;color:var(--mute);min-height:40px}
+.daytabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:12.5px;font-variant-numeric:tabular-nums}
+.mcal b{font-weight:600;color:var(--mute);padding-bottom:2px}
+.mcal span{aspect-ratio:1;display:grid;place-items:center;border-radius:9px;position:relative}
+.mcal span.today{background:var(--ink);color:#fff;font-weight:700}
+.mcal span.ev::after{content:"";position:absolute;bottom:3px;width:5px;height:5px;border-radius:50%;background:var(--c)}
+.mcal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:650}
+.mcal-head button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--mute)}
+.mcal-head button:hover{background:var(--sky-c);color:var(--ink)}
+
+/* Estadísticas */
+.st-head{display:flex;gap:28px;margin-bottom:10px;flex-wrap:wrap}
+.st-head div{display:flex;flex-direction:column}
+.st-head b{font-family:var(--disp);font-size:30px;letter-spacing:-.03em;line-height:1.05;font-weight:650}
+.st-head span{color:var(--mute);font-size:13px}
+.area{width:100%;height:auto;display:block}
+.area text{font-family:var(--ui);font-size:12px;fill:var(--mute)}
+.ins li{background:var(--sky-c);border-radius:14px;padding:12px 14px;font-size:14px;margin-top:10px}
+.ins li:first-child{margin-top:0}
+.ins b{display:block;font-family:var(--disp);font-size:16px}
+.hbar li{display:grid;grid-template-columns:170px minmax(0,1fr) 64px;gap:12px;align-items:center;padding:7px 0;font-size:13.5px}
+.hbar li > span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar .v{font-family:var(--mono);font-size:12.5px;color:var(--mute);text-align:right}
+
+/* Control del cielo */
+.skyctl{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9;font-size:13px}
+.skyctl > button{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:999px;padding:8px 14px 8px 10px;font-weight:600;box-shadow:0 8px 24px -12px rgba(13,35,64,.45);min-height:40px}
+.skyctl > button i{width:16px;height:16px;border-radius:50%;background:linear-gradient(180deg,var(--bg-a),var(--bg-c));box-shadow:inset 0 0 0 1px rgba(13,35,64,.15)}
+.skypanel{position:absolute;bottom:calc(100% + 8px);left:0;width:min(320px,calc(100vw - 32px));background:var(--card);border-radius:18px;padding:16px;box-shadow:0 18px 40px -18px rgba(13,35,64,.5);display:flex;flex-direction:column;gap:12px}
+.skypanel p{color:var(--mute);font-size:12.5px}
+.skypanel input[type=range]{width:100%;accent-color:var(--sun)}
+.skypanel .rowx{display:flex;justify-content:space-between;align-items:center;gap:8px}
+footer{color:var(--mute);font-size:12.5px;padding:8px 0 90px;max-width:80ch}
+
+@media (max-width:1100px){.live{max-width:180px}}
+@media (max-width:900px){
+ .grid,.subjects,.sum-grid{grid-template-columns:minmax(0,1fr)}
+ .span2,.span3{grid-column:auto}
+ .dock{display:none}.me{margin-left:auto}
+ .hero-copy{position:static;transform:none;width:auto;margin-top:-34px}
+ .arc .lab{display:none}
+ .hbar li{grid-template-columns:96px minmax(0,1fr) 56px}
+ .rec{grid-template-columns:auto minmax(0,1fr) auto}.rec .state{display:none}
+ .page{padding-bottom:110px}
+ .tt-card .tt-wrap,.tt-card .hint{display:none}
+ .dayview{display:block}
+ .tabbar{display:flex;justify-content:space-around;position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-radius:999px;padding:6px;box-shadow:0 10px 30px -10px rgba(13,35,64,.45);z-index:10}
+ .tabbar a{padding:0;width:52px;height:44px;justify-content:center}
+ .skyctl{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ footer{padding-bottom:150px}
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #11141a; --surface: #1a1f28; --fg: #e8ebf1; --muted: #9aa3b3; --line: #2a3140;
-    --desk: #3a3329; --desk-edge: #4d4436; --paper: #1f232b; --accent: #7d9cf5;
-    --alta: #ff7a70; --ok: #3fbf99; --mix: 45%; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #11141a; --surface: #1a1f28; --fg: #e8ebf1; --muted: #9aa3b3; --line: #2a3140;
-  --desk: #3a3329; --desk-edge: #4d4436; --paper: #1f232b; --accent: #7d9cf5;
-  --alta: #ff7a70; --ok: #3fbf99; --mix: 45%; color-scheme: dark;
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
-button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.ct { color: color-mix(in srgb, var(--c), white var(--mix)); }
-.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 20px; }
-.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
-.top h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; margin: 0; letter-spacing: -0.02em; }
-.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.seg { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--line); padding: 3px; border-radius: 999px; }
-.seg button { border: 0; background: transparent; padding: 5px 11px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--muted); }
-.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
-.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 13px; font-size: .82rem; font-weight: 600; }
-a.btn { text-decoration: none; display: inline-flex; align-items: center; color: inherit; }
-.btn:hover { border-color: var(--muted); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn.danger:hover { border-color: var(--alta); color: var(--alta); }
-.live { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .82rem; font-weight: 600; }
-.live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
-.live.on .dot { background: #e5484d; animation: pulse 1.4s infinite; }
-@keyframes pulse { 50% { opacity: .35; } }
-@media (prefers-reduced-motion: reduce) { .live.on .dot { animation: none; } }
-.lead { margin: 0; color: var(--muted); max-width: 70ch; font-size: .92rem; }
-.note { background: color-mix(in srgb, var(--alta) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--alta) 35%, var(--line)); border-radius: 10px; padding: 10px 14px; font-size: .88rem; }
-
-/* Lo importante */
-.imp { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 12px; }
-.imp-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
-.imp-head h2 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
-.card { border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 10px; padding: 11px 13px; display: grid; gap: 5px; background: var(--paper); min-width: 0; }
-.card.done { opacity: .5; }
-.card .row1 { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: .74rem; }
-.tag { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; border-radius: 999px; padding: 1px 8px; border: 1px solid currentColor; }
-.tag.alta { color: var(--alta); }
-.when { margin-left: auto; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); white-space: nowrap; }
-.when.soon { color: var(--alta); font-weight: 700; }
-.card b { font-size: .95rem; overflow-wrap: anywhere; }
-.card p { margin: 0; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
-.card .row2 { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: .78rem; }
-.card .row2 a { color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.card label { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); cursor: pointer; }
-.empty { color: var(--muted); font-size: .9rem; margin: 0; }
-
-/* Mesa */
-.desk { background: var(--desk); border-radius: 16px; padding: 26px 22px 0; border-bottom: 10px solid var(--desk-edge); overflow-x: auto; }
-.books { display: flex; gap: 18px; align-items: flex-end; min-width: max-content; padding-bottom: 18px; }
-.rbook { position: relative; width: 150px; height: 206px; border: 0; padding: 0; overflow: hidden; background: color-mix(in srgb, var(--c) 72%, #0b0d12); border-radius: 3px 8px 8px 3px; box-shadow: inset 12px 0 0 rgb(0 0 0 / .28), inset 13px 0 0 rgb(255 255 255 / .12), 0 8px 16px rgb(0 0 0 / .25); text-align: left; transition: transform .2s; }
-.rbook .art { position: absolute; left: 12px; right: 0; bottom: 0; height: 62%; opacity: .9; }
-.rbook .art svg { width: 100%; height: 100%; }
-.rbook .ttl { position: absolute; left: 24px; right: 12px; top: 18px; font-family: var(--font-display); font-weight: 800; font-size: 1.22rem; line-height: 1.05; letter-spacing: -0.015em; color: #fff; text-wrap: balance; text-shadow: 0 1px 2px rgb(0 0 0 / .35); }
-.rbook .ttl.long { font-size: 1.02rem; letter-spacing: -0.025em; }
-.rbook .ttl.xlong { font-size: .9rem; letter-spacing: -0.02em; }
-.rbook .ttl::after { content: ""; display: block; width: 28px; height: 3px; margin-top: 10px; background: rgb(255 255 255 / .7); }
-.rbook .n { position: absolute; right: 8px; bottom: 8px; font-family: var(--font-mono); font-size: .7rem; color: #fff; background: rgb(0 0 0 / .35); border-radius: 999px; padding: 1px 7px; }
-.rbook .bad { position: absolute; right: 8px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #ff5a4f; box-shadow: 0 0 0 2px rgb(255 255 255 / .8); }
-.rbook::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, rgb(255 255 255 / .1), transparent 40%); pointer-events: none; }
-.rbook[aria-expanded="true"] { transform: translateY(-14px) rotate(-2deg); }
-@media (prefers-reduced-motion: reduce) { .rbook { transition: none; } }
-
-/* Doble página */
-.spread { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 12px 28px rgb(0 0 0 / .1); overflow: hidden; }
-.spread > div { padding: 26px 28px; min-width: 0; }
-.spread .left { border-right: 1px solid var(--line); background: linear-gradient(90deg, transparent 85%, rgb(0 0 0 / .05)); display: grid; align-content: start; gap: 12px; }
-.eb { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
-.spread .left h2 { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1.05; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-.spread .left p { margin: 0; color: var(--muted); }
-.slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: .85rem; color: var(--muted); }
-.slots b { color: var(--fg); font-weight: 600; text-transform: capitalize; }
-.mini { display: grid; gap: 6px; }
-.mini div { font-size: .85rem; border-left: 3px solid var(--alta); padding-left: 8px; }
-.spread .right h3 { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 10px; font-weight: 500; }
-.toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.toc button { display: flex; width: 100%; align-items: baseline; gap: 8px; border: 0; background: none; padding: 6px 0; text-align: left; }
-.toc button:hover .tt { color: color-mix(in srgb, var(--c), white var(--mix)); }
-.toc .tt { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.toc .dots { flex: 1; border-bottom: 2px dotted var(--line); min-width: 20px; transform: translateY(-4px); }
-.toc .pg { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.toc .meta { display: block; font-size: .78rem; color: var(--muted); font-weight: 400; }
-.st { font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; }
-.st.rec { color: #e5484d; border-color: #e5484d; }
-.st.err { color: var(--alta); border-color: var(--alta); }
-@media (max-width: 640px) { .spread { grid-template-columns: minmax(0, 1fr); } .spread .left { border-right: 0; border-bottom: 1px solid var(--line); } .spread > div { padding: 20px; } }
-
-/* Lector de una clase */
-.reader { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: grid; grid-template-rows: auto minmax(0, 1fr); }
-.rbar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface); border-bottom: 3px solid var(--c, var(--accent)); flex-wrap: wrap; }
-.rbar .rt { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-.rbody { overflow: auto; }
-.page { max-width: 820px; margin: 0 auto; padding: 28px 16px 64px; display: grid; gap: 22px; }
-.page h1 { font-family: var(--font-display); font-size: 2rem; line-height: 1.1; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-.page h2 { font-family: var(--font-mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
-.page section h3 { font-size: 1.02rem; margin: 18px 0 6px; color: var(--fg); }
-.page section { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
-.page p { margin: 0 0 10px; }
-.page p:last-child { margin: 0; }
-.page ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
-.dl { display: grid; gap: 8px; }
-.dl div b { display: block; }
-.dl div span { color: var(--muted); font-size: .9rem; }
-.dest { display: grid; gap: 10px; }
-.dest .card { background: var(--surface); }
-.q { font-style: italic; color: var(--muted); font-size: .85rem; border-left: 2px solid var(--line); padding-left: 8px; }
-.trans-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
-.trans-tools input { flex: 1; min-width: 160px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .88rem; }
-.trans { display: grid; gap: 4px; font-size: .92rem; max-height: 70vh; overflow: auto; }
-.trans div { display: grid; grid-template-columns: 56px 1fr; gap: 8px; }
-.trans time { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); padding-top: 3px; }
-.trans mark { background: color-mix(in srgb, #ffd23f 60%, transparent); color: inherit; }
-.trans .hl { background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: 4px; }
-.meta-line { color: var(--muted); font-size: .88rem; display: flex; gap: 12px; flex-wrap: wrap; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-select { font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 5px 10px; }
-footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line); padding-top: 14px; }
-
-.note { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; background: var(--surface); border-color: var(--line); }
-#panelNote, #appNote, #syncNote { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
-.note-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: .82rem; cursor: pointer; }
-.mini span { color: var(--muted); }
+@media (max-width:560px){.live{display:none}.brand small{display:none}}
 </style>
 <div class="wrap">
-  <div class="top">
-    <h1>Mis clases</h1>
-    <div class="tools">
-      <span class="live" id="live"><span class="dot"></span><span id="liveTxt">Conectando…</span></span>
-      <div class="seg" role="group" aria-label="Tema" id="theme">
-        <button data-th="auto" aria-pressed="true">Automático</button>
-        <button data-th="light" aria-pressed="false">Claro</button>
-        <button data-th="dark" aria-pressed="false">Oscuro</button>
-      </div>
+  <header class="top">
+    <a class="brand" href="#hoy"><i></i>estudio <small>Mis clases</small></a>
+    <nav class="dock" aria-label="Secciones" id="dock"></nav>
+    <div class="me"><span class="live" id="live" role="status"><i></i><span id="liveTxt">Conectando…</span></span><span class="av" id="av" aria-hidden="true">·</span></div>
+  </header>
+  <div class="notes">
+    <div class="note info" id="panelNote" hidden></div>
+    <div class="note info" id="appNote" hidden></div>
+    <div class="note warn" id="syncNote" hidden></div>
+    <div class="note" id="sumBar" hidden>
+      <span id="sumTxt"></span>
+      <span class="note-actions">
+        <label class="chk-inline"><input type="checkbox" id="autoSum"> Resumir solas al abrir el panel</label>
+        <button class="btn pri sm" id="sumBtn">Resumir ahora</button>
+      </span>
     </div>
   </div>
-  <div class="note" id="panelNote" hidden></div>
-  <div class="note" id="appNote" hidden></div>
-  <div class="note" id="syncNote" hidden></div>
-  <div class="note" id="sumBar" hidden>
-    <span id="sumTxt"></span>
-    <span class="note-actions">
-      <label class="chk"><input type="checkbox" id="autoSum"> Resumir solas al abrir el hub</label>
-      <button class="btn primary" id="sumBtn">Resumir ahora</button>
-    </span>
-  </div>
-
-  <section class="imp" aria-labelledby="impT">
-    <div class="imp-head">
-      <h2 id="impT">Lo importante</h2>
-      <div class="seg" role="group" aria-label="Filtro" id="fil">
-        <button data-f="pend" aria-pressed="true">Pendiente</button>
-        <button data-f="alta" aria-pressed="false">Solo muy importante</button>
-        <button data-f="all" aria-pressed="false">Todo</button>
-      </div>
-    </div>
-    <div class="cards" id="cards"><p class="empty">Cargando…</p></div>
-  </section>
-
-  <div class="desk"><div class="books" id="books"></div></div>
-  <div id="spread"></div>
-  <footer id="foot">Las clases se graban y transcriben en tu ordenador con el Agente de clases. Este hub las recoge cuando lo abres en la app de Claude de ese ordenador, y desde ahí se ven en cualquier sitio.</footer>
+  <main id="app" class="page"></main>
+  <footer>Las clases se graban y se transcriben en tu ordenador con Estudio. Este panel las recoge cuando lo abres en la app de Claude de ese ordenador, y desde aquí las ves en cualquier sitio.</footer>
 </div>
-
-<div class="reader" id="reader" hidden>
-  <div class="rbar">
-    <button class="btn primary" id="back">← Volver</button>
-    <span class="eb ct" id="rsub"></span>
-    <span class="rt" id="rtitle"></span>
+<nav class="tabbar" aria-label="Secciones" id="tabbar"></nav>
+<div class="skyctl">
+  <div class="skypanel" id="skypanel" hidden>
+    <b>Cielo según tu hora</b>
+    <p data-sky-how></p>
+    <label class="field">Ubicación<select id="sky-city"></select></label>
+    <label class="field">Probar otra hora<input type="range" id="sky-range" data-sky-range min="0" max="23.99" step="0.25"></label>
+    <div class="rowx"><span class="muted" style="font-size:12.5px">Desliza para ver la tarde y la noche</span><button type="button" class="btn sec sm" id="sky-live">Hora real</button></div>
   </div>
-  <div class="rbody" id="rbody"></div>
+  <button type="button" id="sky-btn" aria-expanded="false" aria-controls="skypanel"><i></i><span data-sky-label>Cielo</span></button>
 </div>
 
 <script>
-const VERSION_PANEL = "1.0.0"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
+const VERSION_PANEL = "1.1.0"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
 const HOST = "host:agente_clases";
 const POR_PARTE = 400; // segmentos por documento de transcripción
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-const color = (c) => /^#[0-9a-fA-F]{3,8}$/.test(c || "") ? c : "#4b5566";
+// Colores de asignatura: los de la paleta antigua se traducen a la del diseño nuevo
+const VIEJOS = { "#2f5bd3": "#2563EB", "#c25a1f": "#B45309", "#0f8a6a": "#0E9F8E", "#8a3fb8": "#D9468A", "#b07e00": "#F08C00",
+  "#c2366b": "#BE185D", "#0e7c8c": "#0369A1", "#5a6b1f": "#4F7A28", "#3d4fa8": "#475569", "#a8432e": "#C2410C", "#4b5566": "#475569" };
+const color = (c) => { const k = String(c || "").toLowerCase(); return VIEJOS[k] || (/^#[0-9a-fA-F]{3,8}$/.test(c || "") ? c : "#475569"); };
 
-/* Tema */
-function setTheme(t) {
-  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
-  else { t = "auto"; document.documentElement.removeAttribute("data-theme"); }
-  document.querySelectorAll("#theme button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.th === t));
-  lsSet("clases-theme", t);
+/* ---------- Cielo (sky.js del diseño, en línea porque el panel es un único archivo) ---------- */
+(function(){
+const CITIES={'auto':null,'Madrid':[40.42,-3.70],'Barcelona':[41.39,2.17],'Zaragoza':[41.65,-0.88],'Valencia':[39.47,-0.38],'Sevilla':[37.39,-5.98],'Bilbao':[43.26,-2.93],'Las Palmas':[28.12,-15.43],
+ 'Lisboa':[38.72,-9.14],'Londres':[51.51,-0.13],'París':[48.86,2.35],'Berlín':[52.52,13.40],'Roma':[41.90,12.50],
+ 'Ciudad de México':[19.43,-99.13],'Bogotá':[4.71,-74.07],'Lima':[-12.05,-77.04],'Santiago':[-33.45,-70.66],'Buenos Aires':[-34.60,-58.38],'Nueva York':[40.71,-74.01],'Los Ángeles':[34.05,-118.24],'Tokio':[35.68,139.69],'Sídney':[-33.87,151.21]};
+const TZ={'Europe/Madrid':'Madrid','Atlantic/Canary':'Las Palmas','Europe/Lisbon':'Lisboa','Europe/London':'Londres','Europe/Paris':'París','Europe/Berlin':'Berlín','Europe/Rome':'Roma','America/Mexico_City':'Ciudad de México','America/Bogota':'Bogotá','America/Lima':'Lima','America/Santiago':'Santiago','America/Argentina/Buenos_Aires':'Buenos Aires','America/New_York':'Nueva York','America/Los_Angeles':'Los Ángeles','Asia/Tokyo':'Tokio','Australia/Sydney':'Sídney'};
+const tz=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){return''}})();
+function autoPlace(){
+ if(TZ[tz]) return {name:TZ[tz], ll:CITIES[TZ[tz]], how:'zona horaria '+tz};
+ const off=-new Date().getTimezoneOffset();
+ return {name:'tu zona horaria', ll:[40, off/4], how:'desfase UTC'+(off>=0?'+':'')+(off/60)};
 }
-document.querySelectorAll("#theme button").forEach((b) => b.onclick = () => setTheme(b.dataset.th));
-setTheme(lsGet("clases-theme") || lsGet("hub-theme") || "auto");
+function sunAlt(ms,lat,lon){
+ const r=Math.PI/180,d=ms/864e5-10957.5,g=(357.529+.98560028*d)*r,q=280.459+.98564736*d;
+ const L=(q+1.915*Math.sin(g)+.02*Math.sin(2*g))*r,e=(23.439-3.6e-7*d)*r;
+ const dec=Math.asin(Math.sin(e)*Math.sin(L)),ra=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L));
+ const gmst=((18.697374558+24.06570982441908*d)%24+24)%24,H=(gmst*15+lon)*r-ra;
+ return Math.asin(Math.sin(lat*r)*Math.sin(dec)+Math.cos(lat*r)*Math.cos(dec)*Math.cos(H))/r;
+}
+const K=[[-90,'#060B1A','#0B1530','#14223F'],[-14,'#08122A','#11204A','#1D2F5C'],[-7,'#0E1F4A','#25407A','#4A64A0'],[-2.5,'#1E3F7A','#4F6FA8','#E9946A'],[2,'#4F84C8','#E9AE86','#FFD0A6'],[8,'#74AEEB','#BFD7F2','#F8E5CF'],[20,'#8EC5FF','#CFE6FF','#F3F8FF'],[90,'#86C0FF','#CBE4FF','#F3F8FF']];
+const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mix=(a,b,t)=>'#'+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
+function colors(alt){let i=0;while(i<K.length-2&&alt>K[i+1][0])i++;const a=K[i],b=K[i+1],t=Math.max(0,Math.min(1,(alt-a[0])/(b[0]-a[0])));return[1,2,3].map(j=>mix(a[j],b[j],t))}
+const S={city:lsGet('sky-city')||'auto',preview:null};
+function place(){return S.city!=='auto'&&CITIES[S.city]?{name:S.city,ll:CITIES[S.city],how:'elegida por ti'}:autoPlace()}
+function when(){if(S.preview==null)return new Date();const d=new Date();d.setHours(Math.floor(S.preview),Math.round(S.preview%1*60),0,0);return d}
+function apply(){
+ const p=place(),t=when(),alt=sunAlt(t.getTime(),p.ll[0],p.ll[1]),[a,b,c]=colors(alt),root=document.documentElement.style;
+ root.setProperty('--bg-a',a);root.setProperty('--bg-b',b);root.setProperty('--bg-c',c);
+ const dark=alt<-1;root.setProperty('--on-sky',dark?'#F2F5FA':'#0D2340');root.setProperty('--on-sky-mute',dark?'#B9C6DA':'#3F5068');
+ root.setProperty('--stars',String(Math.max(0,Math.min(1,(-alt-4)/10))));
+ document.documentElement.dataset.sky=dark?'night':alt<8?'golden':'day';
+ const hh=t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+ const phase=alt<-12?'Noche':alt<-1?(t.getHours()<12?'Amanecer':'Anochecer'):alt<8?(t.getHours()<12?'Mañana temprana':'Atardecer'):'Día';
+ document.querySelectorAll('[data-sky-label]').forEach(el=>el.textContent=`${phase} · ${hh} · ${p.name}`);
+ document.querySelectorAll('[data-sky-how]').forEach(el=>el.textContent=S.preview==null?`Hora real de tu dispositivo. Ubicación: ${p.name} (${p.how}).`:`Vista previa a las ${hh} en ${p.name}.`);
+ document.querySelectorAll('[data-sky-range]').forEach(el=>{if(S.preview==null){const n=new Date();el.value=n.getHours()+n.getMinutes()/60}});
+}
+window.Sky={cities:Object.keys(CITIES),get city(){return S.city},
+ setCity(c){S.city=c;lsSet('sky-city',c);apply()},preview(h){S.preview=h;apply()},live(){S.preview=null;apply()},apply};
+apply();setInterval(()=>{if(S.preview==null)apply()},60000);
+const btn=$('#sky-btn'),panel=$('#skypanel'),sel=$('#sky-city');
+sel.innerHTML=Sky.cities.map(c=>`<option value="${esc(c)}">${c==='auto'?'Automática (por tu zona horaria)':esc(c)}</option>`).join('');sel.value=Sky.city;
+btn.addEventListener('click',()=>{panel.hidden=!panel.hidden;btn.setAttribute('aria-expanded',String(!panel.hidden))});
+sel.addEventListener('change',()=>Sky.setCity(sel.value));
+$('#sky-range').addEventListener('input',e=>Sky.preview(+e.target.value));
+$('#sky-live').addEventListener('click',()=>Sky.live());
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden){panel.hidden=true;btn.setAttribute('aria-expanded','false');btn.focus()}});
+})();
 
-/* Portadas */
-const W = "rgb(255 255 255 / .28)", W2 = "rgb(255 255 255 / .5)";
-const ART = {
-  lf: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="3"><circle cx="50" cy="70" r="22"/><circle cx="140" cy="70" r="22"/><circle cx="140" cy="70" r="16"/><circle cx="95" cy="150" r="22"/><path d="M72 70h44M128 90l-22 40M62 90l22 40"/><path d="M40 48c-6-24 26-24 20 0" /></g><g fill="${W2}" font-family="monospace" font-size="16"><text x="86" y="62">a</text><text x="122" y="118">b</text><text x="56" y="118">ε</text></g></svg>`,
-  papi: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="${W}" font-family="monospace" font-size="15"><text x="14" y="34">GET /api/users</text><text x="14" y="58">app.use(auth)</text><text x="14" y="82">SELECT * FROM</text><text x="14" y="106">jwt.verify()</text><text x="14" y="130">res.json({…})</text></g><g fill="none" stroke="${W2}" stroke-width="4"><path d="M120 150l-26 26 26 26M156 150l26 26-26 26"/></g></svg>`,
-  rt: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="3"><circle cx="140" cy="60" r="34"/><path d="M140 40v20l14 10"/></g><g stroke="${W}" stroke-width="10" stroke-linecap="round"><path d="M20 120h70M110 120h50"/><path d="M50 145h90"/><path d="M20 170h30M80 170h90"/></g></svg>`,
-  sd: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="${W2}" stroke-width="6" stroke-linecap="round">${Array.from({ length: 18 }, (_, i) => { const h = 12 + Math.abs(Math.sin(i * 1.3) * 60) + (i % 3) * 8; return `<path d="M${14 + i * 10.5} ${100 - h / 2}v${h}"/>`; }).join("")}</g></svg>`,
-  si: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="${W}" stroke-width="2">${[[40,40],[40,90],[40,140]].flatMap(a => [[100,50],[100,110]].map(b => `<path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}"/>`)).join("")}${[[100,50],[100,110]].map(a => `<path d="M${a[0]} ${a[1]}L160 80"/>`).join("")}</g><g fill="${W2}"><circle cx="40" cy="40" r="9"/><circle cx="40" cy="90" r="9"/><circle cx="40" cy="140" r="9"/><circle cx="100" cy="50" r="9"/><circle cx="100" cy="110" r="9"/><circle cx="160" cy="80" r="11"/></g></svg>`,
-  tal: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="4" stroke-linecap="round"><circle cx="70" cy="80" r="26"/><circle cx="70" cy="80" r="9"/>${Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4; return `<path d="M${70 + Math.cos(a) * 26} ${80 + Math.sin(a) * 26}L${70 + Math.cos(a) * 36} ${80 + Math.sin(a) * 36}"/>`; }).join("")}<path d="M110 170l50-50M150 110l20 20-14 14-20-20z"/></g></svg>`,
-  est: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="${W}"><rect x="20" y="40" width="40" height="40" rx="4"/><rect x="66" y="40" width="40" height="40" rx="4" fill="${W2}"/><rect x="112" y="40" width="40" height="40" rx="4"/><rect x="20" y="86" width="40" height="40" rx="4" fill="${W2}"/><rect x="66" y="86" width="40" height="40" rx="4"/></g><g fill="none" stroke="${W2}" stroke-width="3"><path d="M30 190c30-50 60-50 90 0s40 10 60-20"/></g></svg>`,
-  vsie: `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="${W2}" stroke-width="4" stroke-linejoin="round"><rect x="30" y="60" width="130" height="70" rx="30"/><path d="M60 82v26M47 95h26"/></g><g fill="${W2}"><circle cx="122" cy="88" r="7"/><circle cx="138" cy="104" r="7"/></g><g fill="${W}" font-family="monospace" font-size="14"><text x="34" y="170">f(x) = sim</text><text x="34" y="192">learn++</text></g></svg>`,
-};
-const ARTX = `<svg viewBox="0 0 200 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="${W}" stroke-width="8" stroke-linecap="round"><path d="M20 60h150M20 90h120M20 120h140M20 150h90"/></g></svg>`;
+/* ---------- Iconos ---------- */
+const P = { home: '<path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/>', book: '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H20v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H20"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>', cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  chart: '<path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/>', check: '<path d="m5 12.5 4.2 4.2L19 7"/>', back: '<path d="M19 12H5M11 6l-6 6 6 6"/>', chev: '<path d="m9 6 6 6-6 6"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>', mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>', doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/>', prev: '<path d="m15 6-6 6 6 6"/>' };
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n] || ""}</svg>`;
 
-
-/* Estado */
+/* ---------- Estado ---------- */
 let db = null, mcp = null, sample = null, hostOK = false;
-let GEN = { asignaturas: [], horario: [], agente: null, sincronizado: null };
+let GEN = { asignaturas: [], horario: [], agente: null, sincronizado: null, nombre: "" };
 let CLASES = [], MAPA = {}, HECHOS = new Set(), cargado = false;
-let open = lsGet("clases-open"), filtro = "pend", lectorId = null;
-const asig = (id) => GEN.asignaturas.find((a) => a.id === id) || { id, nombre: id || "Sin asignatura", color: "#4b5566" };
+let filtro = "pend";
+const asig = (id) => GEN.asignaturas.find((a) => a.id === id) || { id, nombre: id || "Sin asignatura", color: "#475569" };
 const hoy = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const isoLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const fmtFecha = (iso) => new Date(iso + (iso.length === 10 ? "T00:00" : "")).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
 const fmtHora = (iso) => new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-const fmtDur = (s) => s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.round(s % 3600 / 60)} min` : `${Math.max(1, Math.round(s / 60))} min`;
+const fmtDur = (s) => s >= 3600 ? `${Math.floor(s / 3600)} h ${String(Math.round(s % 3600 / 60)).padStart(2, "0")}` : `${Math.max(1, Math.round(s / 60))} min`;
+const fmtH = (s) => { const h = s / 3600; return h >= 10 ? `${Math.round(h)} h` : `${String(Math.round(h * 10) / 10).replace(".", ",")} h`; };
 const mmss = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 const hace = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "ahora mismo" : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `el ${fmtFecha(iso.slice(0, 10))}`; };
 const TIPOS = { examen: "Examen", trabajo: "Trabajo", entrega: "Entrega", fecha: "Fecha", aviso: "Aviso", comentario: "Comentario" };
+const TIPO_C = { examen: "#B42318", trabajo: "#E0560F", entrega: "#E0560F", fecha: "#2563EB", aviso: "#475569", comentario: "#0E9F8E" };
+const TAREA = ["examen", "trabajo", "entrega"];
+const NORM = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+const DIAS_N = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+const DIA_CORTO = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const h2n = (t) => { const [a, b] = String(t || "0:0").split(":").map(Number); return (a || 0) + (b || 0) / 60; };
+const ahoraH = () => { const n = new Date(); return n.getHours() + n.getMinutes() / 60; };
+const slotDow = (h) => DIAS_N.indexOf(NORM(h.dia));
+const PALABRAS_VACIAS = new Set(["de", "del", "la", "las", "el", "los", "y", "e", "a", "en", "para", "con", "al"]);
+function codigo(a) {
+  const ws = String(a.nombre || a.id || "").normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[\s\-_/]+/)
+    .filter((w) => w && !PALABRAS_VACIAS.has(w.toLowerCase()) && !/^([ivx]+|\d+)$/i.test(w));
+  const c = ws.length >= 2 ? ws.slice(0, 3).map((w) => w[0]).join("") : (ws[0] || a.id || "?").slice(0, 3);
+  return c.toUpperCase();
+}
+function asignaturasIds() {
+  return [...GEN.asignaturas.map((a) => a.id), ...new Set(CLASES.map((c) => c.asignatura).filter((id) => id && !GEN.asignaturas.some((a) => a.id === id)))];
+}
+const clasesDe = (id) => CLASES.filter((c) => c.asignatura === id);
+const urlClase = (id) => "#clase=" + encodeURIComponent(id);
 
 function destacados() {
   const out = [];
@@ -251,112 +411,120 @@ function destacados() {
   return out;
 }
 function cuando(d) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha_iso || "")) return { txt: "sin fecha", dias: null };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha_iso || "")) return { txt: "Sin fecha", dias: null };
   const f = new Date(d.fecha_iso + "T00:00"), dias = Math.round((f - hoy()) / 864e5);
-  const txt = dias === 0 ? "hoy" : dias === 1 ? "mañana" : dias > 1 ? `en ${dias} días · ${fmtFecha(d.fecha_iso)}` : `${fmtFecha(d.fecha_iso)} · pasado`;
+  const txt = dias === 0 ? "Hoy" : dias === 1 ? "Mañana" : dias > 1 && dias < 7 ? f.toLocaleDateString("es-ES", { weekday: "long" }).replace(/^./, (x) => x.toUpperCase())
+    : dias >= 7 ? f.toLocaleDateString("es-ES", { day: "numeric", month: "short" }) : `${f.toLocaleDateString("es-ES", { day: "numeric", month: "short" })} · pasado`;
   return { txt, dias };
 }
 const vigente = (d) => !HECHOS.has(d.clave) && !(cuando(d).dias < 0);
+const pesoD = (d) => { const w = cuando(d); return w.dias === null ? 1e6 - new Date(d.clase.inicio) / 1e9 : w.dias < 0 ? 2e6 - w.dias : w.dias; };
 
-/* ---------- Pintado ---------- */
-function cardHTML(d, conClase = true) {
+/* Horario: siguiente vez que toca una franja, contando desde ahora */
+function proximaVez(h) {
+  const dow = slotDow(h); if (dow < 0) return null;
+  const n = new Date(); let dias = (dow - n.getDay() + 7) % 7;
+  if (dias === 0 && h2n(h.inicio) <= ahoraH()) dias = 7;
+  return { dias, h };
+}
+function txtProxima(p) { return !p ? "—" : p.dias === 0 ? `hoy ${p.h.inicio}` : p.dias === 1 ? `mañana ${p.h.inicio}` : `${DIA_CORTO[slotDow(p.h)]} ${p.h.inicio}`; }
+function franjasHoy() { const d = new Date().getDay(); return GEN.horario.filter((h) => slotDow(h) === d).sort((a, b) => h2n(a.inicio) - h2n(b.inicio)); }
+/* Clase grabada que corresponde a una franja de hoy */
+function grabadaDe(h) {
+  const iso = isoLocal(new Date());
+  return CLASES.find((c) => c.fecha === iso && c.asignatura === h.asignatura && (() => { const t = new Date(c.inicio); const x = t.getHours() + t.getMinutes() / 60; return x >= h2n(h.inicio) - .5 && x < h2n(h.fin); })());
+}
+function agenteVivo() { const ag = GEN.agente; return ag && ag.actualizado && (Date.now() - new Date(ag.actualizado)) < 3 * 60000 ? ag : null; }
+function grabandoAhora() { const ag = agenteVivo(); return hostOK && ag && ag.activo && ag.clase_id ? ag : null; }
+
+/* ---------- Piezas compartidas ---------- */
+function filaTarea(d, { clase = true } = {}) {
   const a = asig(d.clase.asignatura), w = cuando(d), hecho = HECHOS.has(d.clave);
-  return `<div class="card${hecho ? " done" : ""}" style="--c:${color(a.color)}">
-    <div class="row1"><span class="tag ct">${esc(TIPOS[d.tipo] || d.tipo)}</span>${d.importancia === "alta" ? `<span class="tag alta">Muy importante</span>` : ""}<span class="when${w.dias !== null && w.dias >= 0 && w.dias <= 7 ? " soon" : ""}">${esc(w.txt)}</span></div>
-    <b>${esc(d.titulo)}</b>
-    ${d.detalle ? `<p>${esc(d.detalle)}</p>` : ""}
-    ${!conClase && d.cita ? `<div class="q">«${esc(d.cita)}»${d.minuto ? ` · ${esc(d.minuto)}` : ""}</div>` : ""}
-    <div class="row2">${conClase ? `<a href="#" data-open="${esc(d.clase.id)}" class="ct">${esc(a.nombre)} · ${esc(fmtFecha(d.clase.fecha))}</a>` : `<span></span>`}
-      <label><input type="checkbox" data-hecho="${esc(d.clave)}" ${hecho ? "checked" : ""} ${db ? "" : "disabled"}> Hecho</label></div>
-  </div>`;
+  const pill = `<span class="pill${w.dias === 0 ? " hot" : ""}" style="--c:${TIPO_C[d.tipo] || "#475569"}">${esc(TIPOS[d.tipo] || d.tipo)} · ${esc(w.txt)}</span>`;
+  return `<li class="task${hecho ? " done" : ""}" style="--c:${color(a.color)}">
+    <button class="chk" type="button" data-hecho="${esc(d.clave)}" aria-pressed="${hecho}" aria-label="Marcar «${esc(d.titulo)}» como hecho" ${db ? "" : "disabled"}>${ic("check")}</button>
+    <div><div class="t-title">${esc(d.titulo)}</div>${d.detalle ? `<div class="t-det">${esc(d.detalle)}</div>` : ""}
+      ${!clase && d.cita ? `<div class="cita">«${esc(d.cita)}»${d.minuto ? ` · ${esc(d.minuto)}` : ""}</div>` : ""}
+      <div class="t-sub">${pill}${d.importancia === "alta" ? `<span class="pill red">Muy importante</span>` : ""}${clase ? `<a href="${urlClase(d.clase.id)}">${esc(a.nombre)} · ${esc(fmtFecha(d.clase.fecha))}</a>` : ""}</div></div><span></span></li>`;
 }
-function bindCards(root) {
-  root.querySelectorAll("[data-open]").forEach((a) => a.onclick = (e) => { e.preventDefault(); abrirClase(a.dataset.open); });
-  root.querySelectorAll("[data-hecho]").forEach((cb) => cb.onchange = async () => {
-    const ref = db.doc("hechos/" + cb.dataset.hecho);
-    try { cb.checked ? await ref.set({ hecho: true, cuando: new Date().toISOString() }) : await ref.delete(); }
-    catch (e) { cb.checked = !cb.checked; }
-  });
+function estadoClase(c) {
+  if (c.en_curso) return `<span class="state live"><i></i>Grabando</span>`;
+  if (resumiendo.has(c.id)) return `<span class="state wait"><i></i>Resumiendo</span>`;
+  if (c.resumen) return `<span class="state"><i></i>Resumen listo</span>`;
+  if (c.estado_resumen === "vacio") return `<span class="state none"><i></i>Sin contenido</span>`;
+  if (c.estado_resumen === "error") return `<span class="state err"><i></i>Sin resumen</span>`;
+  return `<span class="state wait"><i></i>Resumen pendiente</span>`;
 }
-function renderImportante() {
-  let ds = destacados();
-  if (filtro !== "all") ds = ds.filter(vigente);
-  if (filtro === "alta") ds = ds.filter((d) => d.importancia === "alta");
-  const peso = (d) => { const w = cuando(d); return w.dias === null ? 1e6 - new Date(d.clase.inicio) / 1e9 : w.dias < 0 ? 2e6 - w.dias : w.dias; };
-  ds.sort((x, y) => peso(x) - peso(y));
-  $("#cards").innerHTML = ds.length ? ds.map((d) => cardHTML(d)).join("")
-    : `<p class="empty">${!cargado ? "Cargando…" : CLASES.length ? "Nada pendiente. Cuando el profe mencione un examen, una entrega o algo importante, aparecerá aquí." : "Aún no hay clases. Inicia el agente en clase y aquí irán apareciendo los exámenes, trabajos y avisos importantes."}</p>`;
-  bindCards($("#cards"));
+function tituloClase(c) { return c.resumen?.titulo || (c.en_curso ? "Clase en curso" : c.estado_resumen === "vacio" ? "Sin contenido" : "Resumen pendiente"); }
+function filaClase(c, conAsig) {
+  const a = asig(c.asignatura), f = new Date(c.fecha + "T00:00");
+  return `<a class="rec" href="${urlClase(c.id)}" style="--c:${color(a.color)}"><span class="date"><b>${f.getDate()}</b><span>${f.toLocaleDateString("es-ES", { month: "short" }).replace(".", "")}</span></span>
+    <span><h3>${esc(tituloClase(c))}</h3><p>${conAsig ? `<span class="pill">${esc(codigo(a))}</span> ${esc(a.nombre)} · ` : `${esc(DIAS[f.getDay()])} · `}${esc(fmtHora(c.inicio))}${c.duracion_s ? ` · ${fmtDur(c.duracion_s)}` : ""}</p></span>
+    ${estadoClase(c)}<span class="chev">${ic("chev")}</span></a>`;
 }
-document.querySelectorAll("#fil button").forEach((b) => b.onclick = () => {
-  filtro = b.dataset.f;
-  document.querySelectorAll("#fil button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-  renderImportante();
-});
+/* Arco del día de 8:00 a 24:00 */
+function arcPt(h) { h = Math.max(8, Math.min(24, h)); const a = Math.PI * (1 - (h - 8) / 16); return [500 + 430 * Math.cos(a), 330 - 280 * Math.sin(a)]; }
+function arcPath(h0, h1) { const [x0, y0] = arcPt(h0), [x1, y1] = arcPt(h1); return `M${x0.toFixed(1)} ${y0.toFixed(1)} A430 280 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
 
-function renderMesa() {
-  const ids = [...GEN.asignaturas.map((a) => a.id), ...new Set(CLASES.map((c) => c.asignatura).filter((id) => !GEN.asignaturas.some((a) => a.id === id)))];
-  $(".desk").hidden = !ids.length;
-  if (!ids.length) { $("#books").innerHTML = ""; $("#spread").innerHTML = ""; return; }
-  if (!ids.includes(open)) open = ids[0];
-  $("#books").innerHTML = ids.map((id) => {
-    const a = asig(id), n = CLASES.filter((c) => c.asignatura === id).length;
-    const urg = destacados().some((d) => d.clase.asignatura === id && d.importancia === "alta" && vigente(d));
-    const maxw = Math.max(...a.nombre.split(" ").map((w) => w.length));
-    const cls = a.nombre.length > 30 ? "xlong" : maxw >= 11 ? "long" : "";
-    return `<button class="rbook" style="--c:${color(a.color)}" aria-expanded="${open === id}" data-b="${esc(id)}" aria-label="${esc(a.nombre)}, ${n} clases">
-      <span class="art">${ART[id] || ARTX}</span><span class="ttl ${cls}">${esc(a.nombre)}</span>
-      ${urg ? `<span class="bad" title="Tiene cosas muy importantes pendientes"></span>` : ""}<span class="n">${n}</span></button>`;
-  }).join("");
-  $("#books").querySelectorAll(".rbook").forEach((b) => b.onclick = () => { open = b.dataset.b; lsSet("clases-open", open); renderMesa(); });
-  const a = asig(open), cs = CLASES.filter((c) => c.asignatura === open);
-  const slots = GEN.horario.filter((h) => h.asignatura === open);
-  const pend = destacados().filter((d) => d.clase.asignatura === open && vigente(d) && ["examen", "trabajo", "entrega"].includes(d.tipo));
-  const dur = cs.reduce((s, c) => s + (c.duracion_s || 0), 0);
-  $("#spread").innerHTML = `<div class="spread" style="--c:${color(a.color)}">
-    <div class="left"><span class="eb ct">Asignatura</span><h2>${esc(a.nombre)}</h2>
-      ${slots.length ? `<ul class="slots">${slots.map((h) => `<li><b>${esc(String(h.dia).replace("miercoles", "miércoles"))}</b> ${esc(h.inicio)}–${esc(h.fin)}${h.aula ? ` · aula ${esc(h.aula)}` : ""}</li>`).join("")}</ul>` : ""}
-      <p>${cs.length} ${cs.length === 1 ? "clase grabada" : "clases grabadas"}${dur ? ` · ${fmtDur(dur)}` : ""}</p>
-      ${pend.length ? `<div class="mini">${pend.slice(0, 4).map((d) => `<div><b>${esc(d.titulo)}</b><br><span>${esc(cuando(d).txt)}</span></div>`).join("")}</div>` : ""}
-    </div>
-    <div class="right"><h3>Clases</h3>${cs.length ? `<ol class="toc">${cs.map((c) => {
-      const titulo = c.resumen?.titulo || (c.en_curso ? "Clase en curso" : c.estado_resumen === "vacio" ? "Sin contenido" : "Resumen pendiente");
-      const st = c.en_curso ? `<span class="st rec">grabando</span>` : resumiendo.has(c.id) ? `<span class="st">resumiendo</span>` : (!c.resumen && c.estado_resumen === "error") ? `<span class="st err">sin resumen</span>` : "";
-      const nd = (c.resumen?.destacados || []).filter((d) => d.importancia === "alta").length;
-      return `<li><button data-open="${esc(c.id)}"><span class="tt">${esc(titulo)}${st}<span class="meta">${esc(fmtFecha(c.fecha))} · ${esc(fmtHora(c.inicio))}${c.duracion_s ? ` · ${fmtDur(c.duracion_s)}` : ""}${nd ? ` · ${nd} muy importante${nd > 1 ? "s" : ""}` : ""}</span></span><span class="dots"></span><span class="pg">${esc(fmtFecha(c.fecha))}</span></button></li>`;
-    }).join("")}</ol>` : `<p class="empty">Todavía no hay clases de esta asignatura.</p>`}</div>
-  </div>`;
-  bindCards($("#spread"));
+/* Horas grabadas por día (fecha local) */
+function horasPorDia() { const m = {}; for (const c of CLASES) if (c.duracion_s) m[c.fecha] = (m[c.fecha] || 0) + c.duracion_s; return m; }
+function lunes(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+function horasHorarioSemana() { return GEN.horario.reduce((s, h) => s + Math.max(0, h2n(h.fin) - h2n(h.inicio)) * 3600, 0); }
+function bloqueStats() {
+  const por = horasPorDia(), N = 28, hoyD = hoy(), vals = [];
+  for (let i = N - 1; i >= 0; i--) { const d = new Date(hoyD); d.setDate(d.getDate() - i); vals.push({ d, s: por[isoLocal(d)] || 0 }); }
+  const lun = lunes(new Date()), semana = CLASES.filter((c) => new Date(c.fecha + "T00:00") >= lun).reduce((s, c) => s + (c.duracion_s || 0), 0);
+  const plan = horasHorarioSemana(), listos = CLASES.filter((c) => c.resumen).length;
+  const head = `<div class="st-head"><div><b>${fmtH(semana)}</b><span>grabadas esta semana${plan ? `, de ${fmtH(plan)} en tu horario` : ""}</span></div><div><b>${CLASES.length}</b><span>${CLASES.length === 1 ? "clase grabada" : "clases grabadas"}</span></div><div><b>${listos}</b><span>${listos === 1 ? "resumen listo" : "resúmenes listos"}</span></div></div>`;
+  if (!vals.some((v) => v.s)) return `<h2>Estadísticas <span>últimas 4 semanas</span></h2>${head}<p class="empty">Todavía no hay clases grabadas en las últimas cuatro semanas.</p>`;
+  const W = 1100, H = 190, pad = 24, st = (W - pad * 2) / (N - 1), max = Math.max(2, Math.ceil(Math.max(...vals.map((v) => v.s / 3600))));
+  const y = (v) => H - 22 - (v / max) * (H - 44);
+  const pts = vals.map((v, i) => [pad + i * st, y(v.s / 3600)]);
+  let d = "M" + pts[0].map((n) => n.toFixed(1)).join(" ");
+  for (let i = 1; i < pts.length - 1; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[i + 1]; d += ` Q${x0.toFixed(1)} ${y0.toFixed(1)} ${((x0 + x1) / 2).toFixed(1)} ${((y0 + y1) / 2).toFixed(1)}`; }
+  const L = pts[pts.length - 1]; d += ` L${L[0].toFixed(1)} ${L[1].toFixed(1)}`;
+  const marcas = [0, Math.round(max / 2), max].filter((v, i, a) => a.indexOf(v) === i);
+  const etiquetas = [0, 7, 14, 21, 27].map((i) => `<text x="${(pad + i * st).toFixed(0)}" y="${H - 4}" text-anchor="${i === 27 ? "end" : i ? "middle" : "start"}">${i === 27 ? "hoy" : vals[i].d.toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</text>`).join("");
+  return `<h2>Estadísticas <span>horas de clase grabadas, últimas 4 semanas</span></h2>${head}
+    <svg class="area" viewBox="0 0 ${W} ${H}" role="img" aria-label="Horas de clase grabadas por día en las últimas cuatro semanas; esta semana ${fmtH(semana)}."><defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2563EB" stop-opacity=".28"/><stop offset="1" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>
+    ${marcas.map((v) => `<line x1="${pad}" x2="${W - pad}" y1="${y(v)}" y2="${y(v)}" stroke="#E3EBF4"/><text x="${W - pad}" y="${y(v) - 5}" text-anchor="end">${v} h</text>`).join("")}
+    <path d="${d} L${L[0].toFixed(1)} ${H - 22} L${pad} ${H - 22} Z" fill="url(#ag)"/><path d="${d}" fill="none" stroke="#2563EB" stroke-width="2.5"/><circle cx="${L[0].toFixed(1)}" cy="${L[1].toFixed(1)}" r="5" fill="#2563EB" stroke="#fff" stroke-width="2"/>${etiquetas}</svg>`;
 }
 
+/* ---------- Barra de estado y avisos ---------- */
 function renderEstado() {
-  const ag = GEN.agente, vivo = ag && ag.actualizado && (Date.now() - new Date(ag.actualizado)) < 3 * 60000;
-  const grabando = hostOK && vivo && ag.activo && ag.clase_id;
-  $("#live").classList.toggle("on", !!grabando);
+  const ag = agenteVivo(), grab = grabandoAhora();
+  $("#live").classList.toggle("on", !!grab);
   $("#liveTxt").textContent = hostOK
-    ? (vivo && ag.activo ? ag.estado : "Agente parado")
+    ? (ag && ag.activo ? ag.estado : "Grabación en pausa")
     : GEN.sincronizado ? `Sincronizado ${hace(GEN.sincronizado)}` : "Sin sincronizar todavía";
+  const nom = String(GEN.nombre || "").trim();
+  $("#av").textContent = nom ? nom.split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() : "·";
+  $("#av").title = nom;
   const n = $("#syncNote");
-  if (!db) { n.hidden = false; n.textContent = "No puedo abrir la base de datos del hub. Inicia sesión en claude.ai y vuelve a abrirlo."; }
+  if (!db) { n.hidden = false; n.textContent = "No puedo abrir la base de datos del panel. Inicia sesión en claude.ai y vuelve a abrirlo."; }
   else if (!hostOK && (hostMsg || notaAccion)) {
     n.hidden = false; n.textContent = "";
     const t = document.createElement("span"); t.textContent = hostMsg; n.appendChild(t);
     if (notaAccion) {
-      const b = document.createElement("button"); b.className = "btn primary"; b.textContent = notaAccion.texto;
+      const b = document.createElement("button"); b.className = "btn pri sm"; b.textContent = notaAccion.texto;
       b.onclick = () => notaAccion.fn(b); n.appendChild(b);
     }
   }
   else if (modo === "fs" && hostOK && RAIZ && !MOSTRAR_CARPETA_OCULTA) {
-    // Qué carpeta se está leyendo, para saber de qué agente vienen las clases
+    // Qué carpeta se está leyendo, para saber de qué ordenador vienen las clases
     n.hidden = false; n.textContent = "";
-    const t = document.createElement("span"); t.className = "meta-line"; t.textContent = `Leyendo las clases de ${RAIZ}`; n.appendChild(t);
-    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Cambiar carpeta";
+    n.classList.remove("warn");
+    const t = document.createElement("span"); t.className = "muted"; t.textContent = `Leyendo las clases de ${RAIZ}`; n.appendChild(t);
+    const b = document.createElement("button"); b.className = "btn sec sm"; b.textContent = "Cambiar carpeta";
     b.onclick = () => { MOSTRAR_CARPETA_OCULTA = true; pedirCarpeta(); }; n.appendChild(b);
+    return renderResumenBar();
   }
   else n.hidden = true;
+  n.classList.add("warn");
   renderResumenBar();
 }
-function renderTodo() { renderEstado(); renderImportante(); renderMesa(); if (lectorId && !$("#reader").hidden) refrescarLector(); }
+function renderTodo() { renderEstado(); pintarVista(false); }
 
 /* ---------- Base de datos ---------- */
 function suscribir() {
@@ -398,7 +566,7 @@ const AG = {
     try { agente = await fsj(`${RAIZ}/datos/estado_agente.json`); } catch (e) {}
     let panel = null;
     try { panel = await fsj(`${RAIZ}/datos/panel.json`); } catch (e) {}
-    return { asignaturas: cfg.asignaturas || [], horario: cfg.horario || [], agente, panel }; // nunca se leen los ajustes (clave de API)
+    return { asignaturas: cfg.asignaturas || [], horario: cfg.horario || [], agente, panel, nombre: (cfg.perfil && cfg.perfil.nombre) || "" }; // nunca se leen los ajustes (clave de API)
   },
   async listar_clases() {
     const dir = `${RAIZ}/datos/clases`;
@@ -459,18 +627,18 @@ async function pasarAModoFs(conClick) {
     try { st = (await desktop.permissions.request(["full-access"]))["full-access"]; } catch (e) {}
   }
   if (st === "prompt") {
-    hostMsg = "Para leer las clases que graba el agente, dale permiso a esta app para acceder a tus archivos.";
+    hostMsg = "Para leer las clases que graba Estudio, dale permiso a esta app para acceder a tus archivos.";
     notaAccion = { texto: "Dar permiso", fn: () => pasarAModoFs(true) };
     renderTodo(); return true;
   }
   if (st !== "granted") {
-    hostMsg = "Esta app no tiene permiso para leer tus archivos, así que no puede traer las clases del agente. Puedes activarlo en sus permisos.";
+    hostMsg = "Esta app no tiene permiso para leer tus archivos, así que no puede traer las clases del ordenador. Puedes activarlo en sus permisos.";
     notaAccion = { texto: "Abrir permisos", fn: () => desktop.permissions.manage().then(() => pasarAModoFs(false)).catch(() => {}) };
     renderTodo(); return true;
   }
   const r = await buscarCarpeta();
   if (!r) {
-    hostMsg = "No encuentro la carpeta del Agente de clases. Escribe dónde está (la que tiene app.py), por ejemplo C:\\Users\\tu_usuario\\Downloads\\AgenteClases.";
+    hostMsg = "No encuentro la carpeta de Estudio. Escribe dónde está (la que tiene app.py), por ejemplo C:\\Users\\tu_usuario\\Downloads\\AgenteClases.";
     notaAccion = { texto: "Indicar carpeta", fn: () => pedirCarpeta() };
     renderTodo(); return true;
   }
@@ -483,12 +651,12 @@ function pedirCarpeta() {
   const n = $("#syncNote");
   n.textContent = "";
   const i = document.createElement("input"); i.type = "text"; i.placeholder = "C:\\Users\\…\\AgenteClases"; i.value = RAIZ; i.style.flex = "1 1 260px";
-  const b = document.createElement("button"); b.className = "btn primary"; b.textContent = "Usar esta carpeta";
-  const m = document.createElement("span"); m.className = "meta-line";
+  const b = document.createElement("button"); b.className = "btn pri sm"; b.textContent = "Usar esta carpeta";
+  const m = document.createElement("span"); m.className = "muted";
   b.onclick = async () => {
     const r = i.value.trim().replace(/[\\/]+$/, "");
     if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); lsSet("clases-carpeta-manual", "1"); pasarAModoFs(false); }
-    else m.textContent = "Ahí no está el agente (no encuentro su config.json). Con la app instalada suele estar en Documentos\\AgenteClases.";
+    else m.textContent = "Ahí no está Estudio (no encuentro su config.json). Con la app instalada suele estar en Documentos\\AgenteClases.";
   };
   n.append(i, b, m); i.focus();
 }
@@ -509,11 +677,11 @@ function avisarPanelNuevo(p) {
   t.append(b, s);
   const notas = Array.isArray(p.notas) ? p.notas.slice(0, 6) : [];
   if (notas.length) { const ul = document.createElement("ul"); ul.style.margin = "6px 0 0"; ul.style.paddingLeft = "18px"; for (const x of notas) { const li = document.createElement("li"); li.textContent = String(x); ul.append(li); } t.append(ul); }
-  const prompt = `Actualiza mi panel "Mis clases" del Agente de clases a la versión ${p.version}. Es un artefacto que ya tengo publicado (búscalo entre mis artefactos). `
+  const prompt = `Actualiza mi panel "Mis clases" de Estudio (antes Agente de clases) a la versión ${p.version}. Es un artefacto que ya tengo publicado (búscalo entre mis artefactos). `
     + `Lee las instrucciones de ${p.guia} y vuelve a publicar en ESA MISMA URL, sin crear uno nuevo, el HTML de ${p.html} tal cual, con las capacidades que indica la guía. Así se conservan mis clases y resúmenes. Cuando esté, dímelo.`;
-  const si = document.createElement("a"); si.className = "btn primary"; si.textContent = "Actualizar el panel";
+  const si = document.createElement("a"); si.className = "btn pri sm"; si.textContent = "Actualizar el panel";
   si.href = "https://claude.ai/new?q=" + encodeURIComponent(prompt); si.target = "_blank"; si.rel = "noopener";
-  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Ahora no";
+  const no = document.createElement("button"); no.className = "btn sec sm"; no.textContent = "Ahora no";
   no.onclick = () => { lsSet("clases-panel-saltado", p.version); n.hidden = true; };
   const acc = document.createElement("span"); acc.className = "note-actions"; acc.append(si, no);
   n.append(t, acc);
@@ -528,9 +696,9 @@ async function sugerirApp() {
   n.hidden = false; n.textContent = "";
   const t = document.createElement("span");
   t.textContent = "Instala Mis clases como app de escritorio: se abre como un programa más y lee tus clases directamente del ordenador.";
-  const si = document.createElement("button"); si.className = "btn primary"; si.textContent = "Instalar";
+  const si = document.createElement("button"); si.className = "btn pri sm"; si.textContent = "Instalar";
   si.onclick = () => { si.disabled = true; desktop.install.request().then((r) => { if (r === "cancelled") si.disabled = false; else n.hidden = true; }).catch(() => { si.disabled = false; }); };
-  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Ahora no";
+  const no = document.createElement("button"); no.className = "btn sec sm"; no.textContent = "Ahora no";
   no.onclick = () => { lsSet("clases-no-instalar", "1"); n.hidden = true; };
   n.append(t, si, no);
 }
@@ -539,7 +707,7 @@ async function ofrecerInstalar() {
     if ((await desktop?.install?.state()) !== "available") return;
     puedeInstalar = true;
     notaAccion = { texto: "Instalar como app", fn: (b) => desktop.install.request().then((r) => { if (r === "cancelled") b.disabled = false; }).catch(() => {}) };
-    if (!hostOK) hostMsg = "Para traer las clases del agente, instala este hub como app de Claude (botón de la derecha) y ábrelo desde ahí.";
+    if (!hostOK) hostMsg = "Para traer las clases del ordenador, instala este panel como app de Claude (botón de al lado) y ábrelo desde ahí.";
     renderTodo();
   } catch (e) {}
 }
@@ -550,7 +718,7 @@ async function sincronizar() {
     const est = await host("estado");
     hostOK = true; hostMsg = "";
     avisarPanelNuevo(est.panel);
-    const gen = { asignaturas: est.asignaturas || [], horario: est.horario || [], agente: est.agente || null };
+    const gen = { asignaturas: est.asignaturas || [], horario: est.horario || [], agente: est.agente || null, nombre: est.nombre || "" };
     const firma = JSON.stringify(gen);
     if (firma !== ultimoGen) { ultimoGen = firma; GEN = { ...GEN, ...gen }; }
     await db.doc("config/general").set({ ...gen, sincronizado: new Date().toISOString() });
@@ -564,15 +732,15 @@ async function sincronizar() {
     hostOK = false;
     if (modo === "mcp" && desktop?.fs) { setTimeout(() => pasarAModoFs(false), 0); return; }
     if (modo === "fs") {
-      hostMsg = `No he podido leer la carpeta del agente (${RAIZ}): ${(e && e.message) || "error"}`;
+      hostMsg = `No he podido leer la carpeta de Estudio (${RAIZ}): ${(e && e.message) || "error"}`;
       notaAccion = { texto: "Cambiar carpeta", fn: () => pedirCarpeta() };
       return;
     }
     hostMsg = e && (e.code === "server_not_connected" || e.code === "not_granted" || e.code === "unavailable") && puedeInstalar
-      ? `Para traer las clases del agente, instala este hub como app de Claude (botón de la derecha) y ábrelo desde ahí. [código: ${e.code}]`
+      ? `Para traer las clases del ordenador, instala este panel como app de Claude (botón de al lado) y ábrelo desde ahí. [código: ${e.code}]`
       : e && (e.code === "server_not_connected" || e.code === "not_granted" || e.code === "unavailable")
-      ? `Para traer clases nuevas, abre este hub en la app de Claude de tu ordenador (con el Agente de clases instalado). Desde aquí ves lo ya sincronizado. [código: ${e.code}]`
-      : e && e.code === "cancelled" ? "No se ha permitido leer las clases del ordenador. Vuelve a abrir el hub para intentarlo."
+      ? `Para traer clases nuevas, abre este panel en la app de Claude de tu ordenador (con Estudio instalado). Desde aquí ves lo ya sincronizado. [código: ${e.code}]`
+      : e && e.code === "cancelled" ? "No se ha permitido leer las clases del ordenador. Vuelve a abrir el panel para intentarlo."
       : `No he podido leer las clases del ordenador${e && e.message ? `: ${e.message}` : "."}`;
   } finally {
     sincronizando = false;
@@ -686,7 +854,7 @@ async function resumirClase(c) {
   const entrada = `${INSTRUCCIONES}\n\nAsignatura: ${c.nombre_asignatura || asig(c.asignatura).nombre}\nFecha de la clase: ${DIAS[ini.getDay()]} ${c.fecha}, empezó a las ${fmtHora(c.inicio)}\n\nTranscripción:\n${texto}`;
   if (new Blob([entrada]).size > 250000) throw new Error("la transcripción es demasiado larga para resumirla de una vez");
   const r = normalizar(await sample.json(entrada, { modelTier: "default" }));
-  r.generado = new Date().toISOString(); r.modelo = "Claude (hub)";
+  r.generado = new Date().toISOString(); r.modelo = "Claude (panel)";
   await db.doc("clases/" + c.id).update({ resumen: r, estado_resumen: "listo", error_resumen: null });
   if (hostOK) host("guardar_resumen", { id: c.id, resumen: r }).catch(() => {});
 }
@@ -702,7 +870,7 @@ async function resumirPendientes() {
     try { await resumirClase(c); ok++; }
     catch (e) {
       resumiendo.delete(c.id);
-      if (e && (e.code === "not_granted")) { sumMsg = "No se ha dado permiso para usar Claude desde el hub."; break; }
+      if (e && (e.code === "not_granted")) { sumMsg = "No se ha dado permiso para usar Claude desde el panel."; break; }
       if (e && e.code === "rate_limited") { sumMsg = "Claude está ocupado ahora mismo. Prueba en un rato."; break; }
       fallos++;
       db.doc("clases/" + c.id).update({ estado_resumen: "error", error_resumen: (e && e.message) || "error" }).catch(() => {});
@@ -713,92 +881,170 @@ async function resumirPendientes() {
   if (!sumMsg.startsWith("No se") && !sumMsg.startsWith("Claude está")) sumMsg = fallos ? `${ok} resumidas, ${fallos} con error. Puedes reintentarlo.` : "";
   renderTodo();
 }
+/* ---------- Vistas ---------- */
+const NAV = [["hoy", "Hoy", "home"], ["asignaturas", "Asignaturas", "book"], ["tareas", "Tareas", "list"], ["calendario", "Calendario", "cal"], ["estadisticas", "Estadísticas", "chart"]];
+function nav(sec) {
+  $("#dock").innerHTML = NAV.map(([k, l, i]) => `<a href="#${k}" ${k === sec ? 'aria-current="page"' : ""}>${ic(i)}<span>${l}</span></a>`).join("");
+  $("#tabbar").innerHTML = NAV.map(([k, l, i]) => `<a href="#${k}" aria-label="${l}" ${k === sec ? 'aria-current="page"' : ""}>${ic(i)}</a>`).join("");
+}
+function vacioInicial() {
+  return !cargado ? `<p class="empty">Cargando…</p>` : "";
+}
 
-/* ---------- Lector ---------- */
-let CLASE = null, SEGS = [], busq = "", segsVersion = "";
-async function abrirClase(id) {
-  lectorId = id; CLASE = MAPA[id] || null;
-  if (!CLASE) return;
-  $("#reader").hidden = false; document.body.style.overflow = "hidden";
-  if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
-  SEGS = []; segsVersion = "";
-  pintarLector(true);
-  $("#back").focus();
-  await cargarSegs();
+function vHoy() {
+  const now = ahoraH(), fr = franjasHoy(), grab = grabandoAhora();
+  const cur = fr.find((h) => h2n(h.inicio) <= now && h2n(h.fin) > now), nxt = fr.find((h) => h2n(h.inicio) > now);
+  const segs = fr.map((h) => {
+    const f = h2n(h.inicio), t = h2n(h.fin), c = color(asig(h.asignatura).color);
+    if (t <= f) return "";
+    if (now <= f) return `<path class="seg todo" d="${arcPath(f + .08, t - .08)}" stroke="${c}"/>`;
+    if (now >= t) return `<path class="seg" d="${arcPath(f + .08, t - .08)}" stroke="${c}"/>`;
+    return `<path class="seg" d="${arcPath(f + .08, Math.max(f + .2, now))}" stroke="${c}"/><path class="seg todo" d="${arcPath(now, t - .08)}" stroke="${c}"/>`;
+  }).join("");
+  const labs = fr.map((h) => { const m = Math.max(8, Math.min(24, (h2n(h.inicio) + h2n(h.fin)) / 2)), a = Math.PI * (1 - (m - 8) / 16), x = 500 + 464 * Math.cos(a), y = 330 - 314 * Math.sin(a); return `<text class="lab" x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="${x < 480 ? "end" : x > 520 ? "start" : "middle"}">${esc(codigo(asig(h.asignatura)))} ${esc(h.inicio)}</text>`; }).join("");
+  const ticks = [8, 12, 16, 20, 24].map((h) => { const a = Math.PI * (1 - (h - 8) / 16); return `<text x="${(500 + 396 * Math.cos(a)).toFixed(0)}" y="${(334 - 246 * Math.sin(a)).toFixed(0)}" text-anchor="middle">${String(h % 24).padStart(2, "0")}</text>`; }).join("");
+  const [sx, sy] = arcPt(now), d = new Date();
+  const hora = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  const fecha = d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  const ultima = CLASES.find((c) => c.resumen);
+  const grabAsig = grab ? (MAPA[grab.clase_id]?.asignatura || cur?.asignatura) : null;
+  const titulo = grab ? (grabAsig ? `Grabando ${asig(grabAsig).nombre}` : "Grabando la clase") : cur ? `Estás en ${asig(cur.asignatura).nombre}, hasta las ${cur.fin}`
+    : nxt ? `Siguiente: ${asig(nxt.asignatura).nombre} a las ${nxt.inicio}` : fr.length ? "Hoy ya no tienes más clases" : "Hoy no tienes clases";
+  const sub = grab ? `<b>${esc(cur?.aula ? "Aula " + cur.aula : "En clase")}</b> · grabando la clase`
+    : cur ? `${cur.aula ? `<b>Aula ${esc(cur.aula)}</b> · ` : ""}${hostOK ? "la grabación no está activa" : "en tu horario"}`
+    : nxt ? `${nxt.aula ? `<b>Aula ${esc(nxt.aula)}</b> · ` : ""}empieza a grabar 5 minutos antes` : ultima ? `Último resumen: <b>${esc(asig(ultima.asignatura).nombre)}</b>` : "";
+  const pend = destacados().filter((x) => vigente(x) && TAREA.includes(x.tipo)).sort((a, b) => pesoD(a) - pesoD(b));
+  const ids = asignaturasIds();
+  const horas = (id) => clasesDe(id).reduce((s, c) => s + (c.duracion_s || 0), 0), maxH = Math.max(1, ...ids.map(horas));
+  const legend = [...new Set(fr.map((h) => h.asignatura))];
+  return `<section class="hero" aria-label="Tu día">
+    <svg class="arc" viewBox="0 0 1000 360" role="img" aria-label="Clases de hoy entre las 8:00 y las 24:00; ahora son las ${hora}."><defs><radialGradient id="sg"><stop offset="0" stop-color="#FFE3C7"/><stop offset=".35" stop-color="#FF9A55"/><stop offset=".6" stop-color="#FF7A2F" stop-opacity=".55"/><stop offset="1" stop-color="#FF7A2F" stop-opacity="0"/></radialGradient></defs>
+    <path class="track" d="${arcPath(8, 24)}"/>${segs}${ticks}${labs}<circle class="sun" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="46" fill="url(#sg)"/><circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="11" fill="#FF7A2F" stroke="#fff" stroke-width="3"/></svg>
+    <div class="hero-copy"><span class="now"><i></i>${hora} · ${esc(fecha.replace(/^./, (x) => x.toUpperCase()))}</span>
+      <h1>${esc(titulo)}</h1>${sub ? `<span class="timer">${sub}</span>` : ""}
+      <div class="row-btns">${ultima ? `<a class="btn pri" href="${urlClase(ultima.id)}">${ic("doc")}Último resumen</a>` : ""}<a class="btn sec" href="#calendario">${ic("cal")}Ver horario</a></div></div>
+  </section>
+  ${legend.length ? `<div class="legend">${legend.map((id) => `<span style="--c:${color(asig(id).color)}"><i></i>${esc(asig(id).nombre)}</span>`).join("")}</div>` : `<div class="legend"></div>`}
+  <div class="grid">
+    <section class="card"><h2>Tareas <a href="#tareas">${pend.length} pendientes →</a></h2>${pend.length ? `<ul>${pend.slice(0, 4).map((x) => filaTarea(x)).join("")}</ul>` : vacioInicial() || `<p class="empty">Nada pendiente. Cuando en clase se hable de un examen o una entrega, aparecerá aquí.</p>`}</section>
+    <section class="card"><h2>Asignaturas <a href="#asignaturas">Ver todas →</a></h2>${ids.length ? ids.slice(0, 6).map((id) => { const a = asig(id); return `<a class="rec" style="--c:${color(a.color)};grid-template-columns:auto minmax(0,1fr) auto" href="#asig=${encodeURIComponent(id)}"><span class="code sm">${esc(codigo(a))}</span><span><b>${esc(a.nombre)}</b><span class="bar" style="margin-top:6px"><i style="--w:${Math.round(horas(id) / maxH * 100)}%"></i></span></span><span class="mono muted">${horas(id) ? fmtH(horas(id)) : "0 h"}</span></a>`; }).join("") : vacioInicial() || `<p class="empty">Añade tus asignaturas en la app del ordenador.</p>`}</section>
+    <section class="card"><h2>Clases de hoy <a href="#calendario">Horario →</a></h2>${clasesHoy(fr, now, grab)}</section>
+    <section class="card span3">${bloqueStats()}</section>
+  </div>`;
+}
+function clasesHoy(fr, now, grab) {
+  if (!fr.length) return `<p class="empty">Hoy no tienes clases en tu horario.</p>`;
+  return `<ul>${fr.map((h) => {
+    const a = asig(h.asignatura), st = h2n(h.fin) <= now ? "past" : h2n(h.inicio) <= now ? "now" : "next", g = grabadaDe(h);
+    const extra = st === "now" ? (grab ? `<span class="pill hot">Grabando</span>` : `<span class="pill hot">En curso</span>`)
+      : g ? (g.resumen ? `<a href="${urlClase(g.id)}"><span class="pill ok">Resumen listo</span></a>` : g.en_curso ? `<span class="pill hot">Grabando</span>` : `<a href="${urlClase(g.id)}"><span class="pill" style="--c:#E0A100">Sin resumir</span></a>`)
+      : st === "past" ? `<span>sin grabar</span>` : "";
+    return `<li class="cls is-${st}" style="--c:${color(a.color)}"><time><b>${esc(h.inicio)}</b>${esc(h.fin)}</time><div><div class="nm">${esc(a.nombre)}</div><div class="t-sub">${h.aula ? `Aula ${esc(h.aula)}` : ""}${h.aula && extra ? " · " : ""}${extra}</div></div></li>`;
+  }).join("")}</ul>`;
+}
+
+function vAsig() {
+  const ids = asignaturasIds();
+  if (!ids.length) return `<div class="head"><div><h1>Asignaturas</h1><p>Aún no hay asignaturas. Se añaden en el asistente o en los ajustes de la app del ordenador.</p></div></div>${vacioInicial()}`;
+  const recientes = CLASES.slice(0, 6);
+  return `<div class="head"><div><h1>Asignaturas</h1><p>Tus ${ids.length} asignaturas. Entra en una para ver sus clases grabadas y sus resúmenes.</p></div></div>
+  <div class="subjects">${ids.map((id) => {
+    const a = asig(id), cs = clasesDe(id), dur = cs.reduce((s, c) => s + (c.duracion_s || 0), 0);
+    const prox = GEN.horario.filter((h) => h.asignatura === id).map(proximaVez).filter(Boolean).sort((x, y) => x.dias * 24 + h2n(x.h.inicio) - (y.dias * 24 + h2n(y.h.inicio)))[0];
+    const pend = destacados().filter((d) => d.clase.asignatura === id && vigente(d) && TAREA.includes(d.tipo)).length;
+    return `<a class="card subj" href="#asig=${encodeURIComponent(id)}" style="--c:${color(a.color)}"><div class="subj-top"><span class="code">${esc(codigo(a))}</span><div><h3>${esc(a.nombre)}</h3><small>${cs.length} ${cs.length === 1 ? "clase grabada" : "clases grabadas"}${dur ? ` · ${fmtH(dur)}` : ""}</small></div></div>
+      <div class="subj-meta"><span>Próxima clase</span><b>${esc(txtProxima(prox))}</b></div><div class="subj-meta"><span>Tareas pendientes</span><b>${pend}</b></div></a>`;
+  }).join("")}</div>
+  <section class="card" style="margin-top:16px"><h2>Últimas clases grabadas <span>de todas tus asignaturas</span></h2>${recientes.length ? recientes.map((c) => filaClase(c, true)).join("") : `<p class="empty">Todavía no hay clases grabadas.</p>`}</section>`;
+}
+function vSubject(id) {
+  if (!asignaturasIds().includes(id)) return vAsig();
+  const a = asig(id), cs = clasesDe(id), slots = GEN.horario.filter((h) => h.asignatura === id).sort((x, y) => ((slotDow(x) + 6) % 7) - ((slotDow(y) + 6) % 7) || h2n(x.inicio) - h2n(y.inicio));
+  const dur = cs.reduce((s, c) => s + (c.duracion_s || 0), 0);
+  const pend = destacados().filter((d) => d.clase.asignatura === id && vigente(d)).sort((x, y) => pesoD(x) - pesoD(y));
+  return `<div class="head" style="--c:${color(a.color)}"><div><a class="crumb" href="#asignaturas">${ic("back")}Asignaturas</a><div class="subj-top"><span class="code">${esc(codigo(a))}</span><div><h1>${esc(a.nombre)}</h1><p>${cs.length} ${cs.length === 1 ? "clase grabada" : "clases grabadas"}${dur ? ` · ${fmtDur(dur)} de audio` : ""}</p></div></div></div></div>
+  <div class="sum-grid" style="--c:${color(a.color)}">
+    <section class="card"><h2>Clases grabadas <span>más recientes primero</span></h2>${cs.length ? cs.map((c) => filaClase(c, false)).join("") : `<p class="empty">Todavía no hay clases grabadas de esta asignatura.</p>`}</section>
+    <div class="col">
+      <section class="card"><h2>Horario</h2>${slots.length ? `<ul class="meta-list">${slots.map((h) => `<li><span>${esc(DIAS[slotDow(h)] || h.dia)}</span><b class="mono">${esc(h.inicio)}–${esc(h.fin)}${h.aula ? ` · ${esc(h.aula)}` : ""}</b></li>`).join("")}</ul>` : `<p class="muted">No está en tu horario.</p>`}</section>
+      <section class="card"><h2>Lo importante <a href="#tareas">Todo →</a></h2>${pend.length ? `<ul>${pend.slice(0, 6).map((d) => filaTarea(d)).join("")}</ul>` : `<p class="muted">Nada pendiente en esta asignatura.</p>`}</section>
+    </div>
+  </div>`;
+}
+
+/* Una clase: resumen, lo importante y transcripción */
+let SEGS = [], segsVersion = "", busq = "", claseAbierta = null;
+function vClase(id) {
+  const c = MAPA[id];
+  if (!c) return cargado ? `<div class="head"><div><a class="crumb" href="#asignaturas">${ic("back")}Asignaturas</a><h1>No encuentro esa clase</h1><p>Puede que se haya borrado.</p></div></div>` : vacioInicial();
+  const a = asig(c.asignatura), r = c.resumen, k = color(a.color);
+  const ds = (r?.destacados || []).map((d, i) => ({ ...d, clase: c, clave: `${c.id}~${i}` }));
+  const estado = c.en_curso ? `Esta clase se está grabando ahora. La transcripción se actualiza mientras tengas el panel abierto en la app de Claude del ordenador, y el resumen se hace al terminar.`
+    : resumiendo.has(c.id) ? `Claude está resumiendo esta clase…`
+    : c.estado_resumen === "vacio" ? `No se transcribió nada en esta clase. ¿Estaba el micrófono silenciado?`
+    : !r ? `Sin resumen todavía.${c.error_resumen ? ` Último intento: ${c.error_resumen}` : ""}` : "";
+  const cuerpo = r ? `<div class="prose">${str(r.resumen).split(/\n+/).map((p) => p.trim()).filter(Boolean).map((p) => /^#{1,4}\s+/.test(p) ? `<h3>${esc(p.replace(/^#{1,4}\s+/, ""))}</h3>` : /^[-*•]\s+/.test(p) ? `<ul><li>${esc(p.replace(/^[-*•]\s+/, ""))}</li></ul>` : `<p>${esc(p)}</p>`).join("")}</div>` : `<p class="empty">${esc(estado)}</p>`;
+  return `<div class="head" style="--c:${k}"><div><a class="crumb" href="#asig=${encodeURIComponent(c.asignatura)}">${ic("back")}${esc(a.nombre)}</a><h1>${esc(r?.titulo || (c.en_curso ? "Clase en curso" : "Clase sin resumen"))}</h1>
+    <p>${esc(new Date(c.fecha + "T00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).replace(/^./, (x) => x.toUpperCase()))} · ${esc(fmtHora(c.inicio))}${c.fin ? `–${esc(fmtHora(c.fin))}` : ""}${c.duracion_s ? ` · ${fmtDur(c.duracion_s)} de grabación` : ""}</p></div></div>
+  <div class="sum-grid" style="--c:${k}">
+    <div class="col">
+      ${r && estado ? `<p class="note warn">${esc(estado)}</p>` : ""}
+      <section class="card"><h2>Resumen de la clase <span>en orden y por temas</span></h2>${cuerpo}</section>
+      ${r?.puntos_clave?.length ? `<section class="card"><h2>Puntos clave</h2><div class="prose"><ul>${r.puntos_clave.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div></section>` : ""}
+      ${r?.conceptos?.length ? `<section class="card"><h2>Conceptos</h2><dl class="terms">${r.conceptos.map((t) => `<dt>${esc(t.termino)}</dt><dd>${esc(t.explicacion)}</dd>`).join("")}</dl></section>` : ""}
+      <section class="card"><h2>Transcripción <span id="nseg"></span></h2>
+        <div class="trans-tools"><input id="buscar" type="search" placeholder="Buscar en la transcripción…" value="${esc(busq)}" aria-label="Buscar en la transcripción"></div>
+        <div class="trans" id="trans"></div></section>
+    </div>
+    <div class="col">
+      <section class="card"><h2>Lo importante <span>${ds.length || ""}</span></h2>${ds.length ? `<ul>${ds.map((d) => filaTarea(d, { clase: false })).join("")}</ul>` : `<p class="muted">${r ? "En esta clase no se dijo nada de exámenes, entregas ni avisos." : "Aparecerá cuando esté el resumen."}</p>`}</section>
+      ${r?.tareas?.length ? `<section class="card"><h2>Tienes que hacer</h2><div class="prose"><ul>${r.tareas.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div></section>` : ""}
+      <section class="card"><h2>Datos de la clase</h2><ul class="meta-list">
+        <li><span>Asignatura</span><b>${esc(a.nombre)}</b></li>
+        <li><span>Fecha</span><b>${esc(fmtFecha(c.fecha))}</b></li>
+        <li><span>Hora</span><b class="mono">${esc(fmtHora(c.inicio))}${c.fin ? `–${esc(fmtHora(c.fin))}` : ""}</b></li>
+        ${c.duracion_s ? `<li><span>Grabación</span><b>${fmtDur(c.duracion_s)}</b></li>` : ""}
+        ${c.aula ? `<li><span>Aula</span><b>${esc(c.aula)}</b></li>` : ""}
+        <li><span>Modo</span><b>${c.modo === "auto" ? "Automático" : "Manual"}</b></li>
+        ${r?.calidad_audio ? `<li><span>Audio</span><b>${esc(r.calidad_audio)}</b></li>` : ""}
+        ${r?.modelo ? `<li><span>Resumen</span><b>${esc(r.modelo)}</b></li>` : ""}
+      </ul></section>
+      <section class="card acts"><h2>Acciones</h2>
+        ${!c.en_curso && sample ? `<button class="btn sec" id="regen" type="button">${ic("spark")}${r ? "Rehacer resumen" : "Resumir con Claude"}</button>` : ""}
+        ${hostOK ? `<label class="field">Mover a otra asignatura<select id="mover">${GEN.asignaturas.map((x) => `<option value="${esc(x.id)}" ${x.id === c.asignatura ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
+        ${hostOK && !c.en_curso ? `<button class="btn sec danger" id="borrar" type="button">Borrar clase</button>` : ""}
+        <span class="muted" id="accMsg" style="font-size:13px">${hostOK ? "" : "Mover o borrar clases solo se puede desde la app de Claude de tu ordenador."}</span>
+      </section>
+    </div>
+  </div>`;
 }
 async function cargarSegs() {
-  const c = MAPA[lectorId]; if (!c || !db) return;
+  const c = MAPA[claseAbierta]; if (!c || !db) return;
   const v = `${c.id}|${c.n_segmentos}`;
   if (v === segsVersion) return;
   try { SEGS = await leerTranscripcion(c.id); segsVersion = v; } catch (e) { SEGS = []; }
-  if (lectorId === c.id) pintarTrans();
+  if (claseAbierta === c.id) pintarTrans();
 }
-function refrescarLector() {
-  const n = MAPA[lectorId]; if (!n) return;
-  const cambio = !CLASE || n.version !== CLASE.version || n.resumen !== CLASE.resumen;
-  CLASE = n;
-  if (cambio) { const y = $("#rbody").scrollTop; pintarLector(); $("#rbody").scrollTop = y; cargarSegs(); }
-}
-function cerrarLector(fromPop) {
-  if ($("#reader").hidden) return;
-  $("#reader").hidden = true; document.body.style.overflow = ""; lectorId = null; CLASE = null; busq = "";
-  if (!fromPop && location.hash) history.pushState(null, "", location.pathname + location.search);
-}
-$("#back").onclick = () => cerrarLector(false);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrarLector(false); });
-window.addEventListener("popstate", () => { const id = decodeURIComponent(location.hash.slice(1)); id && MAPA[id] ? abrirClase(id) : cerrarLector(true); });
-
 function pintarTrans() {
-  const t = $("#trans"); if (!t) return;
+  const t = $("#trans"), c = MAPA[claseAbierta]; if (!t || !c) return;
   const q = busq.trim().toLowerCase();
   const re = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi") : null;
-  const marcas = new Set((CLASE?.resumen?.destacados || []).map((d) => str(d.minuto).replace(/[\[\]\s]/g, "")).filter(Boolean));
+  const marcas = new Set((c.resumen?.destacados || []).map((d) => str(d.minuto).replace(/[\[\]\s]/g, "")).filter(Boolean));
   const lista = q ? SEGS.filter((s) => s.texto.toLowerCase().includes(q)) : SEGS;
   const abajo = t.scrollTop + t.clientHeight >= t.scrollHeight - 30;
   t.innerHTML = lista.length ? lista.map((s) => `<div class="${marcas.has(mmss(s.ini)) ? "hl" : ""}"><time>${mmss(s.ini)}</time><span>${re ? esc(s.texto).replace(re, (m) => `<mark>${m}</mark>`) : esc(s.texto)}</span></div>`).join("")
-    : `<p class="empty">${q ? "No aparece en la transcripción." : CLASE?.n_segmentos ? "Cargando transcripción…" : "Todavía no hay texto."}</p>`;
-  if (abajo && CLASE?.en_curso) t.scrollTop = t.scrollHeight;
-  const n = $("#nseg"); if (n) n.textContent = `${SEGS.length} fragmentos`;
+    : `<p class="empty">${q ? "No aparece en la transcripción." : c.n_segmentos ? "Cargando transcripción…" : "Todavía no hay texto."}</p>`;
+  if (abajo && c.en_curso) t.scrollTop = t.scrollHeight;
+  const n = $("#nseg"); if (n) n.textContent = SEGS.length ? `${SEGS.length} fragmentos` : "";
 }
-function pintarLector(scrollTop) {
-  const c = CLASE, a = asig(c.asignatura), r = c.resumen;
-  $("#reader").style.setProperty("--c", color(a.color));
-  $("#rsub").textContent = a.nombre;
-  $("#rtitle").textContent = `${fmtFecha(c.fecha)} · ${fmtHora(c.inicio)}`;
-  const ds = (r?.destacados || []).map((d, i) => ({ ...d, clase: c, clave: `${c.id}~${i}` }));
-  const estado = c.en_curso ? `<p>Esta clase se está grabando ahora. La transcripción se actualiza mientras tengas el hub abierto en la app de Clade del ordenador; el resumen se hace al terminar.</p>`.replace("Clade", "Claude")
-    : resumiendo.has(c.id) ? `<p>Claude está resumiendo esta clase…</p>`
-    : c.estado_resumen === "vacio" ? `<p>No se transcribió nada en esta clase (¿micrófono silenciado?).</p>`
-    : !r ? `<p>Sin resumen todavía.${c.error_resumen ? ` Último intento: ${esc(c.error_resumen)}` : ""}</p>` : "";
-  const puedeHost = hostOK;
-  $("#rbody").innerHTML = `<div class="page" style="--c:${color(a.color)}">
-    <div><span class="eb ct">${esc(a.nombre)}</span><h1>${esc(r?.titulo || (c.en_curso ? "Clase en curso" : "Clase sin resumen"))}</h1>
-      <div class="meta-line"><span>${esc(fmtFecha(c.fecha))}, ${esc(fmtHora(c.inicio))}${c.fin ? `–${esc(fmtHora(c.fin))}` : ""}</span>${c.duracion_s ? `<span>${fmtDur(c.duracion_s)} de audio</span>` : ""}<span>modo ${c.modo === "auto" ? "automático" : "manual"}</span>${r?.calidad_audio && r.calidad_audio !== "buena" ? `<span>audio ${esc(r.calidad_audio)}</span>` : ""}</div></div>
-    ${estado ? `<section>${estado}</section>` : ""}
-    ${r ? `<section><h2>Resumen de la clase</h2>${str(r.resumen).split(/\n+/).map((p) => p.trim()).filter(Boolean).map((p) => /^#{1,4}\s+/.test(p) ? `<h3>${esc(p.replace(/^#{1,4}\s+/, ""))}</h3>` : `<p>${esc(p)}</p>`).join("")}</section>` : ""}
-    ${ds.length ? `<div><h2>Lo importante de esta clase</h2><div class="dest">${ds.map((d) => cardHTML(d, false)).join("")}</div></div>` : ""}
-    ${r?.puntos_clave?.length ? `<section><h2>Puntos clave</h2><ul>${r.puntos_clave.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></section>` : ""}
-    ${r?.tareas?.length ? `<section><h2>Tienes que hacer</h2><ul>${r.tareas.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></section>` : ""}
-    ${r?.conceptos?.length ? `<section><h2>Conceptos</h2><div class="dl">${r.conceptos.map((k) => `<div><b>${esc(k.termino)}</b><span>${esc(k.explicacion)}</span></div>`).join("")}</div></section>` : ""}
-    <section><h2>Transcripción</h2>
-      <div class="trans-tools"><input id="buscar" type="search" placeholder="Buscar en la transcripción…" value="${esc(busq)}"><span class="meta-line" id="nseg"></span></div>
-      <div class="trans" id="trans"></div></section>
-    <div class="actions">
-      ${!c.en_curso && sample ? `<button class="btn" id="regen">${r ? "Rehacer resumen" : "Resumir con Claude"}</button>` : ""}
-      ${puedeHost ? `<label class="meta-line">Mover a <select id="mover">${GEN.asignaturas.map((x) => `<option value="${esc(x.id)}" ${x.id === c.asignatura ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
-      ${puedeHost && !c.en_curso ? `<button class="btn danger" id="borrar">Borrar clase</button>` : ""}
-      <span class="meta-line" id="accMsg">${puedeHost ? "" : "Mover o borrar clases solo se puede desde la app de Claude de tu ordenador."}</span>
-    </div>
-  </div>`;
-  pintarTrans();
-  bindCards($("#rbody"));
-  $("#buscar").oninput = (e) => { busq = e.target.value; pintarTrans(); };
+function enlazarClase(c) {
+  const bu = $("#buscar"); if (bu) bu.oninput = (e) => { busq = e.target.value; pintarTrans(); };
   const rg = $("#regen");
   if (rg) rg.onclick = async () => {
-    rg.disabled = true; resumiendo.add(c.id); pintarLector();
+    rg.disabled = true; resumiendo.add(c.id); pintarVista(true);
     try { await resumirClase(c); }
-    catch (e) { $("#accMsg") && ($("#accMsg").textContent = e && e.code === "not_granted" ? "No se ha dado permiso para usar Claude." : `No se pudo resumir: ${(e && e.message) || "error"}`); }
-    finally { resumiendo.delete(c.id); renderTodo(); }
+    catch (e) { resumiendo.delete(c.id); pintarVista(true); $("#accMsg") && ($("#accMsg").textContent = e && e.code === "not_granted" ? "No se ha dado permiso para usar Claude." : `No se pudo resumir: ${(e && e.message) || "error"}`); return; }
+    resumiendo.delete(c.id); renderTodo();
   };
   const mv = $("#mover");
   if (mv) mv.onchange = async (e) => {
@@ -819,15 +1065,134 @@ function pintarLector(scrollTop) {
         const partes = await db.collection(`clases/${c.id}/partes`).get();
         for (const p of partes.docs) await db.doc(`clases/${c.id}/partes/${p.id}`).delete();
         await db.doc("clases/" + c.id).delete();
-        cerrarLector(false);
+        location.hash = "#asig=" + encodeURIComponent(c.asignatura);
       } catch (err) { $("#accMsg").textContent = "No se pudo borrar la clase."; }
     };
   }
-  if (scrollTop) $("#rbody").scrollTop = 0;
 }
 
+function vTareas() {
+  const todos = destacados();
+  let ds = filtro === "hechas" ? todos.filter((d) => HECHOS.has(d.clave)) : filtro === "all" ? todos : todos.filter(vigente);
+  if (filtro === "alta") ds = ds.filter((d) => d.importancia === "alta");
+  if (filtro === "pend") ds = ds.filter((d) => TAREA.includes(d.tipo) || d.importancia === "alta");
+  ds.sort((x, y) => pesoD(x) - pesoD(y));
+  const nPend = todos.filter((d) => vigente(d) && (TAREA.includes(d.tipo) || d.importancia === "alta")).length, nHechas = todos.filter((d) => HECHOS.has(d.clave)).length;
+  const F = [["pend", "Pendientes"], ["alta", "Muy importantes"], ["hechas", "Hechas"], ["all", "Todo"]];
+  const dias = [];
+  for (let i = 0; i < 7; i++) {
+    const d = hoy(); d.setDate(d.getDate() + i); const iso = isoLocal(d);
+    const ts = todos.filter((x) => x.fecha_iso === iso && !HECHOS.has(x.clave));
+    const cl = GEN.horario.filter((h) => slotDow(h) === d.getDay()).length;
+    dias.push(`<li class="opt-row" style="align-items:flex-start"><div><b>${i === 0 ? "Hoy" : i === 1 ? "Mañana" : esc(d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric" }))}</b><div class="t-sub">${cl ? `${cl} ${cl === 1 ? "clase" : "clases"}` : "Sin clases"}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;min-width:0">${ts.length ? ts.map((t) => `<span class="pill" style="--c:${color(asig(t.clase.asignatura).color)}">${esc(t.titulo.length > 28 ? t.titulo.slice(0, 27) + "…" : t.titulo)}</span>`).join("") : `<span class="muted" style="font-size:13px">Nada que entregar</span>`}</div></li>`);
+  }
+  return `<div class="head"><div><h1>Tareas</h1><p>Los exámenes, entregas y avisos que se dicen en clase. ${nPend} pendientes · ${nHechas} hechas.</p></div>
+    <div class="seg-ctl" role="group" aria-label="Filtrar">${F.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${filtro === k}">${l}</button>`).join("")}</div></div>
+  <div class="grid"><section class="card span2">${ds.length ? `<ul>${ds.map((d) => filaTarea(d)).join("")}</ul>` : vacioInicial() || `<p class="empty">${filtro === "hechas" ? "Aún no has marcado nada como hecho." : CLASES.length ? "Nada pendiente. Cuando en clase se hable de un examen, una entrega o algo importante, aparecerá aquí." : "Aún no hay clases. Cuando Estudio grabe tus clases, aquí irán apareciendo los exámenes, entregas y avisos."}</p>`}</section>
+  <section class="card"><h2>Próximos 7 días</h2><ul>${dias.join("")}</ul></section></div>`;
+}
+
+let selFranja = null, diaMovil = null, mesOff = 0;
+function vCal() {
+  const H = GEN.horario.map((h, i) => ({ ...h, i, dow: slotDow(h) })).filter((h) => h.dow >= 0);
+  const hoyDow = new Date().getDay();
+  const dows = [1, 2, 3, 4, 5].concat(H.some((h) => h.dow === 6) ? [6] : [], H.some((h) => h.dow === 0) ? [0] : []);
+  if (diaMovil === null || !dows.includes(diaMovil)) diaMovil = dows.includes(hoyDow) ? hoyDow : 1;
+  const H0 = Math.min(8, ...H.map((h) => Math.floor(h2n(h.inicio)))), H1 = Math.max(20, ...H.map((h) => Math.ceil(h2n(h.fin)))), PX = 44, now = ahoraH();
+  const lun = lunes(new Date());
+  const hours = []; for (let h = H0; h < H1; h++) hours.push(`<span style="top:${(h - H0) * PX}px">${String(h).padStart(2, "0")}</span>`);
+  const cols = dows.map((d) => `<div class="tcol${d === hoyDow ? " today" : ""}" style="height:${(H1 - H0) * PX}px">${H.filter((h) => h.dow === d).map((h) => { const a = asig(h.asignatura); return `<button type="button" class="blk${h.i === selFranja ? " sel" : ""}" data-franja="${h.i}" style="--c:${color(a.color)};top:${(h2n(h.inicio) - H0) * PX}px;height:${Math.max(20, (h2n(h.fin) - h2n(h.inicio)) * PX - 3)}px"><b>${esc(a.nombre)}</b>${esc(h.inicio)}–${esc(h.fin)}${h.aula ? ` · ${esc(h.aula)}` : ""}</button>`; }).join("")}${d === hoyDow && now >= H0 && now <= H1 ? `<div class="nowline" style="top:${(now - H0) * PX}px"></div>` : ""}</div>`).join("");
+  const sel = H.find((h) => h.i === selFranja);
+  const detalle = sel ? (() => { const a = asig(sel.asignatura); return `<div class="cls-detail" style="--c:${color(a.color)}"><div><b>${esc(a.nombre)}</b><div class="t-sub">${esc(DIAS[sel.dow])} · ${esc(sel.inicio)}–${esc(sel.fin)}${sel.aula ? ` · Aula ${esc(sel.aula)}` : ""} · próxima: ${esc(txtProxima(proximaVez(sel)))}</div></div><div class="row-btns"><a class="btn sec sm" href="#asig=${encodeURIComponent(sel.asignatura)}">Ver sus clases</a><button type="button" class="btn sec sm" data-franja="" aria-label="Cerrar">${ic("x")}</button></div></div>`; })()
+    : `<p class="hint">Toca una clase para ver sus datos. El horario se cambia en los ajustes de la app del ordenador.</p>`;
+  const lista = H.filter((h) => h.dow === diaMovil).sort((a, b) => h2n(a.inicio) - h2n(b.inicio));
+  const dayview = `<div class="dayview"><div class="daytabs" role="group" aria-label="Día">${dows.map((d) => `<button type="button" data-dia="${d}" aria-pressed="${d === diaMovil}">${DIA_CORTO[d]}</button>`).join("")}</div>${lista.length ? `<ul>${lista.map((h) => { const a = asig(h.asignatura); return `<li class="cls" style="--c:${color(a.color)}"><time><b>${esc(h.inicio)}</b>${esc(h.fin)}</time><div><div class="nm">${esc(a.nombre)}</div><div class="t-sub">${h.aula ? `Aula ${esc(h.aula)}` : ""}</div></div></li>`; }).join("")}</ul>` : `<p class="empty">No hay clases este día.</p>`}</div>`;
+  // Mes con las fechas que han salido en clase
+  const base = new Date(); base.setDate(1); base.setMonth(base.getMonth() + mesOff);
+  const ev = {}; for (const d of destacados()) if (/^\d{4}-\d{2}-\d{2}$/.test(d.fecha_iso || "") && !HECHOS.has(d.clave)) (ev[d.fecha_iso] = ev[d.fecha_iso] || []).push(d);
+  let mc = ["L", "M", "X", "J", "V", "S", "D"].map((x) => `<b>${x}</b>`).join("");
+  for (let i = 0; i < (base.getDay() + 6) % 7; i++) mc += "<span></span>";
+  const nDias = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate(), hoyIso = isoLocal(new Date());
+  for (let d = 1; d <= nDias; d++) { const iso = isoLocal(new Date(base.getFullYear(), base.getMonth(), d)), e = ev[iso]; mc += `<span class="${iso === hoyIso ? "today" : ""}${e ? " ev" : ""}" ${e ? `style="--c:${TIPO_C[e[0].tipo] || "#475569"}" title="${esc(e.map((x) => x.titulo).join(" · "))}"` : ""}>${d}</span>`; }
+  const delMes = Object.keys(ev).filter((k) => k.startsWith(isoLocal(base).slice(0, 7))).sort().flatMap((k) => ev[k]);
+  const ini = new Date(lun), fin = new Date(lun); fin.setDate(fin.getDate() + 4);
+  return `<div class="head"><div><h1>Calendario</h1><p>${H.length ? `${H.length} ${H.length === 1 ? "clase" : "clases"} a la semana en tu horario.` : "Tu horario está vacío. Añádelo en el asistente o en los ajustes de la app del ordenador."}</p></div></div>
+  <div class="grid">
+    <section class="card span3 tt-card"><h2>Horario semanal <span>semana del ${ini.getDate()} al ${fin.toLocaleDateString("es-ES", { day: "numeric", month: "long" })}</span></h2>${detalle}
+      <div class="tt-wrap"><div class="tt" style="grid-template-columns:48px repeat(${dows.length},minmax(110px,1fr))"><div></div>${dows.map((d) => { const f = new Date(lun); f.setDate(f.getDate() + ((d + 6) % 7)); return `<div class="hd${d === hoyDow ? " today" : ""}">${DIAS[d].replace(/^./, (x) => x.toUpperCase())} ${f.getDate()}</div>`; }).join("")}<div class="hours" style="height:${(H1 - H0) * PX}px">${hours.join("")}</div>${cols}</div></div>${dayview}</section>
+    <section class="card"><div class="mcal-head"><button type="button" data-mes="-1" aria-label="Mes anterior">${ic("prev")}</button><span>${esc(base.toLocaleDateString("es-ES", { month: "long", year: "numeric" }).replace(/^./, (x) => x.toUpperCase()))}</span><button type="button" data-mes="1" aria-label="Mes siguiente">${ic("chev")}</button></div><div class="mcal">${mc}</div></section>
+    <section class="card span2"><h2>Fechas que han salido en clase <span>${esc(base.toLocaleDateString("es-ES", { month: "long" }))}</span></h2>${delMes.length ? `<ul>${delMes.map((d) => filaTarea(d)).join("")}</ul>` : `<p class="empty">No hay fechas apuntadas para este mes.</p>`}</section>
+  </div>`;
+}
+
+function vStats() {
+  const ids = asignaturasIds(), desde = hoy(); desde.setDate(desde.getDate() - 27);
+  const per = ids.map((id) => [id, clasesDe(id).filter((c) => new Date(c.fecha + "T00:00") >= desde).reduce((s, c) => s + (c.duracion_s || 0), 0)]).filter(([, s]) => s).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...per.map(([, s]) => s));
+  const sinRes = CLASES.filter((c) => !c.en_curso && !c.resumen && c.estado_resumen !== "vacio").length;
+  const pend = destacados().filter((d) => vigente(d) && TAREA.includes(d.tipo)).length;
+  const mas = per[0];
+  const datos = [
+    mas ? `<li><b>${esc(asig(mas[0]).nombre)}</b>es la asignatura con más horas grabadas en las últimas cuatro semanas (${fmtH(mas[1])}).</li>` : "",
+    `<li><b>${pend} ${pend === 1 ? "tarea pendiente" : "tareas pendientes"}</b>entre exámenes, trabajos y entregas que se han dicho en clase.</li>`,
+    sinRes ? `<li><b>${sinRes} ${sinRes === 1 ? "clase sin resumen" : "clases sin resumen"}</b>Puedes resumirlas con el botón de arriba.</li>` : `<li><b>Todo resumido</b>No queda ninguna clase grabada sin resumen.</li>`,
+  ].join("");
+  return `<div class="head"><div><h1>Estadísticas</h1><p>Lo que has grabado, a partir de tus clases.</p></div></div>
+  <div class="grid"><section class="card span3">${bloqueStats()}</section>
+    <section class="card span2"><h2>Horas por asignatura <span>últimas 4 semanas</span></h2>${per.length ? `<ul class="hbar">${per.map(([id, s]) => { const a = asig(id); return `<li style="--c:${color(a.color)}"><span>${esc(a.nombre)}</span><span class="bar"><i style="--w:${Math.round(s / max * 100)}%"></i></span><span class="v">${fmtH(s)}</span></li>`; }).join("")}</ul>` : `<p class="empty">Sin clases grabadas en estas semanas.</p>`}</section>
+    <section class="card"><h2>Lo que dicen tus datos</h2><ul class="ins">${datos}</ul></section></div>`;
+}
+
+/* ---------- Router ---------- */
+let rutaPintada = "", firmaClase = "";
+function ruta() { return decodeURIComponent(location.hash.slice(1)) || "hoy"; }
+function pintarVista(forzar) {
+  if (!document.getElementById("app")) return;
+  let h = ruta();
+  // Enlaces antiguos: "#<id de clase>"
+  if (MAPA[h] && !h.startsWith("clase=")) { history.replaceState(null, "", urlClase(h)); h = "clase=" + h; }
+  let sec = "hoy", html;
+  if (h.startsWith("clase=")) {
+    const id = h.slice(6), c = MAPA[id];
+    const firma = JSON.stringify([id, c?.version, c?.resumen?.generado, c?.asignatura, resumiendo.has(id), hostOK, !!sample, !!db, cargado, (c?.resumen?.destacados || []).map((_, i) => HECHOS.has(`${id}~${i}`))]);
+    if (!forzar && rutaPintada === h && firma === firmaClase) { cargarSegs(); return; }
+    firmaClase = firma; sec = "asignaturas";
+    if (claseAbierta !== id) { claseAbierta = id; SEGS = []; segsVersion = ""; busq = ""; }
+    html = vClase(id);
+  } else {
+    claseAbierta = null;
+    if (h === "asignaturas") { sec = "asignaturas"; html = vAsig(); }
+    else if (h.startsWith("asig=")) { sec = "asignaturas"; html = vSubject(h.slice(5)); }
+    else if (h === "tareas") { sec = "tareas"; html = vTareas(); }
+    else if (h === "calendario") { sec = "calendario"; html = vCal(); }
+    else if (h === "estadisticas") { sec = "estadisticas"; html = vStats(); }
+    else html = vHoy();
+  }
+  const y = scrollY, misma = rutaPintada === h;
+  nav(sec); $("#app").innerHTML = html; rutaPintada = h;
+  if (misma) scrollTo(0, y);
+  if (claseAbierta) { pintarTrans(); enlazarClase(MAPA[claseAbierta] || {}); cargarSegs(); }
+}
+window.addEventListener("hashchange", () => { pintarVista(true); scrollTo(0, 0); });
+$("#app").addEventListener("click", async (e) => {
+  const h = e.target.closest("[data-hecho]");
+  if (h && db) {
+    const ref = db.doc("hechos/" + h.dataset.hecho), on = !HECHOS.has(h.dataset.hecho);
+    on ? HECHOS.add(h.dataset.hecho) : HECHOS.delete(h.dataset.hecho); pintarVista(true);
+    try { on ? await ref.set({ hecho: true, cuando: new Date().toISOString() }) : await ref.delete(); }
+    catch (err) { on ? HECHOS.delete(h.dataset.hecho) : HECHOS.add(h.dataset.hecho); pintarVista(true); }
+    return;
+  }
+  const f = e.target.closest("[data-f]"); if (f) { filtro = f.dataset.f; pintarVista(true); return; }
+  const fr = e.target.closest("[data-franja]"); if (fr) { selFranja = fr.dataset.franja === "" ? null : +fr.dataset.franja; pintarVista(true); return; }
+  const di = e.target.closest("[data-dia]"); if (di) { diaMovil = +di.dataset.dia; pintarVista(true); return; }
+  const me = e.target.closest("[data-mes]"); if (me) { mesOff += +me.dataset.mes; pintarVista(true); return; }
+});
+// El sol avanza: se repinta Hoy cada minuto
+setInterval(() => { if (!document.hidden && (ruta() === "hoy" || ruta() === "calendario")) pintarVista(true); }, 60000);
+
 /* ---------- Arranque ---------- */
-renderTodo();
+nav("hoy"); pintarVista(true); renderEstado();
 (async () => {
   db = await claude.use("db");
   if (!db) { cargado = true; renderTodo(); return; }
@@ -841,12 +1206,10 @@ renderTodo();
   } else if (desktop?.fs) {
     await pasarAModoFs(false);
   } else {
-    hostMsg = "Para traer clases nuevas, abre este hub en la app de Claude de tu ordenador (con el Agente de clases instalado). Desde aquí ves lo ya sincronizado. [código: sin_mcp]";
+    hostMsg = "Para traer clases nuevas, abre este panel en la app de Claude de tu ordenador (con Estudio instalado). Desde aquí ves lo ya sincronizado. [código: sin_mcp]";
   }
   if (!hostOK && !desktop?.fs) await ofrecerInstalar();
   await sugerirApp();
   renderTodo();
-  const id = decodeURIComponent(location.hash.slice(1));
-  if (id && MAPA[id]) abrirClase(id);
 })();
 </script>

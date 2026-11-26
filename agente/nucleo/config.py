@@ -64,8 +64,9 @@ AJUSTES_POR_DEFECTO = {
     "url_hub": "",
 }
 
-COLORES = ["#2f5bd3", "#c25a1f", "#0f8a6a", "#8a3fb8", "#b07e00", "#c2366b", "#0e7c8c", "#5a6b1f",
-           "#3d4fa8", "#a8432e"]
+# Colores de asignatura del diseño "Jornada" (mismo orden que los antiguos: el panel traduce los viejos)
+COLORES = ["#2563EB", "#B45309", "#0E9F8E", "#D9468A", "#F08C00", "#BE185D", "#0369A1", "#4F7A28",
+           "#475569", "#C2410C"]
 
 
 # Archivo en la carpeta del usuario que dice dónde están los datos, para que el panel

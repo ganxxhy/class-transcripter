@@ -3,127 +3,129 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agente de clases</title>
+<title>Estudio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..750&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Fuentes del sistema (sin internet): Segoe UI Variable en Windows 11, Segoe UI en Windows 10 */
+/* Diseño "Jornada" de Estudio: cielo de día de fondo, tarjeta blanca, tinta azul noche y el sol para lo principal.
+   Fuentes de Google si hay internet; si no, Segoe UI. */
 :root {
-  --bg: #F6F6F3; --surface: #FFFFFF; --fg: #16181D; --fg2: #3A3F4B; --muted: #5B6070; --faint: #8A8F9C;
-  --line: #E4E5EA; --line2: #C9CBD3; --accent: #4338CA; --accent-hover: #3730A3; --accent-soft: #F5F6FF;
-  --accent-tint: #E0E3FF; --accent-ink: #312E81; --ok: #0F766E; --warn-bg: #FFF7E6; --warn-line: #F5D9A3;
-  --warn-ink: #5C3A05; --warn-icon: #B45309; --danger: #B42318; --on-accent: #FFFFFF;
-  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --bg: #F5F9FE; --surface: #FFFFFF; --fg: #0D2340; --fg2: #2A3D57; --muted: #54657B; --faint: #8796AA;
+  --line: #E3EBF4; --line2: #CBD6E3; --accent: #0D2340; --accent-hover: #17365F; --accent-soft: #F3F8FF;
+  --accent-tint: #E6F0FF; --accent-ink: #1D4ED8; --sun: #FF7A2F; --ok: #16A34A; --warn-bg: #FFF4E5; --warn-line: #F8DDB4;
+  --warn-ink: #8A4B00; --warn-icon: #E0560F; --danger: #B42318; --on-accent: #FFFFFF; --blue: #2563EB;
+  --font: "Figtree", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --display: "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
+  --shadow: 0 1px 2px rgba(13,35,64,.05), 0 30px 60px -36px rgba(13,35,64,.45);
+  --ease: cubic-bezier(.2,.8,.2,1);
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111318; --surface: #1A1D24; --fg: #ECEDF1; --fg2: #C9CCD5; --muted: #9AA0AE; --faint: #6E7482;
-    --line: #2A2E38; --line2: #3A3F4B; --accent: #7C83F5; --accent-hover: #959BFF; --accent-soft: #1E2140;
-    --accent-tint: #2A2E5C; --accent-ink: #C7CAFF; --ok: #3FBFA5; --warn-bg: #2B2212; --warn-line: #5A4520;
-    --warn-ink: #F3D9A6; --warn-icon: #F0A93B; --danger: #FF7A70; --on-accent: #0E1030; color-scheme: dark;
-  }
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; overflow: hidden; }
+body { margin: 0; background: linear-gradient(180deg, #8EC5FF 0, #CFE6FF 45%, #F3F8FF 100%); color: var(--fg); font-family: var(--font); font-size: 14.5px; line-height: 1.5; overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
 .app { height: 100%; display: flex; }
-.lado { width: 232px; flex: none; padding: 20px; display: flex; flex-direction: column; gap: 24px; }
-.marca { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 600; font-size: 16px; }
-.logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.lado { width: 236px; flex: none; padding: 22px 18px; display: flex; flex-direction: column; gap: 26px; }
+.marca { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 21px; letter-spacing: -.03em; }
+.marca small { font-family: var(--font); font-weight: 550; font-size: 13px; letter-spacing: 0; color: #3F5068; }
+.logo { width: 36px; height: 36px; border-radius: 11px; background: var(--accent); display: grid; place-items: center; flex: none; }
 .pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.pasos li { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--muted); }
-.pasos .num { width: 22px; height: 22px; border-radius: 11px; border: 1.5px solid var(--line2); display: grid; place-items: center; font-size: 12px; flex: none; }
-.pasos li.hecho { color: var(--fg2); }
-.pasos li.hecho .num { border: 0; background: var(--accent-tint); }
-.pasos li.actual { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-.pasos li.actual .num { border: 0; background: var(--accent); color: var(--on-accent); }
+.pasos li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 999px; color: #3F5068; font-weight: 550; }
+.pasos .num { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.6); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+.pasos li.hecho { color: var(--fg); }
+.pasos li.hecho .num { background: #E8F7EE; }
+.pasos li.actual { background: var(--surface); color: var(--fg); font-weight: 650; box-shadow: 0 8px 24px -14px rgba(13,35,64,.4); }
+.pasos li.actual .num { background: var(--accent); color: var(--on-accent); }
 
-.panel { flex: 1; min-width: 0; margin: 12px 12px 12px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; }
+.panel { flex: 1; min-width: 0; margin: 14px 14px 14px 0; background: var(--surface); border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
 .contenido { flex: 1; min-height: 0; overflow: auto; padding: 32px 40px 20px; display: flex; flex-direction: column; gap: 18px; }
-.pie { height: 68px; flex: none; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; gap: 12px; }
+.pie { height: 72px; flex: none; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; gap: 12px; }
 .pie .der { display: flex; gap: 10px; align-items: center; }
 .puntos { display: flex; gap: 6px; }
-.puntos i { width: 6px; height: 6px; border-radius: 3px; background: var(--line2); transition: width .2s; }
-.puntos i.on { width: 24px; background: var(--accent); }
+.puntos i { width: 28px; height: 4px; border-radius: 2px; background: var(--line); transition: background .3s; }
+.puntos i.on { background: var(--accent); }
 
-.eyebrow { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: .02em; }
-h1 { margin: 4px 0 0; font-family: var(--display); font-size: 28px; font-weight: 600; line-height: 1.15; }
-.sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--muted); }
+h1 { margin: 4px 0 0; font-family: var(--display); font-size: 32px; font-weight: 650; line-height: 1.05; letter-spacing: -.035em; text-wrap: balance; }
+.sub { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 p { margin: 0; }
 
-.btn { height: 44px; padding: 0 24px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; }
+.btn { height: 46px; padding: 0 24px; border-radius: 999px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 650; font-size: 15px; box-shadow: 0 8px 18px -10px rgba(13,35,64,.7); transition: transform .12s var(--ease), background .15s; }
 .btn:hover { background: var(--accent-hover); }
+.btn:active { transform: scale(.97); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn.oscuro { background: var(--fg); color: var(--surface); height: 40px; font-size: 14px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; }
-.btn-sec { height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line2); background: var(--surface); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
-.btn-sec:hover { background: var(--bg); }
-.btn-texto { height: 44px; padding: 0 16px; border: 0; background: transparent; color: var(--fg2); font-weight: 500; font-size: 15px; border-radius: 10px; }
-.btn-texto.acento { color: var(--accent); font-size: 14px; }
-.btn-texto:hover { background: var(--bg); }
+.btn.oscuro { background: var(--accent); color: #fff; height: 42px; font-size: 14px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; }
+.btn-sec { height: 42px; padding: 0 16px; border-radius: 999px; border: 0; box-shadow: inset 0 0 0 1px var(--line2); background: var(--surface); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.btn-sec:hover { background: var(--accent-soft); }
+.btn-texto { height: 44px; padding: 0 16px; border: 0; background: transparent; color: var(--fg2); font-weight: 600; font-size: 15px; border-radius: 999px; }
+.btn-texto.acento { color: var(--blue); font-size: 14px; }
+.btn-texto:hover { background: var(--accent-soft); }
 
 .campo { display: flex; flex-direction: column; gap: 6px; }
-.campo label, .etq { font-size: 13px; font-weight: 600; }
-.ayuda { font-size: 12px; color: var(--muted); }
+.campo label, .etq { font-size: 13px; font-weight: 650; }
+.ayuda { font-size: 12.5px; color: var(--muted); }
 input[type=text], input[type=password], input[type=time], select, textarea {
-  height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--surface); font-size: 14px; }
-textarea { height: 120px; padding: 10px 12px; resize: vertical; font-family: Consolas, ui-monospace, monospace; font-size: 12px; }
-input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; flex: none; }
+  height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line2); background: var(--surface); font-size: 14.5px; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--blue); outline-offset: 0; border-color: transparent; }
+textarea { height: 120px; padding: 10px 12px; resize: vertical; font-family: var(--mono); font-size: 12px; }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 18px; height: 18px; margin: 0; flex: none; }
 .fila { display: flex; gap: 10px; align-items: center; }
 
-.aviso { padding: 16px 18px; border-radius: 10px; background: var(--warn-bg); border: 1px solid var(--warn-line); display: flex; gap: 14px; align-items: flex-start; }
+.aviso { padding: 16px 18px; border-radius: 18px; background: var(--warn-bg); display: flex; gap: 14px; align-items: flex-start; }
 .aviso .txt { color: var(--warn-ink); }
-.check { display: flex; gap: 10px; align-items: center; font-weight: 500; cursor: pointer; }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 600; cursor: pointer; }
 
 /* Horario */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 16px; border: 0; font-weight: 500; font-size: 13px; background: color-mix(in srgb, var(--c) 12%, var(--surface)); color: color-mix(in srgb, var(--c) 70%, var(--fg)); }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; border: 0; font-weight: 600; font-size: 13px; background: color-mix(in srgb, var(--c) 14%, white); color: color-mix(in srgb, var(--c) 65%, #0D2340); }
 .chip .pt { width: 10px; height: 10px; border-radius: 5px; background: var(--c); }
-.chip.nuevo { border: 1px dashed var(--faint); background: var(--surface); color: var(--fg2); }
-.semana { flex: 1; min-height: 300px; display: grid; grid-template-columns: 48px repeat(var(--dias), minmax(0, 1fr)); grid-template-rows: 26px 1fr; gap: 0 4px; }
-.semana .cab { font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; align-self: center; }
+.chip.nuevo { box-shadow: inset 0 0 0 1.5px var(--line2); background: var(--surface); color: var(--fg2); }
+.semana { flex: 1; min-height: 300px; display: grid; grid-template-columns: 48px repeat(var(--dias), minmax(0, 1fr)); grid-template-rows: 28px 1fr; gap: 0 4px; }
+.semana .cab { font-size: 13px; font-weight: 650; color: var(--fg); text-align: center; align-self: center; }
 .horas { position: relative; }
-.horas span { position: absolute; left: 0; font-size: 11px; color: var(--muted); transform: translateY(-50%); }
-.dia { position: relative; border-radius: 8px; background: repeating-linear-gradient(to bottom, var(--bg) 0 1px, transparent 1px var(--h1)); background-color: color-mix(in srgb, var(--bg) 40%, var(--surface)); cursor: copy; }
-.bloque { position: absolute; left: 2px; right: 2px; border-radius: 7px; background: var(--c); color: #fff; padding: 5px 8px; overflow: hidden; border: 0; text-align: left; display: flex; flex-direction: column; font-size: 11px; line-height: 1.3; cursor: pointer; }
-.bloque strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bloque span { opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.horas span { position: absolute; left: 0; font-family: var(--mono); font-size: 11px; color: var(--muted); transform: translateY(-50%); }
+.dia { position: relative; border-radius: 12px; background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--h1)); background-color: var(--bg); cursor: copy; }
+.bloque { position: absolute; left: 3px; right: 3px; border-radius: 10px; background: color-mix(in srgb, var(--c) 14%, white); color: color-mix(in srgb, var(--c) 70%, #0D2340); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 30%, white); padding: 5px 8px; overflow: hidden; border: 0; text-align: left; display: flex; flex-direction: column; font-size: 11px; line-height: 1.3; cursor: pointer; }
+.bloque:hover { box-shadow: inset 0 0 0 1.5px var(--c); }
+.bloque strong { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bloque span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Micro */
-.medidor { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px; background: var(--bg); }
+.medidor { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--bg); }
 .barras { flex: 1; display: flex; gap: 3px; align-items: center; height: 24px; }
 .barras i { flex: 1; height: 6px; border-radius: 2px; background: var(--line2); transition: height .08s, background .08s; }
 .opciones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.opcion { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 10px; border: 1px solid var(--line2); cursor: pointer; }
-.opcion:has(input:checked) { border: 2px solid var(--accent); background: var(--accent-soft); padding: 13px; }
-.opcion .t { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-.opcion .d { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.opcion { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; transition: box-shadow .15s, background .15s; }
+.opcion:has(input:checked) { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+.opcion .t { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+.opcion .d { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 
 /* Resúmenes */
-.modo { display: flex; gap: 16px; padding: 18px; border-radius: 12px; border: 1px solid var(--line2); cursor: pointer; }
-.modo:has(> input:checked) { border: 2px solid var(--accent); background: var(--accent-soft); padding: 17px; }
+.modo { display: flex; gap: 16px; padding: 18px; border-radius: 20px; box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; transition: box-shadow .15s, background .15s; }
+.modo:has(> input:checked) { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
 .modo > input { margin-top: 3px; }
 .modo .cuerpo { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-.modo .t { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-.etiqueta { font-size: 11px; font-weight: 600; color: var(--accent-ink); background: var(--accent-tint); padding: 3px 8px; border-radius: 10px; }
+.modo .t { font-family: var(--display); font-size: 18px; font-weight: 650; letter-spacing: -.015em; display: flex; align-items: center; gap: 10px; }
+.etiqueta { font-family: var(--font); font-size: 12px; font-weight: 650; letter-spacing: 0; color: #14632F; background: #E8F7EE; padding: 2px 9px; border-radius: 999px; }
 
 /* Final */
 .final { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; }
-.final .logo { width: 80px; height: 80px; border-radius: 24px; }
-.proxima { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); text-align: left; min-width: 420px; }
-.proxima .barra { width: 6px; align-self: stretch; border-radius: 3px; background: var(--c, var(--accent)); }
+.final .logo { width: 84px; height: 84px; border-radius: 26px; background: var(--accent); }
+.proxima { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 20px; background: var(--bg); text-align: left; min-width: 420px; }
+.proxima .barra { width: 6px; align-self: stretch; border-radius: 3px; background: var(--c, var(--sun)); }
 
 /* Diálogo */
-dialog { border: 0; border-radius: 14px; padding: 0; background: var(--surface); color: var(--fg); box-shadow: 0 20px 60px rgba(0,0,0,.25); width: 440px; max-width: calc(100vw - 32px); }
-dialog::backdrop { background: rgba(10,12,18,.45); }
+dialog { border: 0; border-radius: 24px; padding: 0; background: var(--surface); color: var(--fg); box-shadow: 0 30px 80px -20px rgba(13,35,64,.5); width: 440px; max-width: calc(100vw - 32px); }
+dialog::backdrop { background: rgba(13,35,64,.45); }
 dialog form { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
-dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight: 600; }
+dialog h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 650; letter-spacing: -.02em; }
 .colores { display: flex; gap: 8px; flex-wrap: wrap; }
-.colores label { width: 28px; height: 28px; border-radius: 14px; background: var(--c); cursor: pointer; display: grid; place-items: center; }
+.colores label { width: 30px; height: 30px; border-radius: 50%; background: var(--c); cursor: pointer; display: grid; place-items: center; }
 .colores input { position: absolute; opacity: 0; width: 0; height: 0; }
 .colores label:has(input:checked) { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
 .dlg-pie { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
@@ -137,8 +139,8 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight
 <div class="app">
   <aside class="lado">
     <div class="marca">
-      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></div>
-      Configurar
+      <div class="logo"><svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 46a20 20 0 0 1 40 0" fill="none" stroke="#CFE6FF" stroke-width="6" stroke-linecap="round"/><circle cx="46.1" cy="31.9" r="8" fill="#FF7A2F" stroke="#fff" stroke-width="3.5"/></svg></div>
+      <span>estudio <small>Configurar</small></span>
     </div>
     <ol class="pasos" id="pasos"></ol>
   </aside>
@@ -149,7 +151,7 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight
       <!-- PASO 1 -->
       <section data-paso="1" class="contenido" style="padding:0">
         <div>
-          <div class="eyebrow">PASO 1 DE 5</div>
+          <div class="eyebrow">Paso 1 de 5</div>
           <h1>Hola, vamos a dejarlo listo</h1>
         </div>
         <p style="font-size:15px;line-height:1.6;color:var(--fg2);max-width:540px">En un par de minutos le dices qué asignaturas tienes y a qué hora, eliges el micrófono y decides cómo hacer los resúmenes.</p>
@@ -177,20 +179,20 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight
       <section data-paso="2" class="contenido" style="padding:0" hidden>
         <div class="fila" style="justify-content:space-between;align-items:flex-end">
           <div>
-            <div class="eyebrow">PASO 2 DE 5</div>
+            <div class="eyebrow">Paso 2 de 5</div>
             <h1>Tus asignaturas y tu horario</h1>
           </div>
           <button type="button" class="btn-sec" id="btnCaptura"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-8 7"/></svg>Leer de una captura</button>
         </div>
         <div class="chips" id="chips"></div>
         <div class="semana" id="semana"></div>
-        <div class="ayuda">Pulsa en un hueco para añadir una clase, o en una clase para cambiarla. Con el horario puesto, el agente graba solo: empieza 5 minutos antes y sigue 10 minutos después por si el profe se alarga.</div>
+        <div class="ayuda">Pulsa en un hueco para añadir una clase, o en una clase para cambiarla. Con el horario puesto, Estudio graba solo: empieza 5 minutos antes y sigue 10 minutos después por si el profe se alarga.</div>
       </section>
 
       <!-- PASO 3 -->
       <section data-paso="3" class="contenido" style="padding:0" hidden>
         <div>
-          <div class="eyebrow">PASO 3 DE 5</div>
+          <div class="eyebrow">Paso 3 de 5</div>
           <h1>Micrófono y calidad</h1>
         </div>
         <div class="campo">
@@ -219,14 +221,14 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight
       <!-- PASO 4 -->
       <section data-paso="4" class="contenido" style="padding:0" hidden>
         <div>
-          <div class="eyebrow">PASO 4 DE 5</div>
+          <div class="eyebrow">Paso 4 de 5</div>
           <h1>¿Cómo quieres los resúmenes?</h1>
           <p class="sub">Cada clase tendrá un resumen completo, en orden y por temas, y aparte los exámenes, entregas y fechas.</p>
         </div>
         <label class="modo">
           <input type="radio" name="modo" value="cuenta" checked>
           <div class="cuerpo">
-            <div class="t">Con mi cuenta de Claude <span class="etiqueta">RECOMENDADO</span></div>
+            <div class="t">Con mi cuenta de Claude <span class="etiqueta">Recomendado</span></div>
             <div style="font-size:13px;line-height:1.55;color:var(--fg2)">Usa tu suscripción Pro o Max, sin pagar nada más. Crea tu panel "Mis clases" en Claude: ahí ves todas tus clases desde el móvil o cualquier ordenador.</div>
             <div class="fila">
               <button type="button" class="btn oscuro" id="btnPanel">Crear mi panel en Claude<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
@@ -255,24 +257,24 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight
 
       <!-- PASO 5 -->
       <section data-paso="5" class="final" hidden>
-        <div class="logo"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div class="logo"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF9A55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
         <div>
           <h1 id="tituloFin" style="font-size:34px">Todo listo</h1>
-          <p style="margin:10px auto 0;font-size:15px;line-height:1.6;color:var(--fg2);max-width:520px">El agente se queda junto al reloj de Windows y empezará a escuchar solo en tu próxima clase.</p>
+          <p style="margin:10px auto 0;font-size:15px;line-height:1.6;color:var(--fg2);max-width:520px">Estudio se queda junto al reloj de Windows y empezará a escuchar solo en tu próxima clase.</p>
         </div>
         <div class="proxima" id="proxima">
           <div class="barra"></div>
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em">PRÓXIMA CLASE</div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);">Próxima clase</div>
             <div id="proxNombre" style="font-size:17px;font-weight:600;margin-top:2px"></div>
             <div id="proxCuando" style="font-size:13px;color:var(--muted);margin-top:2px"></div>
           </div>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--sun)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         </div>
         <div class="error" id="errorGuardar" hidden></div>
         <div class="fila" style="gap:12px">
           <button type="button" class="btn-sec" id="btnHub" style="height:46px;padding:0 22px;font-weight:600;font-size:15px">Abrir Mis clases</button>
-          <button type="button" class="btn" id="btnFin" style="height:46px">Ir al agente</button>
+          <button type="button" class="btn" id="btnFin" style="height:46px">Ir a Estudio</button>
         </div>
       </section>
     </div>
@@ -343,7 +345,7 @@ const DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const DIAS_CORTO = { lunes: "Lun", martes: "Mar", miercoles: "Mié", jueves: "Jue", viernes: "Vie", sabado: "Sáb" };
 const DIAS_LARGO = { lunes: "lunes", martes: "martes", miercoles: "miércoles", jueves: "jueves", viernes: "viernes", sabado: "sábado", domingo: "domingo" };
 const NOMBRES_PASOS = ["Bienvenida", "Asignaturas y horario", "Micrófono", "Resúmenes", "Listo"];
-const ICONO_OK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+const ICONO_OK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
 
 // ---------- puente con Python (pywebview); en un navegador normal usa datos de prueba ----------
 let apiLista;

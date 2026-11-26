@@ -22,7 +22,7 @@ URL_HUB_HTML = f"https://raw.githubusercontent.com/{REPO}/main/hub/mis-clases.ht
 URL_HUB_GUIA = f"https://github.com/{REPO}/blob/main/hub/PUBLICAR.md"
 
 PROMPT_HUB = (
-    "Quiero mi propio panel \"Mis clases\" del Agente de clases. "
+    "Quiero mi propio panel \"Mis clases\" de Estudio (la app que graba y resume mis clases). "
     f"Lee las instrucciones de {URL_HUB_GUIA} y publica como artefacto el HTML de {URL_HUB_HTML} "
     "tal cual, con las capacidades que indica la guía. Cuando esté, dame el enlace."
 )
@@ -183,8 +183,8 @@ def ejecutar():
     import webview
 
     api = Api()
-    api._ventana = webview.create_window("Agente de clases", html=html(), js_api=api, width=1000, height=700,
-                                        min_size=(900, 640), background_color="#F6F6F3")
+    api._ventana = webview.create_window("Estudio", html=html(), js_api=api, width=1000, height=700,
+                                        min_size=(900, 640), background_color="#CFE6FF")
     webview.start()
     api.parar_medidor()
     return api._terminado

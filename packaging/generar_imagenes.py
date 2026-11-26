@@ -1,5 +1,7 @@
 """Genera el icono y las imágenes del instalador (sin archivos binarios en el repo).
 
+Diseño "Jornada" de Estudio: el arco del día con el sol sobre azul noche, y un cielo de atardecer
+en el panel lateral. Mismo dibujo que docs/assets/icon.svg.
 Salida en packaging/build/: icono.ico, asistente-*.bmp (panel izquierdo) y logo-*.bmp (esquina).
 Uso: python packaging/generar_imagenes.py
 """
@@ -9,32 +11,33 @@ from PIL import Image, ImageDraw, ImageFont
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SALIDA = os.path.join(AQUI, "build")
-ACENTO = (67, 56, 202)        # #4338CA
+TINTA = (13, 35, 64)          # #0D2340
+SOL = (255, 122, 47)          # #FF7A2F
+ARCO = (207, 230, 255)        # #CFE6FF
 BLANCO = (255, 255, 255)
 
 
-def ondas(draw, cx, cy, alto, grosor, color):
-    """El logo: cinco barras de onda de sonido."""
-    alturas = [0.33, 0.6, 1.0, 0.6, 0.33]
-    paso = grosor * 2.2
-    x0 = cx - paso * 2
-    for i, h in enumerate(alturas):
-        x = x0 + i * paso
-        mitad = alto * h / 2
-        draw.rounded_rectangle((x - grosor / 2, cy - mitad, x + grosor / 2, cy + mitad), radius=grosor / 2, fill=color)
+def marca(d, x, y, lado, fondo=True):
+    """El logo en un cuadrado de `lado` px con esquina superior izquierda en (x, y)."""
+    u = lado / 64
+    if fondo:
+        d.rounded_rectangle((x, y, x + lado - 1, y + lado - 1), radius=15 * u, fill=TINTA)
+    cx, cy, r = x + 32 * u, y + 46 * u, 20 * u
+    d.arc((cx - r, cy - r, cx + r, cy + r), 180, 360, fill=ARCO, width=max(1, round(5 * u)))
+    sx, sy, sr = x + 46.1 * u, y + 31.9 * u, 6.25 * u
+    d.ellipse((sx - sr - 1.75 * u, sy - sr - 1.75 * u, sx + sr + 1.75 * u, sy + sr + 1.75 * u), fill=BLANCO)
+    d.ellipse((sx - sr, sy - sr, sx + sr, sy + sr), fill=SOL)
 
 
 def icono(lado):
     s = lado * 4  # dibujamos grande y reducimos para suavizar bordes
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, s - 1, s - 1), radius=int(s * 0.24), fill=ACENTO)
-    ondas(d, s / 2, s / 2, s * 0.58, s * 0.085, BLANCO)
+    marca(ImageDraw.Draw(img), 0, 0, s)
     return img.resize((lado, lado), Image.LANCZOS)
 
 
 def fuente(tam, negrita=True):
-    for nombre in (["segoeuib.ttf", "DejaVuSans-Bold.ttf"] if negrita else ["segoeui.ttf", "DejaVuSans.ttf"]):
+    for nombre in (["BricolageGrotesque-Bold.ttf", "segoeuib.ttf", "DejaVuSans-Bold.ttf"] if negrita else ["segoeui.ttf", "DejaVuSans.ttf"]):
         for carpeta in ("C:/Windows/Fonts", "/usr/share/fonts/truetype/dejavu", ""):
             try:
                 return ImageFont.truetype(os.path.join(carpeta, nombre) if carpeta else nombre, tam)
@@ -43,26 +46,42 @@ def fuente(tam, negrita=True):
     return ImageFont.load_default()
 
 
+def _mezcla(a, b, t):
+    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
+
+
 def panel(ancho, alto):
-    """Panel izquierdo del asistente de instalación (bienvenida y final)."""
-    f = ancho / 164
-    img = Image.new("RGB", (ancho, alto), ACENTO)
+    """Panel izquierdo del asistente de instalación: cielo de la tarde con el arco del día y el sol."""
+    k = 3
+    W, H = ancho * k, alto * k
+    img = Image.new("RGB", (W, H))
     d = ImageDraw.Draw(img, "RGBA")
-    # círculos decorativos abajo a la izquierda
-    cx, cy = ancho * 0.25, alto * 0.95
-    for r in (50, 75, 100):
-        rr = r * f
-        d.ellipse((cx - rr, cy - rr, cx + rr, cy + rr), outline=(255, 255, 255, 46), width=max(1, int(2 * f)))
-    # logo
-    m = 22 * f
-    lado = 46 * f
-    d.rounded_rectangle((m, m, m + lado, m + lado), radius=13 * f, fill=(255, 255, 255, 40))
-    ondas(d, m + lado / 2, m + lado / 2, lado * 0.55, lado * 0.085, BLANCO)
-    # nombre
-    t = fuente(int(22 * f))
-    d.text((m, alto * 0.62), "Agente", font=t, fill=BLANCO)
-    d.text((m, alto * 0.62 + 25 * f), "de clases", font=t, fill=BLANCO)
-    return img
+    paradas = [(0, (14, 31, 74)), (.45, (79, 111, 168)), (.8, (233, 148, 106)), (1, (255, 208, 166))]
+    for yy in range(H):
+        t = yy / (H - 1)
+        for (t0, c0), (t1, c1) in zip(paradas, paradas[1:]):
+            if t0 <= t <= t1:
+                d.line((0, yy, W, yy), fill=_mezcla(c0, c1, (t - t0) / (t1 - t0)))
+                break
+    f = W / 164
+    # arco del día y el sol a media tarde
+    cx, cy, r = W / 2, H * 1.02, W * .62
+    d.arc((cx - r, cy - r, cx + r, cy + r), 180, 360, fill=(255, 255, 255, 150), width=int(5 * f))
+    import math
+    a = math.radians(180 + 128)
+    sx, sy = cx + r * math.cos(a), cy + r * math.sin(a)
+    for rr, al in ((26, 40), (18, 80)):
+        d.ellipse((sx - rr * f, sy - rr * f, sx + rr * f, sy + rr * f), fill=SOL + (al,))
+    d.ellipse((sx - 9 * f, sy - 9 * f, sx + 9 * f, sy + 9 * f), fill=SOL, outline=BLANCO, width=int(2.5 * f))
+    # estrellas
+    for px, py in ((.18, .1), (.7, .07), (.42, .2), (.86, .26), (.1, .33)):
+        d.ellipse((W * px - 1.4 * f, H * py - 1.4 * f, W * px + 1.4 * f, H * py + 1.4 * f), fill=(255, 255, 255, 200))
+    # logo y nombre
+    m = 20 * f
+    marca(d, m, m, 44 * f)
+    d.text((m, H * .34), "estudio", font=fuente(int(27 * f)), fill=BLANCO)
+    d.text((m, H * .34 + 34 * f), "Tus clases grabadas,\nresumidas y en orden", font=fuente(int(10.5 * f), False), fill=(228, 236, 247), spacing=int(3 * f))
+    return img.resize((ancho, alto), Image.LANCZOS)
 
 
 def main():
@@ -74,7 +93,6 @@ def main():
     for escala in (100, 125, 150, 175, 200, 225, 250):
         k = escala / 100
         panel(int(164 * k), int(314 * k)).save(os.path.join(SALIDA, f"asistente-{escala}.bmp"))
-        icono(int(55 * k)).convert("RGBA")
         peq = Image.new("RGB", (int(55 * k), int(58 * k)), BLANCO)
         ic = icono(int(52 * k))
         peq.paste(ic, ((peq.width - ic.width) // 2, (peq.height - ic.height) // 2), ic)

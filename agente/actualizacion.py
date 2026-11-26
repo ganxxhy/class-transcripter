@@ -32,8 +32,8 @@ def _tupla(v):
 
 
 def es_mas_nueva(remota, local=VERSION):
-    if str(local).endswith("-dev"):
-        return False  # desde el código fuente no se actualiza
+    if str(local).endswith("-dev") or str(local).startswith("0.0."):
+        return False  # desde el código fuente o una compilación de prueba (CI) no se actualiza
     return _tupla(remota) > _tupla(local)
 
 
@@ -169,7 +169,7 @@ class Api:
             url = self._info.get("instalador")
             if not url:
                 raise RuntimeError("Esta versión no tiene instalador.")
-            destino = os.path.join(tempfile.gettempdir(), f"AgenteClases-{self._info['version']}-instalador.exe")
+            destino = os.path.join(tempfile.gettempdir(), f"Estudio-{self._info['version']}-instalador.exe")
             req = urllib.request.Request(url, headers={"User-Agent": "AgenteClases"})
             with urllib.request.urlopen(req, timeout=60) as r, open(destino + ".part", "wb") as f:
                 e["total"] = int(r.headers.get("Content-Length") or e["total"] or 0)
@@ -202,8 +202,8 @@ def _ventana(info, modo):
     api = Api(info, modo)
     with open(os.path.join(AQUI, "asistente", "actualizacion.html"), encoding="utf-8") as f:
         html = f.read()
-    api._ventana = webview.create_window("Agente de clases", html=html, js_api=api, width=640, height=600,
-                                         min_size=(520, 480), background_color="#F6F6F3")
+    api._ventana = webview.create_window("Estudio", html=html, js_api=api, width=640, height=600,
+                                         min_size=(520, 480), background_color="#CFE6FF")
     webview.start()
 
 

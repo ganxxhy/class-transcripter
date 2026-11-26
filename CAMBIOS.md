@@ -4,6 +4,22 @@ Cada versión publicada en Releases toma sus notas de aquí (la sección `## X.Y
 
 Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nuevo en una sección `### Panel`: los paneles con una versión más vieja avisan y lo enseñan.
 
+## 1.1.0
+
+### Novedades
+- La app pasa a llamarse **Estudio** y estrena el diseño "Jornada": un cielo que sigue la hora del día, tarjetas blancas y el día dibujado como un arco con el sol.
+- Ventana de grabación, asistente de primera vez, aviso de actualización e instalador con el diseño nuevo.
+- Web nueva: https://ganxxhy.github.io/class-transcripter/
+- Tus clases, ajustes y la carpeta `Documentos\AgenteClases` siguen donde estaban.
+
+### Panel
+- Diseño nuevo con secciones: Hoy, Asignaturas, Tareas, Calendario y Estadísticas.
+- Hoy enseña tu día como un arco con el sol en la hora actual, las clases de hoy y lo pendiente.
+- Tareas reúne los exámenes, entregas y avisos que se dicen en clase; márcalos al terminar.
+- Calendario con tu horario de la semana y las fechas que han salido en clase.
+- Estadísticas con las horas de clase grabadas por día y por asignatura.
+- Los resúmenes se hacen igual que antes.
+
 ## 1.0.0
 
 ### Novedades
