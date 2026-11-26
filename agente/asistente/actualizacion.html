@@ -3,54 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agente de clases</title>
+<title>Estudio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..750&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+/* Diseño "Jornada" de Estudio */
 :root {
-  --bg: #F6F6F3; --surface: #FFFFFF; --fg: #16181D; --fg2: #3A3F4B; --muted: #5B6070;
-  --line: #E4E5EA; --line2: #C9CBD3; --accent: #4338CA; --accent-hover: #3730A3; --accent-tint: #E0E3FF;
-  --accent-ink: #312E81; --on-accent: #FFFFFF; --danger: #B42318; --ok: #0F766E;
-  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --bg: #F5F9FE; --surface: #FFFFFF; --fg: #0D2340; --fg2: #2A3D57; --muted: #54657B;
+  --line: #E3EBF4; --line2: #CBD6E3; --accent: #0D2340; --accent-hover: #17365F; --sun: #FF7A2F;
+  --on-accent: #FFFFFF; --danger: #B42318; --ok: #16A34A; --blue: #2563EB;
+  --font: "Figtree", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --display: "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111318; --surface: #1A1D24; --fg: #ECEDF1; --fg2: #C9CCD5; --muted: #9AA0AE;
-    --line: #2A2E38; --line2: #3A3F4B; --accent: #7C83F5; --accent-hover: #959BFF; --accent-tint: #2A2E5C;
-    --accent-ink: #C7CAFF; --on-accent: #0E1030; --danger: #FF7A70; --ok: #3FBFA5; color-scheme: dark;
-  }
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.55; }
+body { margin: 0; background: linear-gradient(180deg, #8EC5FF 0, #CFE6FF 50%, #F3F8FF 100%); color: var(--fg); font-family: var(--font); font-size: 14.5px; line-height: 1.55; }
 button { font: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.caja { height: 100%; padding: 12px; display: flex; }
-.panel { flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; min-height: 0; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.caja { height: 100%; padding: 14px; display: flex; }
+.panel { flex: 1; background: var(--surface); border-radius: 24px; box-shadow: 0 1px 2px rgba(13,35,64,.05), 0 30px 60px -36px rgba(13,35,64,.45); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .cabecera { padding: 28px 32px 18px; display: flex; gap: 16px; align-items: center; }
-.logo { width: 52px; height: 52px; border-radius: 14px; background: var(--accent); display: grid; place-items: center; flex: none; }
-.eyebrow { font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .03em; }
-h1 { margin: 2px 0 0; font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1.2; }
-.versiones { color: var(--muted); font-size: 13px; margin-top: 2px; }
-.notas { flex: 1; min-height: 0; overflow: auto; margin: 0 32px; padding: 16px 18px; border-radius: 10px; background: var(--bg); color: var(--fg2); }
-.notas h2, .notas h3 { font-family: var(--display); font-size: 15px; margin: 14px 0 6px; color: var(--fg); }
+.logo { width: 56px; height: 56px; border-radius: 16px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--muted); }
+h1 { margin: 2px 0 0; font-family: var(--display); font-size: 26px; font-weight: 650; line-height: 1.1; letter-spacing: -.03em; }
+.versiones { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+.notas { flex: 1; min-height: 0; overflow: auto; margin: 0 32px; padding: 16px 18px; border-radius: 18px; background: var(--bg); color: var(--fg2); }
+.notas h2, .notas h3 { font-family: var(--display); font-size: 16px; font-weight: 650; letter-spacing: -.01em; margin: 14px 0 6px; color: var(--fg); }
 .notas h2:first-child, .notas h3:first-child { margin-top: 0; }
 .notas ul { margin: 0 0 8px; padding-left: 20px; }
 .notas li { margin: 3px 0; }
+.notas li::marker { color: var(--sun); }
 .notas p { margin: 0 0 8px; }
-.notas a { color: var(--accent); }
+.notas a { color: var(--blue); }
+.notas code { font-family: var(--mono); font-size: 12.5px; }
 .progreso { margin: 14px 32px 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
-.pista { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
-.pista > div { height: 100%; width: 0; background: var(--accent); border-radius: 4px; transition: width .3s; }
+.pista { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.pista > div { height: 100%; width: 0; background: var(--sun); border-radius: 99px; transition: width .3s; }
+#progNum { font-family: var(--mono); }
 .pie { padding: 18px 32px 22px; display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
 .pie .izq { margin-right: auto; }
-.btn { height: 42px; padding: 0 22px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; }
+.btn { height: 44px; padding: 0 22px; border-radius: 999px; border: 0; background: var(--accent); color: var(--on-accent); font-weight: 650; font-size: 15px; box-shadow: 0 8px 18px -10px rgba(13,35,64,.7); }
 .btn:hover { background: var(--accent-hover); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn-sec { height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--line2); background: var(--surface); color: var(--fg); font-weight: 500; }
-.btn-texto { height: 42px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); border-radius: 10px; }
-.btn-texto:hover, .btn-sec:hover { background: var(--bg); }
+.btn-sec { height: 44px; padding: 0 18px; border-radius: 999px; border: 0; box-shadow: inset 0 0 0 1px var(--line2); background: var(--surface); color: var(--fg); font-weight: 600; }
+.btn-texto { height: 44px; padding: 0 14px; border: 0; background: transparent; color: var(--muted); font-weight: 600; border-radius: 999px; }
+.btn-texto:hover, .btn-sec:hover { background: #F3F8FF; }
 .error { color: var(--danger); }
 </style>
 </head>
@@ -58,7 +58,7 @@ h1 { margin: 2px 0 0; font-family: var(--display); font-size: 24px; font-weight:
 <div class="caja">
   <main class="panel">
     <div class="cabecera">
-      <div class="logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></div>
+      <div class="logo"><svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 46a20 20 0 0 1 40 0" fill="none" stroke="#CFE6FF" stroke-width="5" stroke-linecap="round"/><circle cx="46.1" cy="31.9" r="8" fill="#FF7A2F" stroke="#fff" stroke-width="3.5"/></svg></div>
       <div>
         <div class="eyebrow" id="eyebrow"></div>
         <h1 id="titulo"></h1>
@@ -128,13 +128,13 @@ const MB = (b) => (b / 1e6).toLocaleString("es-ES", { maximumFractionDigits: 0 }
   const d = await api("datos");
   $("#notas").innerHTML = markdown(d.notas || "") || "<p>Sin notas para esta versión.</p>";
   if (d.modo === "novedades") {
-    $("#eyebrow").textContent = "ACTUALIZADO";
+    $("#eyebrow").textContent = "Actualizado";
     $("#titulo").textContent = `Novedades de la versión ${d.version}`;
     $("#versiones").textContent = "Esto es lo que ha cambiado.";
     $("#pieNovedades").hidden = false;
     $("#btnVale").focus();
   } else {
-    $("#eyebrow").textContent = "ACTUALIZACIÓN DISPONIBLE";
+    $("#eyebrow").textContent = "Actualización disponible";
     $("#titulo").textContent = `Hay una versión nueva: ${d.version}`;
     $("#versiones").textContent = `Tienes la ${d.actual}${d.fecha ? ` · publicada el ${new Date(d.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}` : ""}. Tus clases y ajustes se conservan.`;
     $("#pieAviso").hidden = false;
@@ -160,7 +160,7 @@ $("#btnSi").onclick = async () => {
     } else if (p.estado === "instalando") {
       clearInterval(t);
       $("#progRelleno").style.width = "100%";
-      $("#progTxt").textContent = "Instalando… el agente se cerrará y se volverá a abrir solo.";
+      $("#progTxt").textContent = "Instalando… Estudio se cerrará y se volverá a abrir solo.";
       $("#progNum").textContent = "";
     } else if (p.estado === "error") {
       clearInterval(t);
