@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agente de clases: tus clases grabadas y ya subrayadas</title>
+<meta name="description" content="App gratuita y de código abierto para Windows: graba tus clases según tu horario, las transcribe en tu ordenador y te las resume con exámenes, entregas, fechas y avisos ya subrayados.">
+<meta name="theme-color" content="#111111">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Agente de clases">
+<meta property="og:description" content="Lo que entra en el examen, ya subrayado.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/icon.svg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@500;700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav__in">
+    <a class="skip-link" href="#top">Saltar al contenido</a>
+    <a class="brand" href="#top" aria-label="Agente de clases, inicio">
+      <img src="assets/icon.svg" alt="" width="32" height="32">
+      <span>Agente de <span class="hl hl--examen is-on">clases</span></span>
+    </a>
+    <nav class="nav__links" aria-label="Secciones">
+      <a href="#como">Cómo funciona</a>
+      <a href="#dia">Un día</a>
+      <a href="#panel">Panel</a>
+      <a href="#instalar">Instalar</a>
+      <a href="#novedades">Novedades</a>
+    </nav>
+    <a class="btn btn--primary nav__cta" href="https://github.com/ganxxhy/class-transcripter/releases/latest">Descargar para Windows</a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="sheet" aria-label="Abrir menú"><span></span><span></span></button>
+  </div>
+  <div class="sheet" id="sheet" hidden>
+    <a href="#como">Cómo funciona</a>
+    <a href="#dia">Un día</a>
+    <a href="#panel">Panel</a>
+    <a href="#instalar">Instalar</a>
+    <a href="#novedades">Novedades</a>
+    <a class="btn btn--primary" href="https://github.com/ganxxhy/class-transcripter/releases/latest">Descargar para Windows</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="wrap hero__grid">
+      <div class="hero__copy">
+        <p class="pill mono" data-enter="1">Gratis · Windows 10 y 11<span class="pill__v"> · <span data-version-label>primera versión: 1.0.0</span></span></p>
+        <h1 id="hero-h" data-enter="2">La app que graba tus clases y subraya <span class="hl hl--examen" data-hero-hl>lo del examen</span></h1>
+        <p class="lead" data-enter="3">Graba según tu horario, transcribe en tu propio ordenador y te deja cada clase resumida por temas, con los exámenes, entregas y fechas aparte.</p>
+        <div class="btn-row" data-enter="4">
+          <a class="btn btn--primary btn--lg" href="https://github.com/ganxxhy/class-transcripter/releases/latest">
+            <svg class="win" viewBox="0 0 16 16" aria-hidden="true"><path d="M0 0h7.5v7.5H0zM8.5 0H16v7.5H8.5zM0 8.5h7.5V16H0zM8.5 8.5H16V16H8.5z"/></svg>
+            Descargar para Windows
+          </a>
+          <a class="btn btn--secondary btn--lg" href="https://github.com/ganxxhy/class-transcripter">Ver el código</a>
+        </div>
+        <p class="hero__meta mono" data-enter="5">Código abierto · Sin cuenta nueva · El audio no sale de tu ordenador</p>
+      </div>
+
+      <div class="hero__sheet" data-enter="3">
+        <article class="chuleta" aria-label="Ejemplo de resumen de una clase">
+          <header class="chuleta__head">
+            <p class="chuleta__subject">Cálculo II</p>
+            <p class="mono chuleta__date">Lunes 9:00 · 1 h 40 min</p>
+          </header>
+          <ol class="chuleta__topics">
+            <li><b>Integración por partes.</b> Cómo elegir u y dv. <span class="hl hl--examen" data-seq="1">El ejercicio tipo es el de la diapositiva 12.</span></li>
+            <li><b>Cambio de variable.</b> Los casos que más cuestan. <span class="hl hl--entrega" data-seq="2">La práctica 3 se entrega por el campus virtual.</span></li>
+            <li><b>Integrales racionales.</b> Repaso. <span class="hl hl--fecha" data-seq="3">Parcial el 2 de diciembre, 9:00, aula 1.4.</span></li>
+            <li><span class="hl hl--aviso" data-seq="4">El jueves no hay clase.</span> Se recupera el lunes a las 12.</li>
+          </ol>
+          <p class="note note--a" aria-hidden="true">esto cae seguro
+            <svg viewBox="0 0 80 40"><path d="M76 4 C60 10 34 14 8 32 M8 32 l12 -2 M8 32 l3 -11" /></svg>
+          </p>
+          <p class="note note--b" aria-hidden="true">apuntado ✓</p>
+        </article>
+        <div class="pen" aria-hidden="true" data-pen><i class="pen__cap"></i><i class="pen__body"></i><i class="pen__tip"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CINTA ============ -->
+  <div class="ribbon" aria-label="Frases típicas de clase">
+    <div class="ribbon__track" data-ribbon>
+      <span><mark class="hl hl--examen is-on">Esto entra en el examen</mark></span>
+      <span><mark class="hl hl--entrega is-on">La práctica se entrega el viernes</mark></span>
+      <span><mark class="hl hl--fecha is-on">Apuntad esta fecha</mark></span>
+      <span><mark class="hl hl--aviso is-on">El jueves no hay clase</mark></span>
+      <span><mark class="hl hl--examen is-on">Esto lo pregunto siempre</mark></span>
+      <span><mark class="hl hl--fecha is-on">Para el parcial, del tema 1 al 4</mark></span>
+    </div>
+    <button class="ribbon__pause" type="button" aria-pressed="false" data-ribbon-pause aria-label="Pausar la cinta de frases">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path class="i-pause" d="M4 3h3v10H4zM9 3h3v10H9z"/><path class="i-play" d="M5 3l8 5-8 5z"/></svg>
+    </button>
+  </div>
+
+  <!-- ============ 01 CÓMO FUNCIONA ============ -->
+  <section id="como" class="section" aria-labelledby="como-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>01</b> Cómo funciona</p>
+        <h2 id="como-h">Cuatro cosas que hace por ti. <span class="muted">Sin que toques nada.</span></h2>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__viz viz-rec" aria-hidden="true">
+            <div class="viz-rec__row"><span class="mono">8:55</span><span class="chip chip--soft">se prepara</span></div>
+            <div class="viz-rec__row is-on"><span class="mono">9:00</span><span class="chip chip--rec"><i></i>grabando</span></div>
+            <div class="viz-rec__row"><span class="mono">10:40</span><span class="chip chip--soft">para</span></div>
+          </div>
+          <h3><span class="hl hl--examen is-on">Graba</span> según tu horario</h3>
+          <p>Empieza 5 minutos antes de cada clase, sigue en los descansos cortos y para al acabar. Fuera de horario no graba nada.</p>
+        </li>
+        <li class="step">
+          <div class="step__viz viz-local" aria-hidden="true">
+            <div class="viz-local__pc">
+              <span class="mono">whisper</span>
+              <div class="bar bar--loop"><i></i></div>
+              <span class="mono small">en este ordenador</span>
+            </div>
+          </div>
+          <h3><span class="hl hl--fecha is-on">Transcribe</span> en tu ordenador</h3>
+          <p>Usa Whisper en tu propio PC. El audio de la clase nunca sale de tu ordenador.</p>
+        </li>
+        <li class="step">
+          <div class="step__viz viz-sum" aria-hidden="true">
+            <p><span class="mono">1</span> Integración por partes</p>
+            <p><span class="mono">2</span> Cambio de variable</p>
+            <p class="viz-sum__hl"><b class="tag">examen</b> Ejercicio tipo: diapositiva 12</p>
+          </div>
+          <h3><span class="hl hl--entrega is-on">Resume</span> por temas</h3>
+          <p>Toda la clase, en orden y por temas. Aparte, lo importante: exámenes, entregas, fechas y avisos.</p>
+        </li>
+        <li class="step">
+          <div class="step__viz viz-devices" aria-hidden="true">
+            <div class="dev dev--laptop"><i></i><i></i><i></i></div>
+            <div class="dev dev--phone"><i></i><i></i></div>
+          </div>
+          <h3>Lo lees en <span class="hl hl--aviso is-on">“Mis clases”</span></h3>
+          <p>Tu panel, en tu cuenta de Claude. Ábrelo en el móvil o en cualquier ordenador, o instálalo como app.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ 02 UN DÍA ============ -->
+  <section id="dia" class="section section--ink" aria-labelledby="dia-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>02</b> Un día con la app</p>
+        <h2 id="dia-h">Un lunes con la app. <span class="muted">Mueve la hora y mira qué hace.</span></h2>
+      </div>
+      <div class="day">
+        <div class="day__left">
+          <div class="tray" data-tray="sleep">
+            <div class="tray__head">
+              <img src="assets/icon.svg" alt="" width="20" height="20">
+              <span>Agente de clases</span>
+              <span class="tray__chip mono" data-day-state>Fuera de horario</span>
+            </div>
+            <p class="tray__line" data-day-line aria-live="polite">Fuera de horario no graba nada.</p>
+            <div class="tray__viz" aria-hidden="true">
+              <div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bar bar--loop tray__bar"><i></i></div>
+            </div>
+          </div>
+          <div class="clock">
+            <label for="hour" class="clock__label">Hora del lunes</label>
+            <output class="clock__time mono" for="hour" data-day-time>07:30</output>
+          </div>
+          <input class="range" id="hour" type="range" min="420" max="1440" step="5" value="450" data-day-range>
+          <div class="presets" role="group" aria-label="Ir a una hora">
+            <button type="button" class="preset" data-jump="535"><span class="mono">8:55</span>se prepara</button>
+            <button type="button" class="preset" data-jump="540"><span class="mono">9:00</span>graba</button>
+            <button type="button" class="preset" data-jump="640"><span class="mono">10:40</span>resume</button>
+            <button type="button" class="preset" data-jump="1380"><span class="mono">23:00</span>descansa</button>
+          </div>
+        </div>
+        <div class="week" aria-label="Horario de la semana">
+          <div class="week__head mono"><span></span><span class="is-today">Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span></div>
+          <div class="week__grid">
+            <div class="week__hours mono"><span style="--h:0">9</span><span style="--h:2">11</span><span style="--h:4">13</span><span style="--h:6">15</span><span style="--h:8">17</span></div>
+            <div class="week__col is-today">
+              <i class="blk" style="--a:0;--b:1.67;--c:var(--examen)" data-blk="calc">Cálculo II<small>9:00–10:40</small></i>
+              <i class="blk" style="--a:6;--b:7.67;--c:var(--aviso)" data-blk="fis">Física<small>15:00–16:40</small></i>
+            </div>
+            <div class="week__col"><i class="blk" style="--a:2;--b:4;--c:var(--fecha)">Álgebra<small>11:00–13:00</small></i></div>
+            <div class="week__col"><i class="blk" style="--a:0;--b:1.67;--c:var(--examen)">Cálculo II<small>9:00–10:40</small></i><i class="blk" style="--a:4;--b:6;--c:var(--entrega)">Química<small>13:00–15:00</small></i></div>
+            <div class="week__col"><i class="blk" style="--a:2;--b:4;--c:var(--fecha)">Álgebra<small>11:00–13:00</small></i></div>
+            <div class="week__col"><i class="blk" style="--a:6;--b:7.67;--c:var(--aviso)">Física<small>15:00–16:40</small></i></div>
+            <i class="week__now" data-nowline hidden></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 COLORES ============ -->
+  <section id="colores" class="section" aria-labelledby="col-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>03</b> Los destacados</p>
+        <h2 id="col-h">Cuatro colores. <span class="muted">Cada uno significa una cosa.</span></h2>
+        <p class="sub measure">El resumen va en orden y por temas. Lo importante sale aparte, con su color, para que lo veas de un vistazo.</p>
+      </div>
+      <ul class="codes">
+        <li class="code code--examen"><p class="code__name">Examen</p><p class="code__q">“Esto entra, practicadlo.”</p><p class="mono code__k">Lo que pueden preguntar</p></li>
+        <li class="code code--entrega"><p class="code__name">Entrega</p><p class="code__q">“La práctica 3, por el campus.”</p><p class="mono code__k">Trabajos y prácticas</p></li>
+        <li class="code code--fecha"><p class="code__name">Fecha</p><p class="code__q">“El parcial es el 2 de diciembre.”</p><p class="mono code__k">Días y horas que importan</p></li>
+        <li class="code code--aviso"><p class="code__name">Aviso</p><p class="code__q">“El jueves no hay clase.”</p><p class="mono code__k">Cambios del profesorado</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 04 PANEL ============ -->
+  <section id="panel" class="section section--paper" aria-labelledby="panel-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>04</b> El panel “Mis clases”</p>
+        <h2 id="panel-h">Lo importante, aparte. <span class="muted">Subraya tú y mira cómo queda.</span></h2>
+        <p class="sub measure">Cada clase llega a tu panel con su resumen por temas y, aparte, los destacados. Elige un color y toca frases de la transcripción, o deja que lo haga la app.</p>
+      </div>
+
+      <div class="lab__bar">
+        <div class="pens" role="radiogroup" aria-label="Elige un fosforito">
+          <button type="button" class="penbtn penbtn--examen" role="radio" aria-checked="true" data-pen="examen"><i></i>Examen</button>
+          <button type="button" class="penbtn penbtn--entrega" role="radio" aria-checked="false" data-pen="entrega"><i></i>Entrega</button>
+          <button type="button" class="penbtn penbtn--fecha" role="radio" aria-checked="false" data-pen="fecha"><i></i>Fecha</button>
+          <button type="button" class="penbtn penbtn--aviso" role="radio" aria-checked="false" data-pen="aviso"><i></i>Aviso</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn--ink" data-auto>Subrayar como la app</button>
+          <button type="button" class="btn btn--secondary" data-clear>Borrar</button>
+        </div>
+      </div>
+
+      <div class="app-frame" data-panel-theme="dark">
+        <div class="app-frame__bar">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="mono app-frame__url">claude.ai · Mis clases</span>
+          <button type="button" class="theme-toggle" data-panel-toggle aria-label="Cambiar el panel a modo claro">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a6.5 6.5 0 1 0 6.5 6.5A5 5 0 0 1 8 1.5z"/></svg>
+          </button>
+        </div>
+        <div class="app">
+          <aside class="app__side" aria-label="Asignaturas">
+            <p class="app__title">Mis clases</p>
+            <ul>
+              <li class="is-on">Cálculo II <span class="mono">12</span></li>
+              <li>Física <span class="mono">11</span></li>
+              <li>Álgebra <span class="mono">9</span></li>
+              <li>Química <span class="mono">8</span></li>
+            </ul>
+          </aside>
+          <div class="app__transcript transcript" data-transcript>
+            <p class="app__label mono">Transcripción · lunes 9:00</p>
+            <ol>
+              <li><button type="button" data-ans="" aria-pressed="false"><time class="mono">12:04</time><span>Bueno, seguimos con integrales por partes. La idea es elegir bien u y dv.</span></button></li>
+              <li><button type="button" data-ans="examen" aria-pressed="false"><time class="mono">14:30</time><span>Esto entra en el examen, así que practicadlo: el ejercicio tipo es el de la diapositiva 12.</span></button></li>
+              <li><button type="button" data-ans="entrega" aria-pressed="false"><time class="mono">21:10</time><span>La práctica 3 se entrega por el campus virtual.</span></button></li>
+              <li><button type="button" data-ans="" aria-pressed="false"><time class="mono">27:45</time><span>Ahora vamos con el cambio de variable, que es lo que más os cuesta.</span></button></li>
+              <li><button type="button" data-ans="fecha" aria-pressed="false"><time class="mono">33:02</time><span>El parcial es el 2 de diciembre, de 9 a 11, en el aula 1.4.</span></button></li>
+              <li><button type="button" data-ans="aviso" aria-pressed="false"><time class="mono">41:18</time><span>El jueves no hay clase; la recuperamos el lunes a las 12.</span></button></li>
+              <li><button type="button" data-ans="" aria-pressed="false"><time class="mono">45:00</time><span>Para terminar, repasamos las integrales racionales.</span></button></li>
+            </ol>
+          </div>
+          <div class="app__summary">
+            <div class="app__summary-head">
+              <p class="app__subject">Cálculo II</p>
+              <p class="mono app__date">Lunes · 1 h 40 min</p>
+            </div>
+            <p class="app__label mono">Destacados <span data-count>· 0</span></p>
+            <ul class="highlights" data-mine aria-live="polite"></ul>
+            <p class="mine__score" data-score aria-live="polite"></p>
+            <p class="app__label mono">Resumen por temas</p>
+            <ol class="topics">
+              <li><b>Integración por partes.</b> Cómo elegir u y dv, con el ejercicio tipo de la diapositiva 12.</li>
+              <li><b>Cambio de variable.</b> Casos que más cuestan y cómo reconocerlos.</li>
+              <li><b>Integrales racionales.</b> Repaso final antes del parcial.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 RESÚMENES ============ -->
+  <section id="resumen" class="section" aria-labelledby="modo-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>05</b> Los resúmenes</p>
+        <h2 id="modo-h">Dos formas de hacer los resúmenes</h2>
+        <p class="sub measure">Elige una en el asistente de primera vez. Puedes cambiarla después.</p>
+      </div>
+      <div class="ways">
+        <article class="way way--rec">
+          <p class="note note--static note--tag" aria-hidden="true">la recomendada</p>
+          <h3>Con tu cuenta de Claude <span class="hl hl--examen is-on">Pro o Max</span></h3>
+          <p>Abres tu panel “Mis clases” y los resúmenes se hacen desde allí, con tu cuenta.</p>
+          <ul class="ticks">
+            <li>No necesitas ninguna clave</li>
+            <li>El panel se abre en el móvil o en otro ordenador</li>
+          </ul>
+        </article>
+        <article class="way">
+          <h3>Con una clave de API de <span class="hl hl--aviso is-on">Claude o Gemini</span></h3>
+          <p>Al acabar la clase, el resumen se hace solo en tu ordenador, sin abrir nada.</p>
+          <ul class="ticks">
+            <li>Pegas la clave una vez en el asistente</li>
+            <li>El resumen está listo al salir de clase</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 PRIVACIDAD ============ -->
+  <section id="privacidad" class="section section--paper" aria-labelledby="priv-h">
+    <div class="wrap priv">
+      <div>
+        <p class="kicker mono"><b>06</b> Tus datos</p>
+        <h2 id="priv-h">Tu audio <span class="hl hl--fecha is-on">no sale</span> de tu ordenador</h2>
+        <p class="sub measure">La transcripción se hace en tu PC con Whisper. Las grabaciones y los textos se guardan en una carpeta tuya, y el código está a la vista de cualquiera.</p>
+        <a class="link" href="https://github.com/ganxxhy/class-transcripter">Ver el código en GitHub</a>
+      </div>
+      <dl class="facts">
+        <div><dt class="mono">Transcripción</dt><dd>Whisper, en tu ordenador</dd></div>
+        <div><dt class="mono">Carpeta</dt><dd class="mono">Documentos\AgenteClases</dd></div>
+        <div><dt class="mono">Fuera de horario</dt><dd>No graba nada</dd></div>
+        <div><dt class="mono">Código</dt><dd>Abierto, en GitHub</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 07 INSTALAR ============ -->
+  <section id="instalar" class="section" aria-labelledby="inst-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>07</b> Instalar</p>
+        <h2 id="inst-h">Instalación en cinco pasos. <span class="muted">Y el aviso de Windows, explicado.</span></h2>
+      </div>
+      <div class="install">
+        <ol class="lined">
+          <li><span class="lined__n mono">1</span><div><h3>Descarga el instalador</h3><p>Desde GitHub: <code data-filename>AgenteClases-1.0.0-instalador.exe</code></p></div></li>
+          <li><span class="lined__n mono">2</span><div><h3>Pasa el aviso de Windows</h3><p>La app no está firmada, así que Windows puede decir “Windows protegió tu PC”. Pulsa “Más información” y luego “Ejecutar de todas formas”. Pruébalo aquí al lado.</p></div></li>
+          <li><span class="lined__n mono">3</span><div><h3>Instálala sin permisos de administrador</h3><p>No hace falta instalar nada más. Si ya la tienes, el instalador solo la actualiza.</p></div></li>
+          <li><span class="lined__n mono">4</span><div><h3>Sigue el asistente de primera vez</h3><p>Pones tu nombre y aceptas el aviso de pedir permiso. Añades tus asignaturas y tu horario, a mano o con una captura que lee Claude. Pruebas el micrófono con su medidor y eliges cómo hacer los resúmenes. Un botón abre Claude para crear tu panel.</p></div></li>
+          <li><span class="lined__n mono">5</span><div><h3>Déjala junto al reloj</h3><p>La app se queda en la bandeja de Windows y trabaja sola.</p></div></li>
+        </ol>
+
+        <div class="ss-wrap">
+          <div class="ss" data-ss="1">
+            <div class="ss__body">
+              <p class="ss__title">Windows protegió tu PC</p>
+              <p class="ss__text">Windows SmartScreen impidió el inicio de una aplicación no reconocida. Si ejecutas esta aplicación, podrías exponer tu PC a riesgos.</p>
+              <button type="button" class="ss__more" data-ss-more>Más información</button>
+              <div class="ss__details">
+                <p><span>Aplicación:</span> <span class="mono" data-filename>AgenteClases-1.0.0-instalador.exe</span></p>
+                <p><span>Editor:</span> Editor desconocido</p>
+              </div>
+              <div class="ss__actions">
+                <button type="button" class="ss__btn ss__btn--run" data-ss-run>Ejecutar de todas formas</button>
+                <button type="button" class="ss__btn" data-ss-no>No ejecutar</button>
+              </div>
+            </div>
+            <div class="ss__done">
+              <img src="assets/icon.svg" alt="" width="52" height="52">
+              <p class="ss__done-title">Instalando Agente de clases</p>
+              <div class="bar bar--inst"><i></i></div>
+              <button type="button" class="link" data-ss-reset>Volver a empezar</button>
+            </div>
+            <p class="note note--ss" aria-hidden="true">pulsa aquí ↓</p>
+          </div>
+          <p class="mono ss-hint" data-ss-hint aria-live="polite">Paso 1 de 2: pulsa “Más información”.</p>
+        </div>
+      </div>
+
+      <div class="reqs">
+        <h3>Requisitos</h3>
+        <dl class="mono">
+          <div><dt>Sistema</dt><dd>Windows 10 u 11 de 64 bits</dd></div>
+          <div><dt>Micrófono</dt><dd>Cualquiera, el del portátil vale</dd></div>
+          <div><dt>Espacio</dt><dd>Hasta 1,6 GB para el modelo de transcripción</dd></div>
+          <div><dt>Cuenta</dt><dd>Una cuenta de Claude para el panel</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 NOVEDADES ============ -->
+  <section id="novedades" class="section section--paper" aria-labelledby="nov-h">
+    <div class="wrap news">
+      <div>
+        <p class="kicker mono"><b>08</b> Novedades</p>
+        <h2 id="nov-h">Novedades de cada versión</h2>
+        <p class="sub measure">La lista sale directamente del repositorio. La app te avisa cuando hay una versión nueva y tú decides cuándo actualizar.</p>
+        <div class="releases" data-releases aria-live="polite">
+          <article class="release">
+            <p class="release__tag mono">1.0.0</p>
+            <p>Todavía no hay ninguna versión publicada. La primera será la 1.0.0 y sus novedades aparecerán aquí.</p>
+          </article>
+        </div>
+        <a class="link" href="https://github.com/ganxxhy/class-transcripter/releases">Ver todas las versiones en GitHub</a>
+      </div>
+
+      <div class="upd" role="group" aria-label="Ventana de actualización de la app">
+        <div class="upd__bar"><img src="assets/icon.svg" alt="" width="16" height="16"><span>Actualización disponible</span></div>
+        <div class="upd__body">
+          <p class="upd__title">Hay una versión nueva: <span class="hl hl--examen is-on mono" data-upd-version>1.1.0</span></p>
+          <ul class="upd__list">
+            <li>Te enseña qué cambia, sacado de <span class="mono">CAMBIOS.md</span>.</li>
+            <li>Después de actualizar, te enseña las novedades.</li>
+            <li>El panel “Mis clases” se actualiza sin perder clases ni resúmenes.</li>
+          </ul>
+        </div>
+        <p class="upd__result" data-upd-result aria-live="polite"></p>
+        <div class="upd__actions">
+          <button type="button" class="ubtn ubtn--main" data-upd-act="now">Actualizar ahora</button>
+          <button type="button" class="ubtn" data-upd-act="later">Ahora no</button>
+          <button type="button" class="ubtn ubtn--text" data-upd-act="skip">Saltar esta versión</button>
+        </div>
+        <p class="note note--upd" aria-hidden="true">tú eliges</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 PREGUNTAS ============ -->
+  <section id="preguntas" class="section" aria-labelledby="faq-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker mono"><b>09</b> Preguntas</p>
+        <h2 id="faq-h">Preguntas frecuentes</h2>
+      </div>
+      <div class="faq">
+        <div><h3>¿Cuánto cuesta?</h3><p>La app es gratuita y de código abierto. Para los resúmenes necesitas tu cuenta de Claude Pro o Max, o una clave de API de Claude o de Gemini.</p></div>
+        <div><h3>¿Funciona en Mac o en Linux?</h3><p>Por ahora solo en Windows 10 y 11 de 64 bits. Linux está previsto para más adelante.</p></div>
+        <div><h3>¿Dónde se guardan mis clases?</h3><p>En tu ordenador, en <span class="mono">Documentos\AgenteClases</span>. Los resúmenes se leen en tu panel “Mis clases”.</p></div>
+        <div><h3>¿Pierdo mis resúmenes al actualizar?</h3><p>No. El panel “Mis clases” avisa cuando hay una versión nueva suya y se actualiza sin perder clases ni resúmenes.</p></div>
+        <div><h3>¿Graba cuando no tengo clase?</h3><p>No. Solo graba en las horas de tu horario, desde 5 minutos antes de cada clase hasta que acaba.</p></div>
+        <div><h3>¿Algo no funciona?</h3><p>Cuéntalo en GitHub y lo miramos. <a class="link" href="https://github.com/ganxxhy/class-transcripter/issues">Abrir un problema en GitHub</a></p></div>
+      </div>
+      <aside class="legal" aria-label="Aviso legal">
+        <p><span class="hl hl--entrega is-on">Antes de grabar una clase, pide permiso al profesorado</span> y comprueba las normas de tu universidad. Tú eres responsable del uso de las grabaciones.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ CIERRE ============ -->
+  <section class="close" aria-labelledby="close-h">
+    <div class="wrap close__in">
+      <h2 id="close-h">La <span class="hl hl--examen" data-close-hl>chuleta perfecta</span> de cada clase</h2>
+      <div class="close__side">
+        <p>Gratis para Windows 10 y 11 de 64 bits.</p>
+        <div class="btn-row">
+          <a class="btn btn--primary btn--lg" href="https://github.com/ganxxhy/class-transcripter/releases/latest">Descargar para Windows</a>
+          <a class="btn btn--secondary btn--lg" href="https://github.com/ganxxhy/class-transcripter">Ver el código</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__in">
+    <a class="brand" href="#top" aria-label="Agente de clases, volver arriba"><img src="assets/icon.svg" alt="" width="28" height="28"><span>Agente de clases</span></a>
+    <nav aria-label="Enlaces del proyecto" class="footer__links">
+      <a href="https://github.com/ganxxhy/class-transcripter">Código</a>
+      <a href="https://github.com/ganxxhy/class-transcripter/releases">Novedades</a>
+      <a href="https://github.com/ganxxhy/class-transcripter/issues">Ayuda</a>
+    </nav>
+  </div>
+  <div class="wrap footer__legal mono">
+    <span>Agente de clases · <span data-year>2026</span></span>
+    <span>Claude es una marca de Anthropic. Gemini es una marca de Google. Windows es una marca de Microsoft.</span>
+  </div>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>
