@@ -17,7 +17,7 @@ from datetime import datetime
 import numpy as np
 
 from . import almacen, horario, resumen
-from .config import RUTA_DATOS, api_key, cargar, nombre_asignatura
+from .config import RUTA_DATOS, cargar, nombre_asignatura, resumen_en_pc
 from .transcripcion import Transcriptor
 
 SR = 16000
@@ -307,7 +307,7 @@ class Motor:
             if item[0] == "cerrar":
                 cid = item[1]
                 almacen.cerrar(cid)
-                if api_key(cargar()):
+                if resumen_en_pc(cargar()):
                     resumen.en_segundo_plano(cid, self.log)  # si no hay clave, lo resume el hub
                 self.guardar_estado()
                 continue

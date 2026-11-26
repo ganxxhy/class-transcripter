@@ -45,7 +45,9 @@ jobs:
           pip install -r agente/requirements.txt pyinstaller
 
       - name: Pruebas
-        run: python tests/test_horario.py
+        run: |
+          python tests/test_horario.py
+          python tests/test_resumen.py
 
       - name: Versión
         id: version
@@ -166,6 +168,7 @@ jobs:
         run: |
           python tests/test_horario.py
           python tests/test_linux.py
+          python tests/test_resumen.py
 
       - name: Versión
         id: version

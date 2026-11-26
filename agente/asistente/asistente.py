@@ -7,6 +7,7 @@ Se lanza con: AgenteClases.exe --asistente   (o python app.py --asistente)
 import json
 import os
 import shutil
+import subprocess
 import sys
 import threading
 import urllib.parse
@@ -80,6 +81,9 @@ class Api:
                 "modelo_whisper": aj.get("modelo_whisper", "auto"),
                 "proveedor": aj.get("proveedor", "claude"),
                 "tiene_clave": bool(config.api_key(cfg)),
+                "resumen_en_pc": config.resumen_en_pc(cfg),
+                "openai_base_url": aj.get("openai_base_url", ""),
+                "modelo_openai": aj.get("modelo_openai", ""),
                 "url_hub": aj.get("url_hub", ""),
             },
             "colores": config.COLORES,
@@ -101,10 +105,13 @@ class Api:
         aj["modelo_whisper"] = datos.get("modelo_whisper") or "auto"
         prov = datos.get("proveedor")
         clave = (datos.get("clave") or "").strip()
-        if prov in ("claude", "gemini"):
+        if prov in ("claude", "gemini", "openai"):
             aj["proveedor"] = prov
+            if prov == "openai":
+                aj["openai_base_url"] = (datos.get("base_url") or "").strip()
+                aj["modelo_openai"] = (datos.get("modelo_openai") or "").strip()
             if clave:
-                aj["gemini_api_key" if prov == "gemini" else "anthropic_api_key"] = clave
+                aj[{"gemini": "gemini_api_key", "openai": "openai_api_key"}.get(prov, "anthropic_api_key")] = clave
         if datos.get("url_hub"):
             aj["url_hub"] = datos["url_hub"].strip()
         aj["permiso_grabar"] = bool(datos.get("permiso"))
@@ -161,6 +168,20 @@ class Api:
 
     def abrir_claude_panel(self):
         webbrowser.open("https://claude.ai/new?q=" + urllib.parse.quote(PROMPT_HUB))
+
+    def copiar(self, texto):
+        """Copy text with the system's clipboard tool (the embedded browser often blocks its own on Linux)."""
+        if not isinstance(texto, str) or not sys.platform.startswith("linux"):
+            return False
+        for cmd in (["wl-copy"], ["xclip", "-selection", "clipboard"], ["xsel", "--clipboard", "--input"]):
+            if shutil.which(cmd[0]):
+                try:
+                    subprocess.run(cmd, input=texto.encode("utf-8"), check=True, timeout=5,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    return True
+                except Exception:
+                    continue
+        return False
 
     def abrir(self, url):
         if isinstance(url, str) and url.startswith("https://"):
