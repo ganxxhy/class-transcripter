@@ -35,6 +35,14 @@ from nucleo.motor import Motor, microfonos  # noqa: E402
 import tema  # noqa: E402
 from version import VERSION  # noqa: E402
 
+if sys.platform.startswith("linux") and CONGELADA:
+    # PortAudio travels inside the bundle and ctypes cannot find it by name
+    _portaudio = os.path.join(getattr(sys, "_MEIPASS", ""), "libportaudio.so.2")
+    if os.path.exists(_portaudio):
+        import ctypes.util
+        _find_library = ctypes.util.find_library
+        ctypes.util.find_library = lambda n: _portaudio if n == "portaudio" else _find_library(n)
+
 os.makedirs(RUTA_DATOS, exist_ok=True)
 RUTA_LOG = os.path.join(RUTA_DATOS, "agente.log")
 
