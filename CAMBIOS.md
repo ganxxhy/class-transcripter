@@ -4,15 +4,6 @@ Cada versión publicada en Releases toma sus notas de aquí (la sección `## X.Y
 
 Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nuevo en una sección `### Panel`: los paneles con una versión más vieja avisan y lo enseñan.
 
-## 1.3.0
-
-### Novedades
-- Resúmenes con cualquier modelo compatible con OpenAI: ChatGPT, Ollama, LM Studio, llama.cpp o Gemma 4 en Cloudflare Workers AI. Se configura en el asistente, con ayuda para cada servicio.
-- Con modelos en tu ordenador no hace falta clave.
-- Funciona igual en Windows y en Linux.
-- Si el modelo devuelve el resumen incompleto, se le pide otra vez; si sigue mal, verás el motivo.
-- El asistente avisa de que, con un servicio externo, el texto de las clases sale del ordenador (el audio no).
-
 ## 1.2.0
 
 ### Novedades
@@ -20,6 +11,10 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 - En Linux los datos van en `~/.local/share/estudio` y la configuración en `~/.config/estudio`.
 - El micrófono por defecto es PipeWire, después PulseAudio y solo al final ALSA directo.
 - La app se actualiza sola también en Linux.
+- Resúmenes con cualquier modelo compatible con OpenAI: ChatGPT, Ollama, LM Studio, llama.cpp o Gemma 4 en Cloudflare Workers AI. Se configura en el asistente, con ayuda para cada servicio.
+- Con modelos en tu ordenador no hace falta clave.
+- Si el modelo devuelve el resumen incompleto, se le pide otra vez; si sigue mal, verás el motivo.
+- El asistente avisa de que, con un servicio externo, el texto de las clases sale del ordenador (el audio no).
 
 ### Panel
 - Encuentra la configuración aunque no esté junto a los datos (Linux).
