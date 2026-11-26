@@ -5,7 +5,7 @@ name: Compilar Estudio
 # - También se puede lanzar a mano desde la pestaña Actions.
 on:
   push:
-    branches: [main, fix/release-build-pipeline]
+    branches: [main]
     tags: ["v*"]
     paths:
       - "agente/**"
