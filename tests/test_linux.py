@@ -62,6 +62,14 @@ def test_desktop_files():
         assert r["exec"] == 'Exec="/home/u/Mi Estudio.AppImage" --inicio'
 
 
+def test_updater_picks_appimage_on_linux():
+    r = _run("import sys; sys.platform = 'linux'; import actualizacion as a; "
+             "rel = {'tag_name': 'v2.0.0', 'assets': [{'name': 'Estudio-2.0.0-instalador.exe', 'browser_download_url': 'win', 'size': 1}, "
+             "{'name': 'Estudio-2.0.0-x86_64.AppImage', 'browser_download_url': 'linux', 'size': 2}]}; "
+             "print(__import__('json').dumps(a._resumen(rel)['instalador']))")
+    assert r == "linux"
+
+
 def test_mcp_mode_answers_initialize():
     msg = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
            "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}}
@@ -73,5 +81,5 @@ def test_mcp_mode_answers_initialize():
 
 if __name__ == "__main__":
     test_xdg_paths(); test_data_env_wins(); test_source_mode_unchanged()
-    test_mcp_entry_appimage(); test_claude_config_path_linux(); test_desktop_files(); test_mcp_mode_answers_initialize()
+    test_mcp_entry_appimage(); test_claude_config_path_linux(); test_desktop_files(); test_updater_picks_appimage_on_linux(); test_mcp_mode_answers_initialize()
     print("OK")
