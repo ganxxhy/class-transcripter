@@ -300,7 +300,7 @@ footer{color:var(--mute);font-size:12.5px;padding:8px 0 90px;max-width:80ch}
 </div>
 
 <script>
-const VERSION_PANEL = "1.1.1"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
+const VERSION_PANEL = "1.1.2"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
 const HOST = "host:agente_clases";
 const POR_PARTE = 400; // segmentos por documento de transcripción
 const $ = (s, el = document) => el.querySelector(s);
@@ -556,9 +556,11 @@ async function host(tool, input) {
 
 /* ---------- Lectura directa de la carpeta del agente (hub instalado como app) ---------- */
 let RAIZ = lsGet("clases-carpeta") || "";
+let RUTA_CFG = lsGet("clases-config") || ""; // en Linux (AppImage) config.json no está junto a los datos
+const rutaCfg = () => RUTA_CFG || `${RAIZ}/config.json`;
 let MOSTRAR_CARPETA_OCULTA = false;
 const CANDIDATAS = ["~/Documents/AgenteClases", "~/OneDrive/Documents/AgenteClases", "~/OneDrive/Documentos/AgenteClases",
-  "~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Desktop/AgenteClases", "~/AgenteClases"];
+  "~/Documentos/AgenteClases", "~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Desktop/AgenteClases", "~/AgenteClases"];
 const fsj = async (ruta) => JSON.parse(await desktop.fs.readFile(ruta, "utf8"));
 const rutaClase = (id) => { if (!id || /[\\/]|\.\./.test(id)) throw new Error("id no válido"); return `${RAIZ}/datos/clases/${id}.json`; };
 async function fsEscribir(ruta, datos) {
@@ -575,7 +577,7 @@ const versionDe = (c) => `${c.n_segmentos || 0}|${c.estado_resumen}|${c.en_curso
 const CACHE_FS = new Map(); // ruta -> {mtime, meta}
 const AG = {
   async estado() {
-    const cfg = await fsj(`${RAIZ}/config.json`);
+    const cfg = await fsj(rutaCfg());
     let agente = { activo: false };
     try { agente = await fsj(`${RAIZ}/datos/estado_agente.json`); } catch (e) {}
     let panel = null;
@@ -617,18 +619,21 @@ const AG = {
   mover_clase: ({ id, asignatura }) => { const a = GEN.asignaturas.find((x) => x.id === asignatura); if (!a) throw new Error("asignatura desconocida"); return fsActualizar(id, { asignatura: a.id, nombre_asignatura: a.nombre }); },
   async borrar_clase({ id }) { await desktop.shell.trashItem(rutaClase(id)); return { ok: true }; },
 };
-async function esCarpetaAgente(r) {
-  try { return (await desktop.fs.exists(`${r}/config.json`)) && ((await desktop.fs.exists(`${r}/datos`)) || (await desktop.fs.exists(`${r}/mcp_servidor.py`))); } catch (e) { return false; }
+async function esCarpetaAgente(r, cfg) {
+  try { return (await desktop.fs.exists(cfg || `${r}/config.json`)) && ((await desktop.fs.exists(`${r}/datos`)) || (await desktop.fs.exists(`${r}/mcp_servidor.py`))); } catch (e) { return false; }
 }
 async function buscarCarpeta() {
   // La app instalada deja anotado dónde guarda sus datos (~/.agente-clases.json): manda sobre todo lo demás
   try {
     const p = await fsj("~/.agente-clases.json");
     const c = String(p.carpeta || "").replace(/[\\/]+$/, "");
-    if (c && c !== RAIZ && !lsGet("clases-carpeta-manual") && await esCarpetaAgente(c)) { RAIZ = c; lsSet("clases-carpeta", c); return c; }
+    const cfgP = String(p.config || "");
+    if (c && (c !== RAIZ || cfgP !== RUTA_CFG) && !lsGet("clases-carpeta-manual") && await esCarpetaAgente(c, cfgP)) {
+      RAIZ = c; RUTA_CFG = cfgP; lsSet("clases-carpeta", c); lsSet("clases-config", cfgP); return c;
+    }
   } catch (e) {}
-  if (RAIZ && await esCarpetaAgente(RAIZ)) return RAIZ;
-  for (const r of CANDIDATAS) if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); return r; }
+  if (RAIZ && await esCarpetaAgente(RAIZ, RUTA_CFG)) return RAIZ;
+  for (const r of CANDIDATAS) if (await esCarpetaAgente(r)) { RAIZ = r; RUTA_CFG = ""; lsSet("clases-carpeta", r); lsSet("clases-config", ""); return r; }
   return "";
 }
 let intervalo = null;
@@ -652,7 +657,7 @@ async function pasarAModoFs(conClick) {
   }
   const r = await buscarCarpeta();
   if (!r) {
-    hostMsg = "No encuentro la carpeta de Estudio. Escribe dónde está (la que tiene app.py), por ejemplo C:\\Users\\tu_usuario\\Downloads\\AgenteClases.";
+    hostMsg = "No encuentro la carpeta de Estudio. Escribe dónde está (la que tiene app.py), por ejemplo C:\\Users\\tu_usuario\\Downloads\\AgenteClases o ~/.local/share/estudio.";
     notaAccion = { texto: "Indicar carpeta", fn: () => pedirCarpeta() };
     renderTodo(); return true;
   }
@@ -664,13 +669,13 @@ async function pasarAModoFs(conClick) {
 function pedirCarpeta() {
   const n = $("#syncNote");
   n.textContent = "";
-  const i = document.createElement("input"); i.type = "text"; i.placeholder = "C:\\Users\\…\\AgenteClases"; i.value = RAIZ; i.style.flex = "1 1 260px";
+  const i = document.createElement("input"); i.type = "text"; i.placeholder = "C:\\Users\\…\\AgenteClases · ~/.local/share/estudio"; i.value = RAIZ; i.style.flex = "1 1 260px";
   const b = document.createElement("button"); b.className = "btn pri sm"; b.textContent = "Usar esta carpeta";
   const m = document.createElement("span"); m.className = "muted";
   b.onclick = async () => {
     const r = i.value.trim().replace(/[\\/]+$/, "");
-    if (await esCarpetaAgente(r)) { RAIZ = r; lsSet("clases-carpeta", r); lsSet("clases-carpeta-manual", "1"); pasarAModoFs(false); }
-    else m.textContent = "Ahí no está Estudio (no encuentro su config.json). Con la app instalada suele estar en Documentos\\AgenteClases.";
+    if (await esCarpetaAgente(r)) { RAIZ = r; RUTA_CFG = ""; lsSet("clases-config", ""); lsSet("clases-carpeta", r); lsSet("clases-carpeta-manual", "1"); pasarAModoFs(false); }
+    else m.textContent = "Ahí no está Estudio (no encuentro su config.json). Con la app instalada suele estar en Documentos\\AgenteClases (Windows) o en ~/.local/share/estudio (Linux).";
   };
   n.append(i, b, m); i.focus();
 }
