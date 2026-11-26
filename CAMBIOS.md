@@ -4,6 +4,21 @@ Cada versión publicada en Releases toma sus notas de aquí (la sección `## X.Y
 
 Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nuevo en una sección `### Panel`: los paneles con una versión más vieja avisan y lo enseñan.
 
+## 1.2.1
+
+### Novedades
+- Estudio busca actualizaciones mediante un manifiesto público, sin depender de la cuota de la API REST de GitHub cuando la release incluye el manifiesto.
+- Se conserva la consulta anterior como respaldo para versiones antiguas.
+- Las consultas se guardan temporalmente en memoria para evitar peticiones repetidas.
+- Los instaladores del nuevo sistema se comprueban mediante SHA-256 y tamaño antes de instalarse.
+- Los mensajes de error explican cuándo GitHub limita las consultas y se guarda un registro de diagnóstico.
+
+### Arreglos
+- Descarga más robusta y verificada de AppImageTool durante la compilación de Linux.
+- Publicación automática de los instaladores de Windows y Linux, sus checksums y el manifiesto de actualización.
+- Posibilidad de recuperar releases existentes sin cambiar su etiqueta.
+- Nuevas pruebas automatizadas del actualizador.
+
 ## 1.2.0
 
 ### Novedades
