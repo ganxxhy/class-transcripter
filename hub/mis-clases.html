@@ -300,7 +300,7 @@ footer{color:var(--mute);font-size:12.5px;padding:8px 0 90px;max-width:80ch}
 </div>
 
 <script>
-const VERSION_PANEL = "1.1.0"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
+const VERSION_PANEL = "1.1.1"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
 const HOST = "host:agente_clases";
 const POR_PARTE = 400; // segmentos por documento de transcripción
 const $ = (s, el = document) => el.querySelector(s);
@@ -545,7 +545,13 @@ let hostMsg = "", sincronizando = false, ultimoGen = "";
 let desktop = null, modo = "mcp", notaAccion = null, puedeInstalar = false; // modo: "mcp" (conector local) o "fs" (app instalada lee la carpeta)
 async function host(tool, input) {
   if (modo === "fs") return AG[tool](input || {});
-  return (await mcp.callTool(HOST, tool, input || {}, { cache: false })).payload;
+  const r = await mcp.callTool(HOST, tool, input || {}, { cache: false });
+  // Un error de la herramienta llega como respuesta con isError, no como excepción
+  if (r && (r.isError || r.payload?.isError)) {
+    const t = (r.content || r.payload?.content || []).map((x) => x && x.text).filter(Boolean).join(" ");
+    throw new Error(t || `${tool} ha fallado`);
+  }
+  return r ? r.payload : r;
 }
 
 /* ---------- Lectura directa de la carpeta del agente (hub instalado como app) ---------- */
@@ -555,7 +561,15 @@ const CANDIDATAS = ["~/Documents/AgenteClases", "~/OneDrive/Documents/AgenteClas
   "~/Downloads/AgenteClases", "~/Descargas/AgenteClases", "~/Desktop/AgenteClases", "~/AgenteClases"];
 const fsj = async (ruta) => JSON.parse(await desktop.fs.readFile(ruta, "utf8"));
 const rutaClase = (id) => { if (!id || /[\\/]|\.\./.test(id)) throw new Error("id no válido"); return `${RAIZ}/datos/clases/${id}.json`; };
-async function fsEscribir(ruta, datos) { const tmp = ruta + ".hub.tmp"; await desktop.fs.writeFile(ruta + ".hub.tmp", JSON.stringify(datos, null, 1), "utf8"); await desktop.fs.rename(tmp, ruta); }
+async function fsEscribir(ruta, datos) {
+  const tmp = ruta + ".hub.tmp", txt = JSON.stringify(datos, null, 1);
+  await desktop.fs.writeFile(tmp, txt, "utf8");
+  try { await desktop.fs.rename(tmp, ruta); }
+  catch (e) { // en Windows renombrar encima de un archivo que ya existe puede fallar: se escribe directamente
+    await desktop.fs.writeFile(ruta, txt, "utf8");
+    try { await (desktop.fs.remove || desktop.fs.unlink).call(desktop.fs, tmp); } catch (e2) {} // si no se puede, se queda el .tmp (no molesta)
+  }
+}
 async function fsActualizar(id, campos) { const r = rutaClase(id); const d = await fsj(r); Object.assign(d, campos); await fsEscribir(r, d); return { ok: true }; }
 const versionDe = (c) => `${c.n_segmentos || 0}|${c.estado_resumen}|${c.en_curso ? 1 : 0}|${c.asignatura}|${(c.resumen && c.resumen.generado) || ""}`;
 const CACHE_FS = new Map(); // ruta -> {mtime, meta}
@@ -1048,12 +1062,22 @@ function enlazarClase(c) {
   };
   const mv = $("#mover");
   if (mv) mv.onchange = async (e) => {
-    const nueva = e.target.value;
+    const nueva = e.target.value, msg = () => $("#accMsg");
+    if (nueva === c.asignatura) return;
+    mv.disabled = true;
+    if (msg()) msg().textContent = `Moviendo a ${asig(nueva).nombre}…`;
     try {
       await host("mover_clase", { id: c.id, asignatura: nueva });
       await db.doc("clases/" + c.id).update({ asignatura: nueva, nombre_asignatura: asig(nueva).nombre });
+      if (MAPA[c.id]) { MAPA[c.id].asignatura = nueva; MAPA[c.id].nombre_asignatura = asig(nueva).nombre; }
+      pintarVista(true);
+      if (msg()) msg().textContent = `Movida a ${asig(nueva).nombre}.`;
       sincronizar();
-    } catch (err) { $("#accMsg").textContent = "No se pudo mover la clase."; mv.value = c.asignatura; }
+    } catch (err) {
+      mv.disabled = false; mv.value = c.asignatura;
+      if (msg()) msg().textContent = err && err.code === "cancelled" ? "No se ha dado permiso, así que la clase no se ha movido."
+        : `No se pudo mover la clase: ${(err && (err.message || err.code)) || "error desconocido"}`;
+    }
   };
   const bo = $("#borrar");
   if (bo) {
