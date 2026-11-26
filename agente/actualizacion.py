@@ -246,7 +246,7 @@ def comprobar_y_avisar(forzar=False):
     """--buscar-actualizacion: abre la ventana solo si hay algo nuevo que no se haya saltado."""
     info = buscar()
     revisar_panel(info)
-    if not info or not es_mas_nueva(info["version"]):
+    if not info or not info.get("instalador") or not es_mas_nueva(info["version"]):
         return
     if not forzar and _ajuste("version_saltada") == info["version"]:
         return
