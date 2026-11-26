@@ -32,8 +32,8 @@ def _tupla(v):
 
 
 def es_mas_nueva(remota, local=VERSION):
-    if str(local).endswith("-dev"):
-        return False  # desde el código fuente no se actualiza
+    if str(local).endswith("-dev") or str(local).startswith("0.0."):
+        return False  # desde el código fuente o una compilación de prueba (CI) no se actualiza
     return _tupla(remota) > _tupla(local)
 
 
