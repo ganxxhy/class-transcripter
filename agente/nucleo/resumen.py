@@ -1,10 +1,11 @@
-"""Genera el resumen y los destacados de una clase con la API de Claude."""
+"""Genera el resumen y los destacados de una clase con Claude, Gemini o un servidor compatible con OpenAI."""
 import json
+import re
 import threading
 from datetime import datetime
 
 from . import almacen
-from .config import api_key, cargar
+from .config import api_key, cargar, resumen_en_pc
 
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
@@ -94,8 +95,8 @@ def generar(cid):
     """Genera el resumen de una clase y lo guarda. Lanza excepción si falla."""
     cfg = cargar()
     clave = api_key(cfg)
-    if not clave:
-        raise RuntimeError("Falta la clave de la API (Ajustes en la app).")
+    if not resumen_en_pc(cfg):
+        raise RuntimeError("Falta configurar los resúmenes (clave o servidor) en el asistente.")
     d = almacen.leer(cid)
     if not d["segmentos"]:
         almacen.actualizar(cid, estado_resumen="vacio", error_resumen="No se transcribió nada en esta clase.")
@@ -107,11 +108,15 @@ def generar(cid):
         f"Fecha de la clase: {DIAS[ini.weekday()]} {ini:%Y-%m-%d}, empezó a las {ini:%H:%M}\n\n"
         f"Transcripción:\n{_formatear(d['segmentos'])}"
     )
-    if cfg["ajustes"].get("proveedor") == "gemini":
-        texto, modelo = _con_gemini(cfg, clave, usuario)
+    proveedor = cfg["ajustes"].get("proveedor")
+    if proveedor == "openai":
+        res, modelo = _con_openai(cfg, clave, usuario)
     else:
-        texto, modelo = _con_claude(cfg, clave, usuario)
-    res = json.loads(texto)
+        if proveedor == "gemini":
+            texto, modelo = _con_gemini(cfg, clave, usuario)
+        else:
+            texto, modelo = _con_claude(cfg, clave, usuario)
+        res = json.loads(texto)
     res["generado"] = datetime.now().isoformat(timespec="seconds")
     res["modelo"] = modelo
     almacen.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
@@ -185,6 +190,124 @@ def _con_gemini(cfg, clave, usuario):
     if not texto:
         raise RuntimeError(f"Gemini no devolvió resumen ({cand.get('finishReason', 'sin motivo')}).")
     return texto, d.get("modelVersion", modelo)
+
+
+def extract_json(text):
+    """Pull a JSON object out of a model reply (tolerates code fences and surrounding text)."""
+    text = (text or "").strip()
+    candidates = [text]
+    for m in re.finditer(r"```(?:json)?\s*(.*?)```", text, re.S | re.I):
+        candidates.append(m.group(1).strip())
+    a, b = text.find("{"), text.rfind("}")
+    if a != -1 and b > a:
+        candidates.append(text[a:b + 1])
+    for c in candidates:
+        try:
+            d = json.loads(c)
+        except ValueError:
+            continue
+        if isinstance(d, dict):
+            return d
+    raise ValueError("la respuesta no contiene un JSON válido")
+
+
+def check_summary(res):
+    """Check the fields required by ESQUEMA and tidy up small slips. Raises ValueError if unusable."""
+    faltan = [k for k in ESQUEMA["required"] if k not in res]
+    if faltan:
+        raise ValueError("faltan los campos: " + ", ".join(faltan))
+    for k in ("puntos_clave", "conceptos", "destacados", "tareas"):
+        if res[k] is None:
+            res[k] = []
+        if not isinstance(res[k], list):
+            raise ValueError(f"el campo {k} debería ser una lista")
+    for k in ("titulo", "resumen"):
+        if not isinstance(res[k], str):
+            raise ValueError(f"el campo {k} debería ser texto")
+    if res["calidad_audio"] not in ("buena", "regular", "mala"):
+        res["calidad_audio"] = "regular"
+    return res
+
+
+def _chat_url(base_url):
+    url = base_url.strip().rstrip("/")
+    return url if url.endswith("/chat/completions") else url + "/chat/completions"
+
+
+def _con_openai(cfg, clave, usuario):
+    import socket
+    import urllib.error
+    import urllib.request
+
+    aj = cfg["ajustes"]
+    base = (aj.get("openai_base_url") or "").strip()
+    modelo = (aj.get("modelo_openai") or "").strip()
+    if "TU_ID_DE_CUENTA" in base:
+        raise RuntimeError("Pon tu ID de cuenta de Cloudflare en la dirección del servidor.")
+    url = _chat_url(base)
+    instrucciones = (sistema() + "\n\nResponde SOLO con un objeto JSON (sin texto antes ni después ni bloques de código) "
+                     "que cumpla este esquema:\n" + json.dumps(ESQUEMA, ensure_ascii=False))
+    mensajes = [{"role": "system", "content": instrucciones}, {"role": "user", "content": usuario}]
+    cuerpo = {"model": modelo, "messages": mensajes, "temperature": 0.2, "max_tokens": 16000}
+    headers = {"Content-Type": "application/json"}
+    if clave:
+        headers["Authorization"] = "Bearer " + clave
+
+    def limpio(t):
+        return t.replace(clave, "***") if clave else t
+
+    def pedir():
+        req = urllib.request.Request(url, data=json.dumps(cuerpo).encode("utf-8"), method="POST", headers=headers)
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return json.loads(r.read().decode("utf-8"))
+
+    def llamar():
+        ajustes = 0
+        while True:
+            try:
+                return pedir()
+            except urllib.error.HTTPError as e:
+                detalle = e.read().decode("utf-8", "replace")
+                # Some servers reject max_tokens / temperature: adapt once each and retry
+                if e.code == 400 and ajustes < 2:
+                    if "max_tokens" in detalle and "max_tokens" in cuerpo:
+                        cuerpo["max_completion_tokens"] = cuerpo.pop("max_tokens")
+                        ajustes += 1
+                        continue
+                    if "temperature" in detalle and "temperature" in cuerpo:
+                        cuerpo.pop("temperature")
+                        ajustes += 1
+                        continue
+                raise RuntimeError(limpio(f"El servidor respondió {e.code}: {detalle[:500]}"))
+            except (socket.timeout, TimeoutError):
+                raise RuntimeError("El servidor tardó demasiado en responder.")
+            except urllib.error.URLError as e:
+                raise RuntimeError(limpio(f"No se pudo conectar con {url} ({e.reason}). ¿Está abierto el servidor?"))
+
+    def leer(d):
+        eleccion = (d.get("choices") or [{}])[0]
+        if eleccion.get("finish_reason") == "length":
+            raise RuntimeError("El resumen se cortó por longitud.")
+        contenido = (eleccion.get("message") or {}).get("content")
+        if isinstance(contenido, list):
+            contenido = "".join(p.get("text", "") for p in contenido if isinstance(p, dict))
+        contenido = (contenido or "").strip()
+        if not contenido:
+            raise RuntimeError("El modelo no devolvió resumen.")
+        return contenido
+
+    d = llamar()
+    texto = leer(d)
+    try:
+        return check_summary(extract_json(texto)), d.get("model") or modelo
+    except ValueError as e:
+        mensajes.append({"role": "assistant", "content": texto})
+        mensajes.append({"role": "user", "content": f"Tu respuesta no es válida ({e}). Devuelve SOLO el JSON completo con todos los campos."})
+    d = llamar()
+    try:
+        return check_summary(extract_json(leer(d))), d.get("model") or modelo
+    except ValueError as e:
+        raise RuntimeError(f"El modelo no devolvió un resumen válido tras dos intentos: {e}")
 
 
 def generar_seguro(cid, log=print):
