@@ -164,14 +164,12 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .formats span{font-family:var(--mono);font-size:13px;padding:6px 12px;border-radius:999px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
 
 /* Sky chapter (scroll-scrubbed) */
-.skyrun{height:280vh;position:relative}
-html.sky-scrubbing{transition:none}
-html.sky-scrubbing body::after{transition:none}
+.skyrun{height:250vh;position:relative;isolation:isolate;background:var(--paper)}
+.skyrun::before{content:'';position:sticky;top:0;display:block;height:100vh;margin-bottom:-100vh;background:linear-gradient(180deg,var(--bg-a) 0,var(--bg-b) 55%,var(--bg-c) 100%);pointer-events:none;z-index:-1}
+.skyrun::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to bottom,var(--paper),transparent clamp(48px,12vh,120px),transparent calc(100% - clamp(48px,12vh,120px)),var(--paper))}
 .skypin{--sky-exit:0}
 .skypin > *{opacity:calc(1 - var(--sky-exit));transform:translateY(calc(-32px * var(--sky-exit)))}
 .skypin:focus-within > *{opacity:1;transform:none}
-.skyrun + .band{position:relative}
-.skyrun + .band::before{content:'';position:absolute;bottom:100%;left:0;right:0;height:clamp(48px,12vh,120px);background:linear-gradient(transparent,var(--paper));pointer-events:none}
 .skypin{position:sticky;top:0;height:100vh;display:grid;align-content:center;text-align:center;color:var(--on-sky)}
 .skypin .h2{margin:0 auto;font-size:clamp(36px,5.2vw,70px);max-width:16ch;color:var(--on-sky)}
 .skypin .lead{color:var(--on-sky-mute);margin-inline:auto}
@@ -273,7 +271,7 @@ footer a{color:#fff}
  .step{min-height:auto;padding:16px 0}
  .sticky{position:static}
  .device{min-height:0}
- .skyrun{height:220vh}
+ .skyrun{height:200vh}
  .dl{padding:28px 20px;border-radius:24px}
  .tt{gap:4px}.tt span{font-size:0;padding:6px 4px;min-height:34px;display:grid;place-items:center}.tt span::before{content:attr(data-c);font-family:var(--mono);font-size:11px}
  .card{padding:18px}
@@ -282,7 +280,8 @@ footer a{color:#fff}
  *,*::before,*::after{animation:none!important;transition:none!important}
  .tt span{transform:none;opacity:1}.bars i{height:var(--h)}
  .skyrun{height:auto}.skypin{position:static;height:auto;padding-block:96px}
- .skyrun + .band::before{display:none}
+ .skyrun::before{position:absolute;inset:0;height:auto;margin:0}
+ .skyrun::after{display:none}
 }
 </style>
 </head>
@@ -532,11 +531,11 @@ const sel=document.getElementById('sky-city');
 sel.innerHTML=Sky.cities.map(x=>`<option value="${x}">${x==='auto'?'Ubicación automática':x}</option>`).join('');sel.value=Sky.city;
 sel.addEventListener('change',()=>Sky.setCity(sel.value));
 let manual=false,manualHour=6;
- const pin=runPin();function runPin(){return document.querySelector('.skypin')}
+ const pin=document.querySelector('.skypin');
  const clamp=x=>Math.max(0,Math.min(1,x)),smooth=x=>{x=clamp(x);return x*x*(3-2*x)};
 const clockEl=document.getElementById('sky-clock'),range=document.getElementById('sky-range');
 function clock(h){clockEl.textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(h%1*60)).padStart(2,'0')}
-range.addEventListener('input',e=>{manual=true;manualHour=+e.target.value;onScroll();if(reduce){Sky.preview(manualHour);clock(manualHour)}});
+range.addEventListener('input',e=>{manual=true;manualHour=+e.target.value;Sky.preview(manualHour);clock(manualHour);if(!reduce)onScroll()});
 
 /* One-time reveals that belong to a section's own content */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.3});
@@ -567,30 +566,20 @@ function onScroll(){
  drawArc(16.7+Math.max(0,Math.min(1,y/(hero.offsetHeight*.8)))*(21-16.7));
  const r=run.getBoundingClientRect(),span=run.offsetHeight-innerHeight,p=-r.top/span;
  if(p>=0&&p<=1){
-  inSky=true;document.documentElement.classList.add('sky-scrubbing');
-  const entry=smooth(p/.18),exit=smooth((p-.8)/.2),fade=smooth((p-.8)/.18);
-  const now=new Date(),liveHour=now.getHours()+now.getMinutes()/60;
-  const h=manual?manualHour:Math.min(23.99,6+clamp((p-.18)/.62)*18);
-  const blend=manual?exit:Math.max(1-entry,exit);
-  // During entry the displayed clock follows the shortest route to 06:00.
-  const delta=((6-liveHour+36)%24)-12;
-  const shown=(!manual&&p<.18)?(liveHour+delta*entry+24)%24:h;
-  Sky.preview(h,blend);range.value=shown;clock(shown);
-  if(!manual&&p<.18){
-   const hh=clockEl.textContent;
-   document.querySelector('[data-sky-label]').textContent='Transición al amanecer · '+hh;
-   document.querySelector('[data-sky-how]').textContent='De la hora actual a las 06:00.';
-  }
+  inSky=true;
+  const fade=smooth((p-.8)/.2);
+  const h=manual?manualHour:Math.min(23.99,6+clamp(p/.8)*18);
+  Sky.preview(h);range.value=h;clock(h);
   pin.style.setProperty('--sky-exit',fade);
  }else{
   pin.style.setProperty('--sky-exit',p>1?1:0);
-  if(inSky){inSky=false;manual=false;Sky.live();const n=new Date();clock(n.getHours()+n.getMinutes()/60);document.documentElement.classList.remove('sky-scrubbing')}
+  if(inSky||!manual){inSky=false;manual=false;const h=p>1?23.99:6;Sky.preview(h);range.value=h;clock(h)}
  }
 }
 addEventListener('resize',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});
  addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});
 fetch('https://api.github.com/repos/ganxxhy/class-transcripter/releases/latest').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.tag_name)document.getElementById('ver').textContent='Última versión: '+j.tag_name}).catch(()=>{});
-const n0=new Date();clock(n0.getHours()+n0.getMinutes()/60);onScroll();
+clock(6);range.value=6;Sky.preview(6);onScroll();
 })();
 </script>
 </body>
