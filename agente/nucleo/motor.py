@@ -20,6 +20,8 @@ from . import almacen, horario, resumen
 from .config import RUTA_DATOS, cargar, nombre_asignatura, resumen_en_pc
 from .transcripcion import Transcriptor
 from .interfaces import ITranscriber, IClassRepository
+from domain.ports import AudioInput
+from infrastructure.audio import SoundDeviceInput, microfonos, buscar_microfono, _microfono_linux, SERVIDORES_SONIDO
 
 SR = 16000
 MIN_FRAG_S = 18     # a partir de aquí se busca un silencio para cortar
@@ -37,60 +39,14 @@ def _a_16k(bloque, sr_in):
     return np.interp(x, np.arange(len(bloque)), bloque).astype(np.float32)
 
 
-def microfonos(refrescar=False):
-    """Entradas de audio de la API por defecto (en Windows, MME; en Linux, ALSA).
-    Con refrescar=True vuelve a preguntar al sistema (para micros conectados después de abrir la app)."""
-    import sounddevice as sd
-    if refrescar:
-        try:
-            sd._terminate()
-            sd._initialize()
-        except Exception:
-            pass
-    try:
-        por_defecto = sd.default.device[0]
-        api_def = sd.query_devices(por_defecto)["hostapi"] if por_defecto is not None and por_defecto >= 0 else 0
-    except Exception:
-        por_defecto, api_def = None, 0
-    out = []
-    for i, d in enumerate(sd.query_devices()):
-        if d["max_input_channels"] > 0 and d["hostapi"] == api_def:
-            out.append({"indice": i, "nombre": d["name"], "defecto": i == por_defecto})
-    if sys.platform.startswith("linux"):  # sound servers first, raw ALSA (hw:…) after
-        out.sort(key=lambda m: SERVIDORES_SONIDO.index(m["nombre"]) if m["nombre"] in SERVIDORES_SONIDO else len(SERVIDORES_SONIDO))
-    return out
-
-
-# On Linux, PortAudio only exposes ALSA (and JACK). PipeWire and PulseAudio are reached through
-# their ALSA plugin devices, so they are preferred by name and raw ALSA is the last resort.
-SERVIDORES_SONIDO = ("pipewire", "pulse")
-
-
-def _microfono_linux(lista):
-    """Index of the PipeWire device, else PulseAudio, else None (the system default)."""
-    for nombre in SERVIDORES_SONIDO:
-        m = next((m for m in lista if m["nombre"] == nombre), None)
-        if m:
-            return m["indice"]
-    return None
-
-
-def buscar_microfono(eleccion, log=print):
-    """Convierte lo guardado en config (nombre del micro, o None = el del sistema) en un índice."""
-    if eleccion is None or eleccion == "":
-        return _microfono_linux(microfonos()) if sys.platform.startswith("linux") else None
-    for m in microfonos():
-        if m["nombre"] == eleccion or m["indice"] == eleccion:
-            return m["indice"]
-    log(f"No encuentro el micrófono «{eleccion}»; uso el predeterminado del sistema.")
-    return None
-
-
 class Motor:
     def __init__(self, log=print, *, transcriptor: ITranscriber | None = None,
-                 repositorio: IClassRepository = almacen):
+                 repositorio: IClassRepository = almacen, audio_input: AudioInput | None = None,
+                 load_config=None):
         self.log = log
-        self.cfg = cargar()
+        self.load_config = load_config or cargar
+        self.audio_input = audio_input if audio_input is not None else SoundDeviceInput()
+        self.cfg = self.load_config()
         self.transcriptor = transcriptor if transcriptor is not None else Transcriptor(self.cfg["ajustes"], log=log)
         self.repositorio = repositorio
         self.lock = threading.Lock()
@@ -126,7 +82,6 @@ class Motor:
 
     # ---------- control ----------
     def iniciar(self, modo, asignatura=None):
-        import sounddevice as sd
         if self.activo:
             return
         if self.transcribiendo():
@@ -142,19 +97,8 @@ class Motor:
         self.log(f"Modo {'automático' if modo == 'auto' else 'manual'}")
 
     def _abrir_stream(self, eleccion):
-        import sounddevice as sd
-        dev = buscar_microfono(eleccion, self.log)
-        info = sd.query_devices(dev, "input")
-        sr = int(info["default_samplerate"])
-
-        def cb(indata, frames, t, status):
-            self.cola_audio.put((sr, indata[:, 0].copy()))
-
-        st = sd.InputStream(device=dev, channels=1, samplerate=sr, dtype="float32",
-                            blocksize=int(sr * 0.25), callback=cb)
-        st.start()
-        self._stream = st
-        self.microfono_actual = info["name"] + ("" if dev is not None else " (predeterminado)")
+        self._stream, self.microfono_actual = self.audio_input.open(
+            eleccion, lambda rate, data: self.cola_audio.put((rate, data)), self.log)
         self.log(f"Escuchando con: {self.microfono_actual}")
 
     def _cerrar_stream(self):
@@ -310,7 +254,7 @@ class Motor:
             if item[0] == "cerrar":
                 cid = item[1]
                 self.repositorio.cerrar(cid)
-                if resumen_en_pc(cargar()):
+                if resumen_en_pc(self.load_config()):
                     resumen.en_segundo_plano(cid, self.log, repositorio=self.repositorio)  # si no hay clave, lo resume el hub
                 self.guardar_estado()
                 continue
