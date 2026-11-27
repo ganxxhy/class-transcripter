@@ -9,39 +9,14 @@ from .proveedores import (ClaudeProvider, GeminiProvider, OpenAIProvider, elegir
 from .formato_resumen import ESQUEMA, SISTEMA, sistema, extract_json, check_summary
 from .config import api_key, cargar, resumen_en_pc
 
-DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
-
-def _formatear(segmentos):
-    lineas = []
-    for s in segmentos:
-        t = int(s["ini"])
-        lineas.append(f"[{t // 60:02d}:{t % 60:02d}] {s['texto']}")
-    return "\n".join(lineas)
+from application.summaries import generate_summary, _formatear, DIAS
 
 
 def generar(cid, *, proveedor: IAIProvider | None = None,
             repositorio: IClassRepository = almacen):
-    """Genera el resumen de una clase y lo guarda. Lanza excepción si falla."""
-    cfg = cargar()
-    clave = api_key(cfg)
-    if not resumen_en_pc(cfg):
-        raise RuntimeError("Falta configurar los resúmenes (clave o servidor) en el asistente.")
-    d = repositorio.leer(cid)
-    if not d["segmentos"]:
-        repositorio.actualizar(cid, estado_resumen="vacio", error_resumen="No se transcribió nada en esta clase.")
-        return
-    repositorio.actualizar(cid, estado_resumen="generando", error_resumen=None)
-    ini = datetime.fromisoformat(d["inicio"])
-    usuario = (
-        f"Asignatura: {d['nombre_asignatura']}\n"
-        f"Fecha de la clase: {DIAS[ini.weekday()]} {ini:%Y-%m-%d}, empezó a las {ini:%H:%M}\n\n"
-        f"Transcripción:\n{_formatear(d['segmentos'])}"
-    )
-    proveedor = proveedor if proveedor is not None else elegir_proveedor(cfg)
-    res, modelo = proveedor.generar(cfg, clave, usuario)
-    res["generado"] = datetime.now().isoformat(timespec="seconds")
-    res["modelo"] = modelo
-    repositorio.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
+    return generate_summary(cid, repositorio=repositorio, proveedor=proveedor,
+                            load_config=cargar, get_key=api_key,
+                            is_enabled=resumen_en_pc, select_provider=elegir_proveedor)
 
 
 def generar_seguro(cid, log=print, *, repositorio: IClassRepository = almacen):
