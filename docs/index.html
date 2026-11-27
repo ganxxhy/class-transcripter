@@ -166,7 +166,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 /* Sky chapter (scroll-scrubbed) */
 .skyrun{height:250vh;position:relative;isolation:isolate;background:var(--paper)}
 .skyrun::before{content:'';position:sticky;top:0;display:block;height:100vh;margin-bottom:-100vh;background:linear-gradient(180deg,var(--bg-a) 0,var(--bg-b) 55%,var(--bg-c) 100%);pointer-events:none;z-index:-1}
-.skyrun::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;--feather:clamp(48px,12vh,120px);background:linear-gradient(to bottom,var(--paper) 0%,rgba(245,249,254,.98) calc(var(--feather)*.1),rgba(245,249,254,.90) calc(var(--feather)*.2),rgba(245,249,254,.65) calc(var(--feather)*.4),rgba(245,249,254,.35) calc(var(--feather)*.6),rgba(245,249,254,.10) calc(var(--feather)*.8),transparent var(--feather),transparent calc(100% - var(--feather)),rgba(245,249,254,.10) calc(100% - var(--feather)*.8),rgba(245,249,254,.35) calc(100% - var(--feather)*.6),rgba(245,249,254,.65) calc(100% - var(--feather)*.4),rgba(245,249,254,.90) calc(100% - var(--feather)*.2),rgba(245,249,254,.98) calc(100% - var(--feather)*.1),var(--paper) 100%)}
+.skyrun::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;--feather:clamp(48px,12vh,120px);background:linear-gradient(to bottom,var(--paper),rgba(245,249,254,0) var(--feather),rgba(245,249,254,0) calc(100% - var(--feather)),var(--paper))}
 .skypin{--sky-exit:0;--sky-enter:0}
 .skypin > *{opacity:calc(var(--sky-enter) * (1 - var(--sky-exit)));transform:translateY(calc(32px * (1 - var(--sky-enter)) - 32px * var(--sky-exit)))}
 .skypin:focus-within > *{opacity:1;transform:none}
