@@ -729,11 +729,12 @@ let rec=42*60+13;setInterval(()=>{rec++;const h=Math.floor(rec/3600),m=Math.floo
 
 /* Scroll feedback: progress, solid nav, hero sun, sky scrub */
 const nav=document.getElementById('nav'),prog=document.getElementById('progress'),hero=document.getElementById('inicio'),run=document.getElementById('cielo');
+const heroTitle=hero.querySelector('h1');
 let inSky=false,ticking=false;
 function onScroll(){
  ticking=false;const y=scrollY,max=document.documentElement.scrollHeight-innerHeight;
  prog.style.setProperty('--p',max>0?(y/max).toFixed(4):0);
- nav.classList.toggle('solid',y>hero.offsetHeight-80);
+ nav.classList.toggle('solid',heroTitle.getBoundingClientRect().top<=nav.getBoundingClientRect().bottom);
  if(reduce)return;
  drawArc(16.7+Math.max(0,Math.min(1,y/(hero.offsetHeight*.8)))*(21-16.7));
  const r=run.getBoundingClientRect(),span=run.offsetHeight-innerHeight,p=-r.top/span;
