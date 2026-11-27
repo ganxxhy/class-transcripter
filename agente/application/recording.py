@@ -61,6 +61,7 @@ class RecordingEngine:
         self.cola_trans = queue.Queue()
         self._hilo_trans = None
         self._hilo_cap = None
+        self._capture_stopped = threading.Event()
         self._stream = None
         self._wav = None
         self.cargando_modelo = False
@@ -86,11 +87,12 @@ class RecordingEngine:
             raise RuntimeError("Todavía estoy terminando de transcribir la sesión anterior. Espera un momento.")
         self.cfg = self.load_config()
         self.modo, self.asig_manual = modo, asignatura
+        self._capture_stopped.clear()
         self._abrir_stream(self.cfg["ajustes"].get("microfono"))
         self.activo = True
         self._hilo_trans = threading.Thread(target=self._bucle_transcripcion, daemon=True)
         self._hilo_trans.start()
-        self._hilo_cap = threading.Thread(target=self._bucle_captura, daemon=True)
+        self._hilo_cap = threading.Thread(target=self._capture_worker, daemon=True)
         self._hilo_cap.start()
         self.log(f"Modo {'automático' if modo == 'auto' else 'manual'}")
 
@@ -128,11 +130,11 @@ class RecordingEngine:
         if not self.activo:
             return
         self.activo = False
-        self._cerrar_stream()
-        if self._hilo_cap:
-            self._hilo_cap.join(timeout=5)
-        self.cola_trans.put(("fin",))
         self.estado_texto = "Terminando de transcribir…"
+        try:
+            self._cerrar_stream()
+        finally:
+            self._capture_stopped.set()
 
     def cambiar_asignatura(self, asignatura):
         """En modo manual: cierra la clase actual y empieza otra."""
@@ -192,11 +194,27 @@ class RecordingEngine:
         self.clase_id = None
         self.clase_asig = None
 
+    def _capture_worker(self):
+        try:
+            self._bucle_captura()
+        except Exception as error:
+            self.log(f"Error de captura: {error}")
+            self.activo = False
+            try:
+                self._cerrar_stream()
+            except Exception as close_error:
+                self.log(f"Error cerrando audio: {close_error}")
+            self._capture_stopped.set()
+            if self.clase_id is not None:
+                self.cola_trans.put(("cerrar", self.clase_id))
+        finally:
+            self.cola_trans.put(("fin",))
+
     def _bucle_captura(self):
         buf = np.zeros(0, dtype=np.float32)
         ultimo_chequeo = 0
         objetivo = (None, "", "")
-        while self.activo or not self.cola_audio.empty():
+        while not self._capture_stopped.is_set() or not self.cola_audio.empty():
             try:
                 bloque = self.cola_audio.get(timeout=0.5)
             except queue.Empty:
@@ -236,22 +254,29 @@ class RecordingEngine:
 
     # ---------- transcripción ----------
     def _bucle_transcripcion(self):
-        contexto = {}
+        failed_classes = set()
         while True:
             item = self.cola_trans.get()
             if item[0] == "fin":
                 break
             if item[0] == "cerrar":
                 cid = item[1]
-                self.repositorio.cerrar(cid)
-                if self.summary_enabled(self.load_config()):
-                    self.schedule_summary(cid, self.log, repositorio=self.repositorio)  # si no hay clave, lo resume el hub
+                try:
+                    self.repositorio.cerrar(cid)
+                    if cid in failed_classes:
+                        self.repositorio.actualizar(cid, estado_resumen="error", error_resumen="Transcripción incompleta: error de almacenamiento o transcripción.")
+                    elif self.summary_enabled(self.load_config()):
+                        self.schedule_summary(cid, self.log, repositorio=self.repositorio)
+                except Exception as error:
+                    self.log(f"Error cerrando clase {cid}: {error}")
+                failed_classes.discard(cid)
                 self.guardar_estado()
                 continue
             _, cid, audio, offset = item
             try:
                 segs = self.transcriptor.transcribir(audio, offset)
             except Exception as e:
+                failed_classes.add(cid)
                 self.log(f"Error transcribiendo: {e}")
                 continue
             # Si se acumulan más de ~4 min de audio sin transcribir, el modelo es demasiado lento aquí
@@ -261,8 +286,12 @@ class RecordingEngine:
                 except Exception as e:
                     self.log(f"No se pudo cambiar de modelo: {e}")
             if segs:
-                self.repositorio.anadir_segmentos(cid, segs)
-                contexto[cid] = (contexto.get(cid, "") + " " + " ".join(s["texto"] for s in segs))[-400:]
+                try:
+                    self.repositorio.anadir_segmentos(cid, segs)
+                except Exception as error:
+                    failed_classes.add(cid)
+                    self.log(f"Error guardando transcripción {cid}: {error}")
+                    continue
                 self.ultimas_lineas = (self.ultimas_lineas + [s["texto"] for s in segs])[-40:]
         if not self.activo:
             self.estado_texto = "Parado"
