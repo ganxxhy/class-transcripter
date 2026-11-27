@@ -15,13 +15,14 @@ class SQLiteClassRepository:
             connection.execute("CREATE TABLE IF NOT EXISTS segments (class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE, position INTEGER NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(class_id, position))")
             connection.execute("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY)")
             connection.execute("INSERT OR IGNORE INTO schema_migrations VALUES (1)")
+            connection.execute("CREATE TABLE IF NOT EXISTS completed_items (item_key TEXT PRIMARY KEY)")
 
     @contextmanager
-    def transaction(self):
+    def transaction(self, write=True):
         connection = sqlite3.connect(self.path, timeout=30)
         try:
             connection.execute("PRAGMA foreign_keys = ON")
-            connection.execute("BEGIN IMMEDIATE")
+            connection.execute("BEGIN IMMEDIATE" if write else "BEGIN")
             yield connection
             connection.commit()
         except BaseException:
@@ -81,7 +82,7 @@ class SQLiteClassRepository:
         return class_id
 
     def leer(self, cid):
-        with self.transaction() as connection:
+        with self.transaction(write=False) as connection:
             return self._read(connection, cid)
 
     def _update(self, connection, class_id, fields):
@@ -114,7 +115,7 @@ class SQLiteClassRepository:
         return self.actualizar(cid, fin=(fin or datetime.now()).isoformat(timespec="seconds"), en_curso=False)
 
     def listar(self, incluir_segmentos=False):
-        with self.transaction() as connection:
+        with self.transaction(write=False) as connection:
             records = []
             for (class_id,) in connection.execute("SELECT id FROM classes ORDER BY id DESC"):
                 record = self._read(connection, class_id)
@@ -139,7 +140,7 @@ class SQLiteClassRepository:
             self._update(connection, cid, {"estado_resumen": "generando", "error_resumen": None})
             return True
 
-    def import_records(self, records):
+    def import_records(self, records, completed_items=()):
         """Import a snapshot atomically; reject conflicting records rather than overwrite."""
         imported = 0
         with self.transaction() as connection:
@@ -153,4 +154,22 @@ class SQLiteClassRepository:
                 else:
                     if existing != record:
                         raise ValueError(f"Conflicting class: {class_id}")
+            connection.executemany("INSERT OR IGNORE INTO completed_items VALUES (?)", ((key,) for key in completed_items))
         return imported
+
+    def leer_estado(self):
+        with self.transaction(write=False) as connection:
+            return {"hechos": [row[0] for row in connection.execute(
+                "SELECT item_key FROM completed_items ORDER BY item_key")]}
+
+    def marcar_hecho(self, clave, hecho):
+        with self.transaction() as connection:
+            if hecho:
+                connection.execute("INSERT OR IGNORE INTO completed_items VALUES (?)", (clave,))
+            else:
+                connection.execute("DELETE FROM completed_items WHERE item_key = ?", (clave,))
+            return {"hechos": [row[0] for row in connection.execute(
+                "SELECT item_key FROM completed_items ORDER BY item_key")]}
+
+    def clases_abiertas_huerfanas(self):
+        return [record["id"] for record in self.listar() if record.get("en_curso")]
