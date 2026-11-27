@@ -1,6 +1,6 @@
 name: Compilar Estudio
 
-# - Cada push a main que toque la app: compila el instalador de Windows y el AppImage de Linux y los deja como artefactos.
+# - Los pull requests compilan y prueban Windows y Linux; main ejecuta solo tests, sin volver a generar instaladores.
 # - Una etiqueta v1.2.3: además publica los dos en Releases (un solo trabajo, al final).
 # - También se puede lanzar a mano desde la pestaña Actions.
 on:
@@ -30,7 +30,33 @@ permissions:
   contents: read
 
 jobs:
+  # El merge ya se validó con los instaladores del PR: evitar compilarlos otra vez en main.
+  pruebas-main:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: agente/requirements.txt
+      - name: Dependencias para las pruebas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libportaudio2 python3-tk
+          python -m pip install --upgrade pip
+          pip install -r agente/requirements.txt
+      - name: Pruebas automatizadas
+        run: |
+          python tests/test_horario.py
+          python tests/test_linux.py
+          python tests/test_resumen.py
+          if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
+
   preparar:
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.ref.outputs.tag }}
