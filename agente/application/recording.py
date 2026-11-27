@@ -5,13 +5,10 @@ Hilos:
   hilo_captura: decide la asignatura actual, corta fragmentos de ~25 s en silencios -> cola_trans
   hilo_transcripcion: Whisper -> almacen; al cerrar una clase lanza el resumen
 """
-import json
-import os
 import queue
 import sys
 import threading
 import time
-import wave
 from datetime import datetime
 
 import numpy as np
@@ -37,7 +34,7 @@ def _a_16k(bloque, sr_in):
 class RecordingEngine:
     def __init__(self, log, *, transcriptor: ITranscriber, repositorio: IClassRepository,
                  audio_input: AudioInput, load_config, subject_name, current_subject,
-                 summary_enabled, schedule_summary, data_path):
+                 summary_enabled, schedule_summary, write_status, open_wave):
         self.log = log
         self.load_config = load_config
         self.audio_input = audio_input
@@ -48,7 +45,8 @@ class RecordingEngine:
         self.current_subject = current_subject
         self.summary_enabled = summary_enabled
         self.schedule_summary = schedule_summary
-        self.data_path = data_path
+        self.write_status = write_status
+        self.open_wave = open_wave
         self.lock = threading.Lock()
         self.activo = False
         self.modo = None             # "auto" | "manual"
@@ -142,15 +140,11 @@ class RecordingEngine:
             self.modo, self.asig_manual = "manual", asignatura
 
     def guardar_estado(self):
-        """Deja el estado en datos/estado_agente.json para que el hub lo lea."""
         try:
-            os.makedirs(self.data_path, exist_ok=True)
-            tmp = os.path.join(self.data_path, "estado_agente.json.tmp")
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump({"activo": self.activo, "estado": self.estado_texto, "clase_id": self.clase_id,
-                           "modo": self.modo, "pendientes": self.pendientes(),
-                           "actualizado": datetime.now().isoformat(timespec="seconds")}, f, ensure_ascii=False)
-            os.replace(tmp, os.path.join(self.data_path, "estado_agente.json"))
+            self.write_status({"activo": self.activo, "estado": self.estado_texto,
+                               "clase_id": self.clase_id, "modo": self.modo,
+                               "pendientes": self.pendientes(),
+                               "actualizado": datetime.now().isoformat(timespec="seconds")})
         except Exception:
             pass
 
@@ -184,11 +178,7 @@ class RecordingEngine:
         self.ultimas_lineas = []
         self.log(f"Nueva clase: {nombre}")
         if self.cfg["ajustes"].get("guardar_audio"):
-            os.makedirs(os.path.join(self.data_path, "audio"), exist_ok=True)
-            self._wav = wave.open(os.path.join(self.data_path, "audio", self.clase_id + ".wav"), "wb")
-            self._wav.setnchannels(1)
-            self._wav.setsampwidth(2)
-            self._wav.setframerate(SR)
+            self._wav = self.open_wave(self.clase_id, SR)
 
     def _cerrar_clase(self, buf):
         if self.clase_id is None:
