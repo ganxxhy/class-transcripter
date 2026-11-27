@@ -153,6 +153,38 @@ class ContratosTest(unittest.TestCase):
                     process.wait()
             almacen.eliminar(cid)
 
+    def test_unique_class_ids(self):
+        from datetime import datetime
+        start = datetime(2026, 1, 1, 10)
+        first = almacen.crear_clase("collision", "Test", "manual", inicio=start)
+        second = almacen.crear_clase("collision", "Test", "manual", inicio=start)
+        try:
+            self.assertNotEqual(first, second)
+            self.assertEqual(almacen.leer(first)["id"], first)
+            self.assertEqual(almacen.leer(second)["id"], second)
+        finally:
+            almacen.eliminar(first)
+            almacen.eliminar(second)
+
+    def test_storage_failure_does_not_stop_worker(self):
+        repo = RepositorioFalso()
+        engine = motor.Motor(log=lambda _: None, transcriptor=TranscriptorFalso(), repositorio=repo)
+        engine.cola_trans.put(("frag", "clase", None, 2))
+        engine.cola_trans.put(("cerrar", "clase"))
+        engine.cola_trans.put(("fin",))
+        with patch.object(repo, "anadir_segmentos", side_effect=OSError("disk")), \
+             patch.object(engine, "guardar_estado"), patch.object(engine, "schedule_summary") as schedule:
+            engine._bucle_transcripcion()
+        schedule.assert_not_called()
+        self.assertEqual(repo.clase["estado_resumen"], "error")
+
+    def test_capture_signals_end_after_producer(self):
+        engine = motor.Motor(log=lambda _: None, transcriptor=TranscriptorFalso(), repositorio=RepositorioFalso())
+        with patch.object(engine, "_bucle_captura", side_effect=lambda: engine.cola_trans.put(("cerrar", "clase"))):
+            engine._capture_worker()
+        self.assertEqual(engine.cola_trans.get_nowait(), ("cerrar", "clase"))
+        self.assertEqual(engine.cola_trans.get_nowait(), ("fin",))
+
     def test_seleccion_proveedores(self):
         for nombre, tipo in [("claude", resumen.ClaudeProvider),
                              ("gemini", resumen.GeminiProvider),
