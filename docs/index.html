@@ -166,8 +166,8 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 /* Sky chapter (scroll-scrubbed) */
 .skyrun{height:250vh;position:relative;isolation:isolate;background:var(--paper)}
 .skyrun::before{content:'';position:sticky;top:0;display:block;height:100vh;margin-bottom:-100vh;background:linear-gradient(180deg,var(--bg-a) 0,var(--bg-b) 55%,var(--bg-c) 100%);pointer-events:none;z-index:-1}
-.skyrun::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;--feather:clamp(180px,36vh,420px);background:linear-gradient(to bottom,var(--paper) 0,color-mix(in srgb,var(--paper) 90%,transparent) calc(var(--feather)*.2),color-mix(in srgb,var(--paper) 50%,transparent) calc(var(--feather)*.5),color-mix(in srgb,var(--paper) 10%,transparent) calc(var(--feather)*.8),transparent var(--feather),transparent calc(100% - var(--feather)),color-mix(in srgb,var(--paper) 10%,transparent) calc(100% - var(--feather)*.8),color-mix(in srgb,var(--paper) 50%,transparent) calc(100% - var(--feather)*.5),color-mix(in srgb,var(--paper) 90%,transparent) calc(100% - var(--feather)*.2),var(--paper) 100%)}
-.skypin{--sky-exit:0;--sky-enter:1}
+.skyrun::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;--feather:clamp(240px,48vh,520px);background:linear-gradient(to bottom,var(--paper) 0%,rgba(245,249,254,.98) calc(var(--feather)*.1),rgba(245,249,254,.90) calc(var(--feather)*.2),rgba(245,249,254,.65) calc(var(--feather)*.4),rgba(245,249,254,.35) calc(var(--feather)*.6),rgba(245,249,254,.10) calc(var(--feather)*.8),transparent var(--feather),transparent calc(100% - var(--feather)),rgba(245,249,254,.10) calc(100% - var(--feather)*.8),rgba(245,249,254,.35) calc(100% - var(--feather)*.6),rgba(245,249,254,.65) calc(100% - var(--feather)*.4),rgba(245,249,254,.90) calc(100% - var(--feather)*.2),rgba(245,249,254,.98) calc(100% - var(--feather)*.1),var(--paper) 100%)}
+.skypin{--sky-exit:0;--sky-enter:0}
 .skypin > *{opacity:calc(var(--sky-enter) * (1 - var(--sky-exit)));transform:translateY(calc(32px * (1 - var(--sky-enter)) - 32px * var(--sky-exit)))}
 .skypin:focus-within > *{opacity:1;transform:none}
 .skypin{position:sticky;top:0;height:100vh;display:grid;align-content:center;text-align:center;color:var(--on-sky)}
@@ -566,16 +566,16 @@ function onScroll(){
  if(reduce)return;
  drawArc(16.7+Math.max(0,Math.min(1,y/(hero.offsetHeight*.8)))*(21-16.7));
  const r=run.getBoundingClientRect(),span=run.offsetHeight-innerHeight,p=-r.top/span;
- pin.style.setProperty('--sky-enter',smooth((innerHeight-r.top-innerHeight*.25)/(innerHeight*.75)));
+ pin.style.setProperty('--sky-enter',smooth(p/.16));
  if(p>=0&&p<=1){
   inSky=true;
   const fade=smooth((p-.8)/.2);
-  const h=manual?manualHour:Math.min(23.99,6+clamp(p/.8)*18);
+  const h=manual?manualHour:Math.min(23+59/60,6+clamp((p-.16)/.64)*18);
   Sky.preview(h);range.value=h;clock(h);
   pin.style.setProperty('--sky-exit',fade);
  }else{
   pin.style.setProperty('--sky-exit',p>1?1:0);
-  if(inSky||!manual){inSky=false;manual=false;const h=p>1?23.99:6;Sky.preview(h);range.value=h;clock(h)}
+  if(inSky||!manual){inSky=false;manual=false;const h=p>1?23+59/60:6;Sky.preview(h);range.value=h;clock(h)}
  }
 }
 addEventListener('resize',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});
