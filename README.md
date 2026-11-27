@@ -78,4 +78,4 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 
 Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, y PortAudio).
 
-El instalador de Windows y el AppImage los compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión: añade su sección `## X.Y.Z` en `CAMBIOS.md`, crea la etiqueta `vX.Y.Z` y se sube sola a Releases. Las apps ya instaladas avisarán de la actualización.
+El instalador de Windows y el AppImage los compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión: añade su sección `## X.Y.Z` en `CAMBIOS.md`, lanza a mano el workflow *Compilar Estudio* desde la pestaña Actions (Run workflow, rama main), indicando el número de versión; compila y lo sube a Releases con la etiqueta `vX.Y.Z`. Las apps ya instaladas avisarán de la actualización.
