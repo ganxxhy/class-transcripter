@@ -9,71 +9,20 @@ import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from nucleo import almacen  # noqa: E402
-from nucleo.config import RUTA_DATOS, cargar  # noqa: E402
+from nucleo.servicio_clases import ServicioClases, MAX_SEGMENTOS  # noqa: E402
 
 NOMBRE = "agente_clases"
 VERSION = "1.0.0"
-MAX_SEGMENTOS = 1500
 
 
-def _version(c):
-    r = c.get("resumen") or {}
-    return f"{c.get('n_segmentos', 0)}|{c.get('estado_resumen')}|{int(bool(c.get('en_curso')))}|{c.get('asignatura')}|{r.get('generado', '')}"
-
-
-def t_estado(_):
-    cfg = cargar()
-    try:
-        with open(os.path.join(RUTA_DATOS, "estado_agente.json"), encoding="utf-8") as f:
-            agente = json.load(f)
-    except Exception:
-        agente = {"activo": False}
-    try:  # última versión del panel publicada (la apunta la app al buscar actualizaciones)
-        with open(os.path.join(RUTA_DATOS, "panel.json"), encoding="utf-8") as f:
-            panel = json.load(f)
-    except Exception:
-        panel = None
-    return {"asignaturas": cfg["asignaturas"], "horario": cfg["horario"], "agente": agente, "panel": panel,
-            "nombre": (cfg.get("perfil") or {}).get("nombre", "")}
-
-
-def t_listar(_):
-    out = []
-    for c in almacen.listar():
-        c["version"] = _version(c)
-        out.append(c)
-    return {"clases": out}
-
-
-def t_leer(a):
-    d = almacen.leer(a["id"])
-    desde = int(a.get("desde", 0))
-    segs = d.pop("segmentos")
-    d["version"] = _version({**d, "n_segmentos": len(segs)})
-    return {"clase": d, "total": len(segs), "desde": desde, "segmentos": segs[desde:desde + MAX_SEGMENTOS]}
-
-
-def t_guardar_resumen(a):
-    almacen.actualizar(a["id"], resumen=a["resumen"], estado_resumen="listo", error_resumen=None)
-    return {"ok": True}
-
-
-def t_marcar_estado_resumen(a):
-    almacen.actualizar(a["id"], estado_resumen=a["estado"], error_resumen=a.get("error"))
-    return {"ok": True}
-
-
-def t_mover(a):
-    cfg = cargar()
-    asig = next(x for x in cfg["asignaturas"] if x["id"] == a["asignatura"])
-    almacen.actualizar(a["id"], asignatura=asig["id"], nombre_asignatura=asig["nombre"])
-    return {"ok": True}
-
-
-def t_borrar(a):
-    almacen.eliminar(a["id"])
-    return {"ok": True}
+servicio = ServicioClases()
+t_estado = servicio.estado
+t_listar = servicio.listar
+t_leer = servicio.leer
+t_guardar_resumen = servicio.guardar_resumen
+t_marcar_estado_resumen = servicio.marcar_estado_resumen
+t_mover = servicio.mover
+t_borrar = servicio.borrar
 
 
 S_ID = {"id": {"type": "string", "description": "Id de la clase"}}
