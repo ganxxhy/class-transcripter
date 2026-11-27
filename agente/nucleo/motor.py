@@ -3,6 +3,7 @@ from . import almacen, horario, resumen
 from .config import RUTA_DATOS, cargar, nombre_asignatura, resumen_en_pc
 from .transcripcion import Transcriptor
 from application.recording import RecordingEngine, SR, MIN_FRAG_S, MAX_FRAG_S, SILENCIO_S, _a_16k
+from infrastructure.recording_files import write_status, open_wave
 from infrastructure.audio import SoundDeviceInput, microfonos, buscar_microfono, _microfono_linux, SERVIDORES_SONIDO
 
 
@@ -16,4 +17,5 @@ class Motor(RecordingEngine):
                          current_subject=horario.asignatura_actual,
                          summary_enabled=lambda cfg: resumen_en_pc(cfg),
                          schedule_summary=lambda *args, **kwargs: resumen.en_segundo_plano(*args, **kwargs),
-                         data_path=RUTA_DATOS)
+                         write_status=lambda status: write_status(RUTA_DATOS, status),
+                         open_wave=lambda cid, rate: open_wave(RUTA_DATOS, cid, rate))
