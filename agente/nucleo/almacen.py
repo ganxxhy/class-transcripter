@@ -2,14 +2,14 @@
 así que si el ordenador se apaga a mitad de clase no se pierde lo transcrito."""
 import json
 import os
-import threading
+from infrastructure.file_lock import FileLock
 from datetime import datetime
 
 from .config import RUTA_DATOS
 
 DIR_CLASES = os.path.join(RUTA_DATOS, "clases")
 RUTA_ESTADO = os.path.join(RUTA_DATOS, "estado.json")
-_lock = threading.RLock()
+_lock = FileLock(os.path.join(RUTA_DATOS, '.storage.lock'))
 
 
 def _ruta(cid):
@@ -44,19 +44,19 @@ def crear_clase(asignatura, nombre, modo, inicio=None, aula=""):
         "resumen": None,
         "error_resumen": None,
     }
-    with _lock:
+    with _lock.hold():
         _escribir(_ruta(cid), datos)
     return cid
 
 
 def leer(cid):
-    with _lock:
+    with _lock.hold():
         with open(_ruta(cid), encoding="utf-8") as f:
             return json.load(f)
 
 
 def actualizar(cid, **campos):
-    with _lock:
+    with _lock.hold():
         d = leer(cid)
         d.update(campos)
         _escribir(_ruta(cid), d)
@@ -66,7 +66,7 @@ def actualizar(cid, **campos):
 def anadir_segmentos(cid, segmentos):
     if not segmentos:
         return
-    with _lock:
+    with _lock.hold():
         d = leer(cid)
         d["segmentos"].extend(segmentos)
         _escribir(_ruta(cid), d)
@@ -98,7 +98,7 @@ def listar(incluir_segmentos=False):
 
 
 def eliminar(cid):
-    with _lock:
+    with _lock.hold():
         os.remove(_ruta(cid))
 
 
@@ -117,7 +117,7 @@ def leer_estado():
 
 
 def marcar_hecho(clave, hecho):
-    with _lock:
+    with _lock.hold():
         st = leer_estado()
         s = set(st.get("hechos", []))
         (s.add if hecho else s.discard)(clave)
