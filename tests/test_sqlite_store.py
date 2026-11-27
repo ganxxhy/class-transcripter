@@ -66,6 +66,35 @@ class SQLiteStoreTests(unittest.TestCase):
         self.assertEqual(self.repository.marcar_hecho("a", False), {"hechos": ["b"]})
         self.assertEqual(self.repository.marcar_hecho("c", True), {"hechos": ["b", "c"]})
 
+    def test_verified_activation(self):
+        from infrastructure.storage_activation import activate_sqlite, active_database
+        root = self.root / "activation"
+        source = root / "clases"
+        source.mkdir(parents=True)
+        class_id = self.repository.crear_clase("math", "Math", "manual")
+        record = self.repository.leer(class_id)
+        original = source / (class_id + ".json")
+        original.write_text(json.dumps(record), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            activate_sqlite(root)
+        self.assertIsNone(active_database(root))
+        database = activate_sqlite(root, offline_confirmed=True)
+        self.assertEqual(active_database(root), database)
+        self.assertEqual(SQLiteClassRepository(database).leer(class_id), record)
+        self.assertEqual(json.loads(original.read_text(encoding="utf-8")), record)
+        self.assertEqual(activate_sqlite(root, offline_confirmed=True), database)
+
+    def test_invalid_snapshot_does_not_activate(self):
+        from infrastructure.storage_activation import activate_sqlite, active_database
+        root = self.root / "invalid"
+        source = root / "clases"
+        source.mkdir(parents=True)
+        (source / "bad.json").write_text("invalid", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            activate_sqlite(root, offline_confirmed=True)
+        self.assertIsNone(active_database(root))
+        self.assertFalse((root / "classes.sqlite3").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
