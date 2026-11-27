@@ -6,6 +6,7 @@ from datetime import datetime
 
 from . import almacen
 from .interfaces import IAIProvider, IClassRepository
+from .proveedores import ClaudeProvider, GeminiProvider, OpenAIProvider, elegir_proveedor
 from .config import api_key, cargar, resumen_en_pc
 
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
@@ -303,28 +304,6 @@ def _con_openai(cfg, clave, usuario):
         return check_summary(extract_json(leer(d))), d.get("model") or modelo
     except ValueError as e:
         raise RuntimeError(f"El modelo no devolvió un resumen válido tras dos intentos: {e}")
-
-
-class ClaudeProvider:
-    def generar(self, cfg, clave, usuario):
-        texto, modelo = _con_claude(cfg, clave, usuario)
-        return json.loads(texto), modelo
-
-
-class GeminiProvider:
-    def generar(self, cfg, clave, usuario):
-        texto, modelo = _con_gemini(cfg, clave, usuario)
-        return json.loads(texto), modelo
-
-
-class OpenAIProvider:
-    def generar(self, cfg, clave, usuario):
-        return _con_openai(cfg, clave, usuario)
-
-
-def elegir_proveedor(cfg) -> IAIProvider:
-    tipo = cfg["ajustes"].get("proveedor")
-    return {"openai": OpenAIProvider, "gemini": GeminiProvider}.get(tipo, ClaudeProvider)()
 
 
 def generar_seguro(cid, log=print, *, repositorio: IClassRepository = almacen):
