@@ -53,6 +53,7 @@ jobs:
           python tests/test_horario.py
           python tests/test_linux.py
           python tests/test_resumen.py
+          python tests/test_interfaces.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
   preparar:
@@ -111,6 +112,7 @@ jobs:
         run: |
           python tests/test_horario.py
           python tests/test_resumen.py
+          python tests/test_interfaces.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
       - name: Versión
@@ -237,6 +239,7 @@ jobs:
           python tests/test_horario.py
           python tests/test_linux.py
           python tests/test_resumen.py
+          python tests/test_interfaces.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
       - name: Versión
