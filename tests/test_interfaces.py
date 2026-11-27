@@ -153,6 +153,16 @@ class ContratosTest(unittest.TestCase):
                     process.wait()
             almacen.eliminar(cid)
 
+    def test_summary_claim_is_exclusive(self):
+        cid = almacen.crear_clase("summary", "Test", "manual")
+        try:
+            self.assertTrue(almacen.claim_summary(cid))
+            self.assertFalse(almacen.claim_summary(cid))
+            almacen.actualizar(cid, estado_resumen="error")
+            self.assertTrue(almacen.claim_summary(cid))
+        finally:
+            almacen.eliminar(cid)
+
     def test_unique_class_ids(self):
         from datetime import datetime
         start = datetime(2026, 1, 1, 10)
