@@ -56,6 +56,16 @@ class SQLiteStoreTests(unittest.TestCase):
             migrate_classes(source, target)
         self.assertEqual(SQLiteClassRepository(target).leer(class_id)["aula"], "")
 
+    def test_completed_items(self):
+        source = self.root / "legacy"
+        source.mkdir()
+        state = self.root / "estado.json"
+        state.write_text(json.dumps({"hechos": ["b", "a", "a"]}), encoding="utf-8")
+        self.assertEqual(migrate_classes(source, self.path, state), 0)
+        self.assertEqual(self.repository.leer_estado(), {"hechos": ["a", "b"]})
+        self.assertEqual(self.repository.marcar_hecho("a", False), {"hechos": ["b"]})
+        self.assertEqual(self.repository.marcar_hecho("c", True), {"hechos": ["b", "c"]})
+
 
 if __name__ == "__main__":
     unittest.main()
