@@ -8,10 +8,6 @@ class AudioInput(Protocol):
     def open(self, selection, callback: Callable, log: Callable): ...
 
 
-class Configuration(Protocol):
-    def load(self) -> dict: ...
-
-
 class ITranscriber(Protocol):
     descripcion: str
 
