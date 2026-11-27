@@ -33,7 +33,7 @@ def _con_claude(cfg, clave, usuario):
     peticion = dict(
         model=cfg["ajustes"]["modelo_resumen"],
         max_tokens=16000,
-        system=sistema(),
+        system=sistema(cfg),
         output_config={"effort": "medium", "format": {"type": "json_schema", "schema": ESQUEMA}},
         messages=[{"role": "user", "content": usuario}],
     )
@@ -65,7 +65,7 @@ def _con_gemini(cfg, clave, usuario):
     modelo = cfg["ajustes"].get("modelo_gemini") or "gemini-flash-latest"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
     cuerpo = {
-        "systemInstruction": {"parts": [{"text": sistema()}]},
+        "systemInstruction": {"parts": [{"text": sistema(cfg)}]},
         "contents": [{"role": "user", "parts": [{"text": usuario}]}],
         "generationConfig": {"responseMimeType": "application/json",
                              "responseJsonSchema": _sin_additional(ESQUEMA), "maxOutputTokens": 16000},
@@ -112,7 +112,7 @@ def _con_openai(cfg, clave, usuario):
     if "TU_ID_DE_CUENTA" in base:
         raise RuntimeError("Pon tu ID de cuenta de Cloudflare en la dirección del servidor.")
     url = _chat_url(base)
-    instrucciones = (sistema() + "\n\nResponde SOLO con un objeto JSON (sin texto antes ni después ni bloques de código) "
+    instrucciones = (sistema(cfg) + "\n\nResponde SOLO con un objeto JSON (sin texto antes ni después ni bloques de código) "
                      "que cumpla este esquema:\n" + json.dumps(ESQUEMA, ensure_ascii=False))
     mensajes = [{"role": "system", "content": instrucciones}, {"role": "user", "content": usuario}]
     cuerpo = {"model": modelo, "messages": mensajes, "temperature": 0.2, "max_tokens": 16000}
