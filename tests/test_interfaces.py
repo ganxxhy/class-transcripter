@@ -106,6 +106,22 @@ class ContratosTest(unittest.TestCase):
             servicio.borrar({"id": "clase"})
             self.assertIsNone(repo.clase)
 
+    def test_application_import_boundaries(self):
+        import ast
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1] / "agente"
+        for layer in ("domain", "application"):
+            for path in (root / layer).rglob("*.py"):
+                for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                    names = ([node.module or ""] if isinstance(node, ast.ImportFrom)
+                             else [alias.name for alias in node.names] if isinstance(node, ast.Import)
+                             else [])
+                    for name in names:
+                        forbidden = ("infrastructure", "nucleo", "bootstrap", "app")
+                        if layer == "domain":
+                            forbidden += ("application",)
+                        self.assertNotIn(name.split(".")[0], forbidden, str(path))
+
     def test_audio_adapter(self):
         class FakeAudio:
             def open(self, selection, callback, log):
