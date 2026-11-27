@@ -4,6 +4,29 @@ Cada versión publicada en Releases toma sus notas de aquí (la sección `## X.Y
 
 Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nuevo en una sección `### Panel`: los paneles con una versión más vieja avisan y lo enseñan.
 
+## Sin publicar
+
+### Cambios internos
+- Se evitan las compilaciones redundantes tras fusionar cambios en `main`: solo se ejecutan las pruebas automatizadas.
+- Las pull requests y las releases mantienen las compilaciones completas de Windows y Linux, sin modificar el sistema de publicación y recuperación.
+
+## 1.2.2
+
+### Novedades
+- El paquete de Linux reduce su tamaño aproximadamente un 65 %.
+- Las ventanas del asistente y de actualizaciones usan WebKitGTK del sistema en lugar de Qt WebEngine.
+- Nuevo modo `--comprobar` para verificar las dependencias del AppImage.
+- Si falta WebKitGTK, se muestran instrucciones de instalación; los avisos de actualización pueden abrir la página de la release en el navegador.
+
+### Arreglos
+- El AppImage utiliza las bibliotecas libstdc++ y libgcc del sistema para mejorar la compatibilidad con distribuciones modernas.
+- Optimización de las dependencias incluidas en el AppImage, conservando las necesarias para el audio.
+- Corrección del backend del icono de la bandeja del sistema.
+- Mejoras de compatibilidad con Debian, Ubuntu, Fedora y Arch Linux.
+- Nuevas comprobaciones automatizadas de las dependencias del AppImage.
+
+Gracias a @KoyFC por las contribuciones y las pruebas de compatibilidad.
+
 ## 1.2.1
 
 ### Novedades
