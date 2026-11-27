@@ -1,12 +1,13 @@
 name: Compilar Estudio
 
 # - Cada push a main que toque la app: compila el instalador de Windows y el AppImage de Linux y los deja como artefactos.
-# - Una etiqueta v1.2.3: además publica los dos en Releases (un solo trabajo, al final).
-# - También se puede lanzar a mano desde la pestaña Actions.
+# - Publicar una versión es manual: pestaña Actions > Compilar Estudio > Run workflow (rama main), e indicar el
+#   número de versión (por ejemplo 1.2.3). Compila los dos y los publica en Releases (un solo trabajo, al final).
+run-name: ${{ inputs.version && format('Versión {0}', inputs.version) || 'Compilar Estudio' }}
+
 on:
   push:
     branches: [main]
-    tags: ["v*"]
     paths:
       - "agente/**"
       - "hub/**"
@@ -21,8 +22,8 @@ on:
       - ".github/workflows/compilar.yml"
   workflow_dispatch:
     inputs:
-      release_tag:
-        description: 'Etiqueta existente para recuperar una release (vacío: prueba)'
+      version:
+        description: 'Versión que se publica, p. ej. 1.2.3 (vacío: solo compilar, sin publicar)'
         required: false
         type: string
 
@@ -43,19 +44,18 @@ jobs:
       - name: Validar referencia y versión
         id: ref
         env:
-          REQUESTED_TAG: ${{ inputs.release_tag }}
+          REQUESTED_VERSION: ${{ inputs.version }}
         run: |
-          tag="$REQUESTED_TAG"
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            if [[ -n "$tag" && "$tag" != "$GITHUB_REF_NAME" ]]; then exit 1; fi
-            tag="$GITHUB_REF_NAME"
-          fi
+          tag=""
           ref="$GITHUB_SHA"
           version="0.0.$GITHUB_RUN_NUMBER"
-          if [[ -n "$tag" ]]; then
-            [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-            ref=$(git rev-parse --verify "refs/tags/$tag^{commit}")
-            version="${tag#v}"
+          if [[ -n "$REQUESTED_VERSION" ]]; then
+            version="${REQUESTED_VERSION#v}"
+            [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Versión no válida: $REQUESTED_VERSION (usa X.Y.Z)" >&2; exit 1; }
+            [[ "$GITHUB_REF" == refs/heads/main ]] || { echo "Las versiones se publican desde main" >&2; exit 1; }
+            tag="v$version"
+            # La etiqueta la crea la release al publicarse: si ya existe, esa versión ya salió
+            if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then echo "La etiqueta $tag ya existe" >&2; exit 1; fi
           fi
           printf 'tag=%s\nref=%s\nversion=%s\n' "$tag" "$ref" "$version" >> "$GITHUB_OUTPUT"
 
@@ -334,9 +334,6 @@ jobs:
           SOURCE_SHA: ${{ needs.preparar.outputs.ref }}
         run: |
           v="${TAG#v}"
-          # Confirmar que la etiqueta no ha cambiado desde la compilación.
-          git fetch origin "refs/tags/$TAG:refs/tags/$TAG"
-          test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$SOURCE_SHA"
           if ! gh release view "$TAG" --json isDraft > release.json; then
             notas=$(awk -v v="## $v" '$0==v{f=1;next} /^## /{f=0} f' CAMBIOS.md | sed '/./,$!d')
             if [ -z "$notas" ]; then
@@ -345,7 +342,7 @@ jobs:
               notas=$(git log "$rango" --merges --pretty='- %b' | grep -v '^- $' || true)
             fi
             printf '%s\n\nWindows: Estudio-%s-instalador.exe\n\nLinux: Estudio-%s-x86_64.AppImage (chmod +x).\n\nAntes de grabar una clase, pide permiso al profesorado y comprueba las normas de tu universidad.\n' "$notas" "$v" "$v" > notas.md
-            gh release create "$TAG" --verify-tag --draft --title "Estudio $v" --notes-file notas.md
+            gh release create "$TAG" --target "$SOURCE_SHA" --draft --title "Estudio $v" --notes-file notas.md
           fi
           gh release view "$TAG" --json name,body > metadata.json
           python - <<'PY'
