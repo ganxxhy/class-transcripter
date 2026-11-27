@@ -20,3 +20,7 @@ Esta es una migración incremental, no una arquitectura hexagonal completa. La c
 ## Domain and composition
 
 `domain/models.py` defines typed persisted records; `domain/ports.py` defines contracts. `infrastructure/audio.py` implements audio input, `infrastructure/repository.py` exposes the JSON adapter, and `bootstrap.py` wires the desktop and MCP entry points. Legacy names remain available for compatibility. The recording loop still lives in `nucleo/motor.py`.
+
+## Application boundary
+
+`application/classes.py` and `application/summaries.py` contain use cases with injected dependencies. `infrastructure/status.py` reads agent and panel state. Legacy `nucleo` facades preserve the existing public API. Import-boundary tests prevent domain and application packages from importing concrete adapters. The recording orchestrator and provider implementations remain in legacy modules; moving them is not required for the class and summary use cases but remains future architectural work.
