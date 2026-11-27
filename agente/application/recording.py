@@ -206,7 +206,15 @@ class RecordingEngine:
                 self.log(f"Error cerrando audio: {close_error}")
             self._capture_stopped.set()
             if self.clase_id is not None:
+                self.cola_trans.put(("failed", self.clase_id))
                 self.cola_trans.put(("cerrar", self.clase_id))
+            if self._wav:
+                try:
+                    self._wav.close()
+                except Exception as close_error:
+                    self.log(f"Error cerrando archivo de audio: {close_error}")
+                self._wav = None
+            self.clase_id = self.clase_asig = None
         finally:
             self.cola_trans.put(("fin",))
 
@@ -259,6 +267,9 @@ class RecordingEngine:
             item = self.cola_trans.get()
             if item[0] == "fin":
                 break
+            if item[0] == "failed":
+                failed_classes.add(item[1])
+                continue
             if item[0] == "cerrar":
                 cid = item[1]
                 try:
