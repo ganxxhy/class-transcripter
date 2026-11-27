@@ -15,4 +15,8 @@ Ejecutar desde la raíz `python tests/test_interfaces.py` y `python tests/test_r
 
 ## Límites
 
-Esta es una migración incremental, no una arquitectura hexagonal completa. La configuración y el estado del agente siguen usando archivos locales. No se incorpora SQLite, sincronización ni una nueva interfaz gráfica. Antes de introducir múltiples procesos escritores se debe resolver la coordinación de escrituras: el bloqueo del almacén JSON es local al proceso.
+Esta es una migración incremental, no una arquitectura hexagonal completa. La configuración y el estado del agente siguen usando archivos locales. No se incorpora SQLite, sincronización ni una nueva interfaz gráfica. El almacén JSON usa un bloqueo de archivo entre procesos para serializar las transacciones de clases y destacados. No coordina versiones antiguas del agente que no utilicen este bloqueo, ni garantiza coordinación en sistemas de archivos remotos.
+
+## Domain and composition
+
+`domain/models.py` defines typed persisted records; `domain/ports.py` defines contracts. `infrastructure/audio.py` implements audio input, `infrastructure/repository.py` exposes the JSON adapter, and `bootstrap.py` wires the desktop and MCP entry points. Legacy names remain available for compatibility. The recording loop still lives in `nucleo/motor.py`.
