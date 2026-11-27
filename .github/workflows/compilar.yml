@@ -245,7 +245,7 @@ jobs:
           --hidden-import comprobar
           agente/app.py
 
-      - name: Recortar el AppImage (sin GTK propio: usa el WebKitGTK del sistema)
+      - name: Recortar el AppImage (sin GTK propio, usa el WebKitGTK del sistema)
         run: bash packaging/linux/recortar.sh dist/Estudio
 
       - name: Montar el AppImage
