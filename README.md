@@ -13,6 +13,7 @@ Ve a [Releases](../../releases), descarga `Estudio-…-instalador.exe` y ábrelo
 Descarga `Estudio-…-x86_64.AppImage`, hazlo ejecutable (`chmod +x Estudio-*.AppImage`) y ábrelo. Hace falta una distribución de 64 bits con PipeWire o PulseAudio (la de casi cualquier escritorio actual); la app usa PipeWire, luego PulseAudio y solo al final ALSA directo.
 
 - Al acabar el asistente crea su lanzador en el menú y arranca con tu sesión. Si mueves el AppImage, se corrige solo al abrirlo.
+- Hace falta WebKitGTK (casi todos los escritorios ya lo tienen). Si falta, Estudio te dice qué instalar: `gir1.2-webkit2-4.1` (Debian/Ubuntu), `webkit2gtk4.1` (Fedora), `webkit2gtk-4.1` y `gobject-introspection-runtime` (Arch).
 - En GNOME hace falta la extensión AppIndicator para ver el icono junto al reloj; si no, la ventana se minimiza.
 - Si no tienes la app de escritorio de Claude (en Linux no hay una versión oficial confirmada), lo más sencillo es hacer los resúmenes con una clave de API de Claude o Gemini (paso «Resúmenes» del asistente). El panel «Mis clases» se conecta con las versiones de la comunidad que usen `~/.config/Claude`.
 
@@ -76,6 +77,6 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 - `CAMBIOS.md`: novedades de cada versión (salen en Releases y en el aviso de actualización).
 - `tests/`: pruebas (`python tests/test_horario.py`, `python tests/test_linux.py` y `python tests/test_resumen.py`).
 
-Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, y PortAudio).
+Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, PortAudio, y PyGObject con WebKitGTK: `python3-gi` y `gir1.2-webkit2-4.1` en Debian/Ubuntu, `python3-gobject` y `webkit2gtk4.1` en Fedora, `python-gobject` y `webkit2gtk-4.1` en Arch).
 
 El instalador de Windows y el AppImage los compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión: añade su sección `## X.Y.Z` en `CAMBIOS.md`, crea la etiqueta `vX.Y.Z` y se sube sola a Releases. Las apps ya instaladas avisarán de la actualización.

@@ -20,17 +20,28 @@ if [ -z "$PY" ]; then
 fi
 "$PY" -c 'import tkinter' 2>/dev/null || { echo "Falta tkinter (python3-tk / python3-tkinter / tk)." >&2; exit 1; }
 
-# PortAudio lo usa sounddevice para grabar; Qt necesita libxcb-cursor
+# PortAudio lo usa sounddevice para grabar; las ventanas web usan el WebKitGTK del sistema (con PyGObject)
 "$PY" - <<'PYEOF' || true
 import ctypes.util
 if not ctypes.util.find_library("portaudio"):
     print("Aviso: no encuentro PortAudio. Debian/Ubuntu: libportaudio2 · Fedora: portaudio · Arch: portaudio")
-if not ctypes.util.find_library("xcb-cursor"):
-    print("Aviso: no encuentro libxcb-cursor. Debian/Ubuntu: libxcb-cursor0 · Fedora: xcb-util-cursor · Arch: xcb-util-cursor")
+try:
+    import gi
+    for v in ("4.1", "4.0"):
+        try:
+            gi.require_version("WebKit2", v)
+            break
+        except ValueError:
+            pass
+    else:
+        raise ValueError
+except Exception:
+    print("Aviso: falta WebKitGTK con PyGObject para las ventanas del asistente.")
+    print("  Debian/Ubuntu: sudo apt install python3-gi gir1.2-webkit2-4.1 · Fedora: sudo dnf install python3-gobject webkit2gtk4.1 · Arch: sudo pacman -S python-gobject webkit2gtk-4.1")
 PYEOF
 
 echo "Creando el entorno virtual…"
-"$PY" -m venv .venv
+"$PY" -m venv --system-site-packages .venv  # así ve el PyGObject de la distribución
 .venv/bin/pip install --quiet --upgrade pip
 .venv/bin/pip install --quiet -r agente/requirements.txt
 

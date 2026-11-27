@@ -293,13 +293,21 @@ class Api:
 
 
 def _ventana(info, modo):
-    import webview
+    import ventana_web
+    webview = ventana_web.importar_webview()
     api = Api(info, modo)
     with open(os.path.join(AQUI, "asistente", "actualizacion.html"), encoding="utf-8") as f:
         html = f.read()
     api._ventana = webview.create_window("Estudio", html=html, js_api=api, width=640, height=600,
                                          min_size=(520, 480), background_color="#CFE6FF")
-    webview.start(gui="qt" if sys.platform.startswith("linux") else None)
+    return ventana_web.iniciar(webview, avisar=False)
+
+
+def _abrir_en_el_navegador(info):
+    """Without a window (no WebKitGTK) the notice falls back to the release page in the browser."""
+    import webbrowser
+    if info.get("url", "").startswith("https://"):
+        webbrowser.open(info["url"])
 
 
 def comprobar_y_avisar(forzar=False):
@@ -310,7 +318,8 @@ def comprobar_y_avisar(forzar=False):
         return
     if not forzar and _ajuste("version_saltada") == info["version"]:
         return
-    _ventana(info, "aviso")
+    if not _ventana(info, "aviso"):
+        _abrir_en_el_navegador(info)
 
 
 def novedades_si_toca():
@@ -323,7 +332,7 @@ def novedades_si_toca():
         return  # primera instalación: no hay "novedades" que contar
     info = notas_de(VERSION)
     if info and info.get("notas"):
-        _ventana(info, "novedades")
+        _ventana(info, "novedades")  # sin ventana, las novedades se pierden sin más: no es crítico
 
 
 if __name__ == "__main__":
