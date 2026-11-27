@@ -469,6 +469,26 @@ class DialogoAjustes(tk.Toplevel):
 
 def main():
     args = sys.argv[1:]
+    if "--migrate-sqlite" in args:
+        from infrastructure.storage_activation import activate_sqlite
+        from nucleo.config import RUTA_DATOS
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            if messagebox.askyesno("Migrar a SQLite",
+                "Cierra todas las otras instancias de Estudio, Claude y el servidor MCP. "
+                "Actualiza el Hub a una versión compatible con SQLite antes de continuar. "
+                "Los archivos JSON originales se conservarán. ¿Confirmas que todo está preparado?",
+                parent=root):
+                try:
+                    database = activate_sqlite(RUTA_DATOS, offline_confirmed=True)
+                    messagebox.showinfo("Migrar a SQLite", f"Migración verificada: {database}", parent=root)
+                except Exception as error:
+                    messagebox.showerror("Migrar a SQLite", str(error), parent=root)
+                    raise
+        finally:
+            root.destroy()
+        return
     if "--mcp" in args:
         import mcp_servidor
         mcp_servidor.main()
