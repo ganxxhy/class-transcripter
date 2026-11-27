@@ -279,33 +279,67 @@ footer a{color:#fff}
  .skyrun::before{position:absolute;inset:0;height:auto;margin:0}
 }
 
-/* Hero showcase: layered previews of the actual Mis clases navigation and views. */
-.hero .stage{max-width:1060px;isolation:isolate;margin-top:40px}
-.hero .frame{position:relative;z-index:1;width:78%;margin-inline:auto}
-.hero .app{background:linear-gradient(180deg,var(--bg-a),var(--bg-c));grid-template-columns:1.3fr 1fr}
-.hero .frame-bar{background:var(--card)}
-.hero .show-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 12px;background:var(--bg-a);color:var(--ink);font-size:11px}
-.hero .show-nav b{margin-right:auto;white-space:nowrap}
-.hero .show-nav span{background:white;border-radius:30px;padding:6px 10px;white-space:nowrap}
-.hero .show-nav em{font-style:normal;background:#0d2340;color:white;border-radius:20px;padding:4px 8px}
-.hero .show-wing{position:absolute;top:12%;bottom:4%;width:43%;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,var(--bg-a),var(--bg-c));box-shadow:0 24px 48px -20px #0d234066;border:1px solid #ffffff99;color:var(--ink);pointer-events:none}
-.hero .show-left{left:0;transform:rotate(-5deg)}
-.hero .show-right{right:0;transform:rotate(5deg)}
-.hero .wing-body{padding:16px}
-.hero .wing-body h3{font-size:21px;margin:0 0 12px}
-.hero .wing-card{background:white;border-radius:14px;padding:12px;margin-bottom:8px;font-size:11px}
-.hero .wing-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;background:white;border-radius:14px;padding:10px}
-.hero .wing-grid span{font-size:9px;min-height:32px;padding:4px;border-bottom:1px solid var(--line)}
-.hero .wing-grid .lesson{background:#dce7fb;color:#2354ac;border-radius:5px}
-.hero .wing-grid .green{background:#d9efeb;color:#087c72}
-.hero .wing-grid .pink{background:#f8e1eb;color:#a52e67}
-.hero .show-right .wing-body{padding-left:42%}
-.hero .wing-card small{display:block;color:var(--mute)}
-.hero .wing-card strong{display:block;margin-bottom:4px}
-.hero .chip.a{left:9%;top:32%}.hero .chip.b{right:8%;top:19%}.hero .chip.c{right:8%;bottom:9%}
-@media(max-width:900px){.hero .frame{width:88%}.hero .app{grid-template-columns:1fr}.hero .show-nav{gap:4px;font-size:9px}.hero .show-nav span{padding:4px}.hero .show-wing{width:40%}}
-@media(max-width:600px){.hero .frame{width:100%}.hero .show-wing{display:none}.hero .show-nav span{white-space:normal}.hero .show-nav b{font-size:10px}}
-
+/* Mis clases previews */
+.hero .stage{isolation:isolate;container-type:inline-size; padding-top:clamp(64px,9vw,114px)}
+.hero .frame,.hero .show-wing{
+  border:1px solid var(--line);background:linear-gradient(160deg,#dcecff,#f4f8fe 75%);
+  box-shadow:0 20px 48px -24px #0d234080;
+}
+.hero .frame{position:relative;z-index:1;width:76%;margin-inline:auto}
+.hero .frame-bar{background:var(--card);gap:clamp(4px,1cqw,10px);padding:10px clamp(8px,1.6cqw,18px);font-size:clamp(11px,1.3cqw,13px)}
+.hero .frame-bar .d{width:7px;height:7px;flex:none}
+.hero .frame-bar .t{margin-left:auto}
+.hero .show-top{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;padding:10px clamp(8px,1.8cqw,18px)}
+.hero .show-brand{display:inline-flex;align-items:center;gap:5px;font:700 clamp(12px,1.6cqw,17px)/1 var(--disp)}
+.hero .show-brand i{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#ffd2a8,var(--sun) 65%);box-shadow:0 0 8px #ff7a2f66}
+.hero .show-brand small{font:550 .72em var(--ui);color:var(--mute)}
+.hero .show-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;border-radius:999px;padding:3px;background:var(--card);font-weight:600;font-size:clamp(9px,1.05cqw,11px);color:var(--mute)}
+.hero .show-nav span{display:flex;align-items:center;gap:3px;white-space:nowrap;padding:4px clamp(3px,.65cqw,7px);border-radius:999px}
+.hero .show-nav .active{background:var(--ink);color:#fff}
+.hero .show-nav svg{width:1em;height:1em}
+.hero .app{background:none;padding:0 clamp(8px,1.8cqw,18px) clamp(8px,1.8cqw,18px);grid-template-columns:minmax(0,1fr)}
+.hero .app-hero h3{font-size:clamp(16px,3cqw,24px);margin-top:0}
+.hero .app-hero svg{max-width:480px;margin-inline:auto}
+.hero .app-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.hero .mini{padding:10px clamp(8px,1.4cqw,16px)}
+.hero .row{gap:5px;grid-template-columns:auto minmax(0,1fr) auto;font-size:clamp(11px,1.35cqw,13.5px)}
+.hero .row time,.hero .row .pill{font-size:clamp(9px,1.15cqw,12px)}
+.hero .row .pill{padding-inline:5px}
+.hero .show-wing{position:absolute;width:46%;overflow:hidden;border-radius:22px;pointer-events:none}
+.hero .show-left{left:1.5%;top:20px;transform:rotate(-4deg)}
+.hero .show-right{right:1.5%;top:0;transform:rotate(4deg)}
+.hero .wing-body{padding:0 clamp(8px,1.5cqw,16px) 16px;font-size:clamp(9px,1.2cqw,12px)}
+.hero .wing-body h3{font:650 clamp(16px,2.4cqw,26px) var(--disp);margin-bottom:2px}
+.hero .wing-body p{color:var(--mute);margin-bottom:10px}
+.hero .wing-card{background:var(--card);border-radius:12px;padding:8px}
+.hero .wing-card h4{margin-bottom:6px}
+.hero .wing-card small,.hero .subject-meta{color:var(--mute)}
+.hero .week{display:grid;grid-template-columns:2em repeat(5,minmax(0,1fr));gap:2px;text-align:center;font-size:.85em}
+.hero .week > *{min-width:0;padding:4px 0}
+.hero .week > span{background:var(--paper);border-radius:4px}
+.hero .week > .lesson,.hero .subject-code{
+  background:color-mix(in srgb,var(--c) 15%,white);color:color-mix(in srgb,var(--c) 65%,var(--ink));
+  font-weight:700;border-radius:5px;
+}
+.hero .subjects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.hero .subject-top{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.hero .subject-code{padding:4px;font-family:var(--mono);flex:none}
+.hero .subject-top small{display:block}
+.hero .subject-meta{display:flex;justify-content:space-between;gap:4px;border-top:1px solid var(--line);padding-top:3px}
+.hero .subject-meta b{color:var(--ink)}
+.hero .chip.a{left:2%;top:54%}.hero .chip.b{right:1%;top:38%}.hero .chip.c{right:0;bottom:6%}
+@media(max-width:900px){.hero .show-nav svg{display:none}}
+@media(max-width:760px){
+ .hero .stage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:0}
+ .hero .frame{grid-area:1/1/2/-1;width:100%}
+ .hero .show-wing{position:relative;inset:auto;width:auto;transform:none;border-radius:16px}
+ .hero .show-top{justify-content:center}
+ .hero .show-wing .show-top{padding-inline:4px}
+}
+@media(max-width:540px){
+ .hero .stage{grid-template-columns:minmax(0,1fr)}
+ .hero .app-side{grid-template-columns:minmax(0,1fr)}
+}
 </style>
 </head>
 <body>
@@ -333,14 +367,87 @@ footer a{color:#fff}
       <p class="platforms"><span><b>Windows</b> disponible</span><span><b>Linux</b> disponible</span><span>macOS, en estudio</span></p>
     </div>
     <div class="stage">
-<div class="show-wing show-left" aria-hidden="true"><div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div><div class="show-nav"><b>🟠 estudio</b><span>Hoy · Asignaturas · Tareas · <em>Calendario</em> · Estadísticas</span></div><div class="wing-body"><h3>Calendario</h3><div class="wing-card"><strong>Horario semanal</strong><small>Semana del 23 al 27 de noviembre</small></div><div class="wing-grid"><span class="">Lun</span><span class="">Mar</span><span class="">Mié</span><span class="">Jue</span><span class="">Vie</span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="lesson ">Cálculo II</span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="lesson pink">Física I</span><span class=""></span><span class=""></span><span class=""></span><span class="lesson green">Estructuras</span><span class=""></span><span class=""></span><span class=""></span><span class="lesson ">Estadística</span><span class=""></span><span class=""></span><span class="lesson pink">Física I</span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span></div></div></div>
-<div class="show-wing show-right" aria-hidden="true"><div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div><div class="show-nav"><b>🟠 estudio</b><span>Hoy · <em>Asignaturas</em> · Tareas · Calendario · Estadísticas</span></div><div class="wing-body"><h3>Asignaturas</h3><div class="wing-card"><strong>Cálculo II</strong><small>1 clases grabadas</small><small>Próxima clase · 10:00</small></div><div class="wing-card"><strong>Física I</strong><small>2 clases grabadas</small><small>Próxima clase · 11:00</small></div><div class="wing-card"><strong>Estadística</strong><small>3 clases grabadas</small><small>Próxima clase · 12:00</small></div><div class="wing-card"><strong>Estructuras de Datos</strong><small>4 clases grabadas</small><small>Próxima clase · 13:00</small></div></div></div>
+      <div class="show-wing show-left" aria-hidden="true">
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div>
+        <div class="show-top">
+          <b class="show-brand"><i></i>estudio <small>Mis clases</small></b>
+          <div class="show-nav">
+            <span><i data-i="home"></i>Hoy</span>
+            <span><i data-i="book"></i>Asignaturas</span>
+            <span><i data-i="list"></i>Tareas</span>
+            <span class="active"><i data-i="cal"></i>Calendario</span>
+            <span><i data-i="chart"></i>Estadísticas</span>
+          </div>
+        </div>
+        <div class="wing-body">
+          <h3>Calendario</h3>
+          <p>7 clases a la semana en tu horario.</p>
+          <div class="wing-card">
+            <h4>Horario semanal <small>· 23 al 27 de noviembre</small></h4>
+            <div class="week">
+              <b></b><b>Lun 23</b><b>Mar 24</b><b>Mié 25</b><b>Jue 26</b><b>Vie 27</b>
+              <time>09</time><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-eda)">EDA</span><span class="lesson" style="--c:var(--c-eda)">EDA</span>
+              <time>11</time><span class="lesson" style="--c:var(--c-calc)">CAL</span><span></span><span></span><span class="lesson" style="--c:var(--c-calc)">CAL</span><span></span>
+              <time>15</time><span></span><span class="lesson" style="--c:var(--c-fis)">FIS</span><span></span><span class="lesson" style="--c:var(--c-fis)">FIS</span><span></span>
+              <time>17</time><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-est)">EST</span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="show-wing show-right" aria-hidden="true">
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div>
+        <div class="show-top">
+          <b class="show-brand"><i></i>estudio <small>Mis clases</small></b>
+          <div class="show-nav">
+            <span><i data-i="home"></i>Hoy</span>
+            <span class="active"><i data-i="book"></i>Asignaturas</span>
+            <span><i data-i="list"></i>Tareas</span>
+            <span><i data-i="cal"></i>Calendario</span>
+            <span><i data-i="chart"></i>Estadísticas</span>
+          </div>
+        </div>
+        <div class="wing-body">
+          <h3>Asignaturas</h3>
+          <p>Tus 4 asignaturas. Entra en una para ver sus clases grabadas y sus resúmenes.</p>
+          <div class="subjects">
+            <div class="wing-card" style="--c:var(--c-calc)">
+              <div class="subject-top"><span class="subject-code">CAL</span><div><b>Cálculo II</b><small>1 clase grabada</small></div></div>
+              <div class="subject-meta"><span>Próxima clase</span><b>mañana 10:00</b></div>
+              <div class="subject-meta"><span>Tareas pendientes</span><b>0</b></div>
+            </div>
+            <div class="wing-card" style="--c:var(--c-fis)">
+              <div class="subject-top"><span class="subject-code">FIS</span><div><b>Física I</b><small>2 clases grabadas</small></div></div>
+              <div class="subject-meta"><span>Próxima clase</span><b>hoy 15:00</b></div>
+              <div class="subject-meta"><span>Tareas pendientes</span><b>0</b></div>
+            </div>
+            <div class="wing-card" style="--c:var(--c-est)">
+              <div class="subject-top"><span class="subject-code">EST</span><div><b>Estadística</b><small>3 clases grabadas</small></div></div>
+              <div class="subject-meta"><span>Próxima clase</span><b>hoy 17:30</b></div>
+              <div class="subject-meta"><span>Tareas pendientes</span><b>1</b></div>
+            </div>
+            <div class="wing-card" style="--c:var(--c-eda)">
+              <div class="subject-top"><span class="subject-code">EDA</span><div><b>Estructuras de Datos</b><small>4 clases grabadas</small></div></div>
+              <div class="subject-meta"><span>Próxima clase</span><b>mañana 09:00</b></div>
+              <div class="subject-meta"><span>Tareas pendientes</span><b>1</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="chip a" style="--c:var(--c-calc)"><span class="ico"><i data-i="spark"></i></span><span><b>Resumen listo</b><small>Cálculo II · por temas</small></span></div>
       <div class="chip b" style="--c:var(--sun)"><span class="ico"><i data-i="clock"></i></span><span><b>Entrega el viernes</b><small>Lo dijo la profe en EDA</small></span></div>
       <div class="chip c" style="--c:var(--c-eda)"><span class="ico"><i data-i="cal"></i></span><span><b>Horario leído</b><small>Desde tu captura de pantalla</small></span></div>
       <div class="frame" aria-hidden="true">
         <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b>· Hoy, jueves 26 de noviembre · <span class="t" id="hero-time">16:42</span></div>
-        <div class="show-nav"><b>🟠 estudio</b><span><em>Hoy</em> · Asignaturas · Tareas · Calendario · Estadísticas</span></div>
+        <div class="show-top">
+          <b class="show-brand"><i></i>estudio <small>Mis clases</small></b>
+          <div class="show-nav">
+            <span class="active"><i data-i="home"></i>Hoy</span>
+            <span><i data-i="book"></i>Asignaturas</span>
+            <span><i data-i="list"></i>Tareas</span>
+            <span><i data-i="cal"></i>Calendario</span>
+            <span><i data-i="chart"></i>Estadísticas</span>
+          </div>
+        </div>
         <div class="app">
           <div class="app-hero"><svg viewBox="0 0 1000 380" id="arcsvg"></svg><h3 id="hero-title">Estás en Física I, hasta las 17:00</h3><p id="hero-sub">Lab. F1 · grabando la clase</p></div>
           <div class="app-side">
@@ -505,7 +612,12 @@ footer a{color:#fff}
 <script src="sky.js"></script>
 <script>
 (function(){
-const P={gh:'<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
+const P={
+ home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
+ book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zm0 0v14"/>',
+ list:'<path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/>',
+ chart:'<path d="M3 3v18h18M8 16v-4m5 4V8m5 8V5"/>',
+gh:'<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',down:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
  win:'<path d="M4 5.5 11 4.5v7H4zM13 4.2 20 3v8.5h-7zM4 12.5h7v7l-7-1zM13 12.5h7V21l-7-1z"/>',
  linux:'<path d="M12 3c-2.2 0-3.5 1.8-3.5 4.5 0 1.6-.6 2.7-1.6 4.2C5.8 13.3 5 15 5 16.8 5 19.5 8 21 12 21s7-1.5 7-4.2c0-1.8-.8-3.5-1.9-5.1-1-1.5-1.6-2.6-1.6-4.2C15.5 4.8 14.2 3 12 3z"/><path d="M10.5 8h.01M13.5 8h.01M11 10.5h2"/>',
