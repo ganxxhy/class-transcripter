@@ -17,6 +17,19 @@ class SQLiteClassRepository:
             connection.execute("INSERT OR IGNORE INTO schema_migrations VALUES (1)")
             connection.execute("CREATE TABLE IF NOT EXISTS completed_items (item_key TEXT PRIMARY KEY)")
 
+    @staticmethod
+    def validate_existing(path):
+        path = Path(path).resolve()
+        connection = sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)
+        try:
+            tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+            if not {"classes", "segments", "completed_items", "schema_migrations"}.issubset(tables):
+                raise ValueError("Invalid SQLite schema")
+            if connection.execute("SELECT version FROM schema_migrations").fetchall() != [(1,)]:
+                raise ValueError("Unsupported SQLite schema version")
+        finally:
+            connection.close()
+
     @contextmanager
     def transaction(self, write=True):
         connection = sqlite3.connect(self.path, timeout=30)
@@ -117,13 +130,18 @@ class SQLiteClassRepository:
     def listar(self, incluir_segmentos=False):
         with self.transaction(write=False) as connection:
             records = []
-            for (class_id,) in connection.execute("SELECT id FROM classes ORDER BY id DESC"):
-                record = self._read(connection, class_id)
-                if not incluir_segmentos:
-                    segments = record.pop("segmentos")
-                    record.update(n_segmentos=len(segments),
-                                  palabras=sum(len(segment["texto"].split()) for segment in segments),
-                                  duracion_s=int(segments[-1]["fin"]) if segments else 0)
+            for class_id, payload in connection.execute("SELECT id, payload FROM classes ORDER BY id DESC"):
+                if incluir_segmentos:
+                    record = self._read(connection, class_id)
+                else:
+                    record = json.loads(payload)
+                    count = words = duration = 0
+                    for (segment_payload,) in connection.execute("SELECT payload FROM segments WHERE class_id = ? ORDER BY position", (class_id,)):
+                        segment = json.loads(segment_payload)
+                        count += 1
+                        words += len(segment["texto"].split())
+                        duration = int(segment["fin"])
+                    record.update(n_segmentos=count, palabras=words, duracion_s=duration)
                 records.append(record)
             return records
 

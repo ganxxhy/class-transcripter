@@ -19,6 +19,7 @@ def build_repository():
         path = Path(database)
         if not path.is_absolute() or not path.is_file():
             raise ValueError("Experimental SQLite requires an existing absolute database path")
+        SQLiteClassRepository.validate_existing(path)
         return SQLiteClassRepository(path)
     return JsonClassRepository()
 

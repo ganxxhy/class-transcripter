@@ -23,6 +23,7 @@ def active_database(data_directory):
     database = root / DATABASE
     if not database.is_file():
         raise FileNotFoundError(database)
+    SQLiteClassRepository.validate_existing(database)
     return database
 
 
@@ -33,11 +34,12 @@ def activate_sqlite(data_directory, *, offline_confirmed=False):
     existing = active_database(root)
     if existing is not None:
         return existing
+    root.mkdir(parents=True, exist_ok=True)
     source = root / "clases"
+    source.mkdir(exist_ok=True)
     state = root / "estado.json"
     database = root / DATABASE
-    if database.exists():
-        raise FileExistsError("Existing inactive database; review it before retrying")
+    # Never overwrite an inactive database: it may contain newer user data.
     with tempfile.TemporaryDirectory(dir=root) as temporary:
         candidate = Path(temporary) / DATABASE
         migrate_classes(source, candidate, state if state.exists() else None)
@@ -59,6 +61,12 @@ def activate_sqlite(data_directory, *, offline_confirmed=False):
             json.dump({"version": 1, "database": DATABASE}, stream)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(candidate, database)
+        if database.exists():
+            SQLiteClassRepository.validate_existing(database)
+            previous = SQLiteClassRepository(database)
+            if previous.listar(incluir_segmentos=True) != actual or previous.leer_estado() != repository.leer_estado():
+                raise ValueError("Inactive database differs from the verified snapshot; preserve it for manual recovery")
+        else:
+            os.replace(candidate, database)
         os.replace(marker, root / MARKER)
     return database

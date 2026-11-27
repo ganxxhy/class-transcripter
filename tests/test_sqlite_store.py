@@ -95,6 +95,31 @@ class SQLiteStoreTests(unittest.TestCase):
         self.assertIsNone(active_database(root))
         self.assertFalse((root / "classes.sqlite3").exists())
 
+    def test_empty_activation_and_retry(self):
+        from infrastructure.storage_activation import activate_sqlite
+        root = self.root / "empty"
+        database = activate_sqlite(root, offline_confirmed=True)
+        (root / "sqlite-active.json").unlink()
+        self.assertEqual(activate_sqlite(root, offline_confirmed=True), database)
+        self.assertEqual(SQLiteClassRepository(database).listar(), [])
+
+    def test_invalid_existing_database(self):
+        import sqlite3
+        path = self.root / "invalid.sqlite3"
+        sqlite3.connect(path).close()
+        with self.assertRaises(ValueError):
+            SQLiteClassRepository.validate_existing(path)
+
+    def test_independent_process_writers(self):
+        import subprocess
+        class_id = self.repository.crear_clase("math", "Math", "manual")
+        agent = str(Path(__file__).resolve().parents[1] / "agente")
+        script = "import sys; sys.path.insert(0, sys.argv[1]); from infrastructure.sqlite_store import SQLiteClassRepository; r=SQLiteClassRepository(sys.argv[2]); [r.anadir_segmentos(sys.argv[3], [{'ini': i, 'fin': i+1, 'texto': 'word'}]) for i in range(20)]"
+        processes = [subprocess.Popen([sys.executable, "-c", script, agent, str(self.path), class_id]) for _ in range(3)]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=60), 0)
+        self.assertEqual(self.repository.listar()[0]["n_segmentos"], 60)
+
 
 if __name__ == "__main__":
     unittest.main()

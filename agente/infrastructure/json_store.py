@@ -18,7 +18,13 @@ def _ruta(cid):
     return os.path.join(DIR_CLASES, cid + ".json")
 
 
+def _require_legacy_storage():
+    if os.path.exists(os.path.join(RUTA_DATOS, "sqlite-active.json")):
+        raise RuntimeError("SQLite is active; legacy JSON writes are disabled")
+
+
 def _escribir(ruta, datos):
+    _require_legacy_storage()
     os.makedirs(os.path.dirname(ruta), exist_ok=True)
     tmp = ruta + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -105,6 +111,7 @@ def listar(incluir_segmentos=False):
 
 def eliminar(cid):
     with _lock.hold():
+        _require_legacy_storage()
         os.remove(_ruta(cid))
 
 
