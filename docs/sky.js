@@ -25,11 +25,12 @@ const K=[[-90,'#060B1A','#0B1530','#14223F'],[-14,'#08122A','#11204A','#1D2F5C']
 const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mix=(a,b,t)=>'#'+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
 function colors(alt){let i=0;while(i<K.length-2&&alt>K[i+1][0])i++;const a=K[i],b=K[i+1],t=Math.max(0,Math.min(1,(alt-a[0])/(b[0]-a[0])));return[1,2,3].map(j=>mix(a[j],b[j],t))}
 const load=k=>{try{return localStorage.getItem(k)}catch(e){return null}},store=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-const S={city:load('sky-city')||'auto',preview:null};
+const S={city:load('sky-city')||'auto',preview:null,blend:0};
 function place(){return S.city!=='auto'&&CITIES[S.city]?{name:S.city,ll:CITIES[S.city],how:'elegida por ti'}:autoPlace()}
 function when(){if(S.preview==null)return new Date();const d=new Date();d.setHours(Math.floor(S.preview),Math.round(S.preview%1*60),0,0);return d}
 function apply(){
- const p=place(),t=when(),alt=sunAlt(t.getTime(),p.ll[0],p.ll[1]),[a,b,c]=colors(alt),root=document.documentElement.style;
+ const p=place(),t=when(),previewAlt=sunAlt(t.getTime(),p.ll[0],p.ll[1]),liveAlt=sunAlt(Date.now(),p.ll[0],p.ll[1]),alt=previewAlt+(liveAlt-previewAlt)*S.blend,root=document.documentElement.style;
+ const [a,b,c]=colors(previewAlt).map((color,i)=>mix(color,colors(liveAlt)[i],S.blend));
  root.setProperty('--bg-a',a);root.setProperty('--bg-b',b);root.setProperty('--bg-c',c);
  const dark=alt<-1;root.setProperty('--on-sky',dark?'#F2F5FA':'#0D2340');root.setProperty('--on-sky-mute',dark?'#B9C6DA':'#3F5068');
  root.setProperty('--stars',String(Math.max(0,Math.min(1,(-alt-4)/10))));
@@ -42,6 +43,6 @@ function apply(){
 }
 window.Sky={cities:Object.keys(CITIES),get city(){return S.city},
  setCity(c){S.city=c;store('sky-city',c);apply()},
- preview(h){S.preview=h;apply()},live(){S.preview=null;apply()},apply};
+ preview(h,blend=0){S.preview=h;S.blend=Math.max(0,Math.min(1,blend));apply()},live(){S.preview=null;S.blend=0;apply()},apply};
 apply();setInterval(()=>{if(S.preview==null)apply()},60000);
 })();
