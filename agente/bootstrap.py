@@ -13,7 +13,7 @@ def build_class_service():
 def build_motor(log=print):
     from application.recording import RecordingEngine
     from infrastructure.recording_files import write_status, open_wave
-    from nucleo.transcripcion import Transcriptor
+    from infrastructure.whisper import Transcriptor
     from nucleo import horario, resumen
     from nucleo.config import nombre_asignatura, resumen_en_pc
     return RecordingEngine(log, transcriptor=Transcriptor(cargar()["ajustes"], log=log),
