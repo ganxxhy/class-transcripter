@@ -247,6 +247,8 @@ jobs:
           v="${{ steps.version.outputs.v }}"
           mkdir -p AppDir/usr/lib
           cp -r dist/Estudio AppDir/usr/lib/estudio
+          # The runner's libstdc++ is older than what Mesa drivers need on newer distros
+          rm -f AppDir/usr/lib/estudio/_internal/libstdc++.so.6 AppDir/usr/lib/estudio/_internal/libgcc_s.so.1
           cp packaging/build/icono.png AppDir/estudio.png
           cat > AppDir/estudio.desktop <<'EOF'
           [Desktop Entry]
