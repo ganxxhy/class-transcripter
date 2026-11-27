@@ -278,6 +278,34 @@ footer a{color:#fff}
  .skyrun{height:auto}.skypin{position:static;height:auto;padding-block:96px}
  .skyrun::before{position:absolute;inset:0;height:auto;margin:0}
 }
+
+/* Hero showcase: layered previews of the actual Mis clases navigation and views. */
+.hero .stage{max-width:1060px;isolation:isolate;margin-top:40px}
+.hero .frame{position:relative;z-index:1;width:78%;margin-inline:auto}
+.hero .app{background:linear-gradient(180deg,var(--bg-a),var(--bg-c));grid-template-columns:1.3fr 1fr}
+.hero .frame-bar{background:var(--card)}
+.hero .show-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 12px;background:var(--bg-a);color:var(--ink);font-size:11px}
+.hero .show-nav b{margin-right:auto;white-space:nowrap}
+.hero .show-nav span{background:white;border-radius:30px;padding:6px 10px;white-space:nowrap}
+.hero .show-nav em{font-style:normal;background:#0d2340;color:white;border-radius:20px;padding:4px 8px}
+.hero .show-wing{position:absolute;top:12%;bottom:4%;width:43%;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,var(--bg-a),var(--bg-c));box-shadow:0 24px 48px -20px #0d234066;border:1px solid #ffffff99;color:var(--ink);pointer-events:none}
+.hero .show-left{left:0;transform:rotate(-5deg)}
+.hero .show-right{right:0;transform:rotate(5deg)}
+.hero .wing-body{padding:16px}
+.hero .wing-body h3{font-size:21px;margin:0 0 12px}
+.hero .wing-card{background:white;border-radius:14px;padding:12px;margin-bottom:8px;font-size:11px}
+.hero .wing-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;background:white;border-radius:14px;padding:10px}
+.hero .wing-grid span{font-size:9px;min-height:32px;padding:4px;border-bottom:1px solid var(--line)}
+.hero .wing-grid .lesson{background:#dce7fb;color:#2354ac;border-radius:5px}
+.hero .wing-grid .green{background:#d9efeb;color:#087c72}
+.hero .wing-grid .pink{background:#f8e1eb;color:#a52e67}
+.hero .show-right .wing-body{padding-left:42%}
+.hero .wing-card small{display:block;color:var(--mute)}
+.hero .wing-card strong{display:block;margin-bottom:4px}
+.hero .chip.a{left:9%;top:32%}.hero .chip.b{right:8%;top:19%}.hero .chip.c{right:8%;bottom:9%}
+@media(max-width:900px){.hero .frame{width:88%}.hero .app{grid-template-columns:1fr}.hero .show-nav{gap:4px;font-size:9px}.hero .show-nav span{padding:4px}.hero .show-wing{width:40%}}
+@media(max-width:600px){.hero .frame{width:100%}.hero .show-wing{display:none}.hero .show-nav span{white-space:normal}.hero .show-nav b{font-size:10px}}
+
 </style>
 </head>
 <body>
@@ -305,11 +333,14 @@ footer a{color:#fff}
       <p class="platforms"><span><b>Windows</b> disponible</span><span><b>Linux</b> disponible</span><span>macOS, en estudio</span></p>
     </div>
     <div class="stage">
+<div class="show-wing show-left" aria-hidden="true"><div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div><div class="show-nav"><b>🟠 estudio</b><span>Hoy · Asignaturas · Tareas · <em>Calendario</em> · Estadísticas</span></div><div class="wing-body"><h3>Calendario</h3><div class="wing-card"><strong>Horario semanal</strong><small>Semana del 23 al 27 de noviembre</small></div><div class="wing-grid"><span class="">Lun</span><span class="">Mar</span><span class="">Mié</span><span class="">Jue</span><span class="">Vie</span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="lesson ">Cálculo II</span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="lesson pink">Física I</span><span class=""></span><span class=""></span><span class=""></span><span class="lesson green">Estructuras</span><span class=""></span><span class=""></span><span class=""></span><span class="lesson ">Estadística</span><span class=""></span><span class=""></span><span class="lesson pink">Física I</span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span></div></div></div>
+<div class="show-wing show-right" aria-hidden="true"><div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div><div class="show-nav"><b>🟠 estudio</b><span>Hoy · <em>Asignaturas</em> · Tareas · Calendario · Estadísticas</span></div><div class="wing-body"><h3>Asignaturas</h3><div class="wing-card"><strong>Cálculo II</strong><small>1 clases grabadas</small><small>Próxima clase · 10:00</small></div><div class="wing-card"><strong>Física I</strong><small>2 clases grabadas</small><small>Próxima clase · 11:00</small></div><div class="wing-card"><strong>Estadística</strong><small>3 clases grabadas</small><small>Próxima clase · 12:00</small></div><div class="wing-card"><strong>Estructuras de Datos</strong><small>4 clases grabadas</small><small>Próxima clase · 13:00</small></div></div></div>
       <div class="chip a" style="--c:var(--c-calc)"><span class="ico"><i data-i="spark"></i></span><span><b>Resumen listo</b><small>Cálculo II · por temas</small></span></div>
       <div class="chip b" style="--c:var(--sun)"><span class="ico"><i data-i="clock"></i></span><span><b>Entrega el viernes</b><small>Lo dijo la profe en EDA</small></span></div>
       <div class="chip c" style="--c:var(--c-eda)"><span class="ico"><i data-i="cal"></i></span><span><b>Horario leído</b><small>Desde tu captura de pantalla</small></span></div>
       <div class="frame" aria-hidden="true">
         <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b>· Hoy, jueves 26 de noviembre · <span class="t" id="hero-time">16:42</span></div>
+        <div class="show-nav"><b>🟠 estudio</b><span><em>Hoy</em> · Asignaturas · Tareas · Calendario · Estadísticas</span></div>
         <div class="app">
           <div class="app-hero"><svg viewBox="0 0 1000 380" id="arcsvg"></svg><h3 id="hero-title">Estás en Física I, hasta las 17:00</h3><p id="hero-sub">Lab. F1 · grabando la clase</p></div>
           <div class="app-side">
