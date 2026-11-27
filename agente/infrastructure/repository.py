@@ -10,3 +10,4 @@ class JsonClassRepository:
     cerrar = staticmethod(almacen.cerrar)
     listar = staticmethod(almacen.listar)
     eliminar = staticmethod(almacen.eliminar)
+    claim_summary = staticmethod(almacen.claim_summary)
