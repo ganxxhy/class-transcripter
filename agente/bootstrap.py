@@ -5,9 +5,14 @@ from nucleo.config import cargar, RUTA_DATOS
 
 
 def build_repository():
-    """Explicit test-only opt-in; production remains on JSON."""
+    """Select activated storage or an explicit experimental database."""
     import os
     from pathlib import Path
+    from infrastructure.storage_activation import active_database
+    active = active_database(RUTA_DATOS)
+    if active is not None:
+        from infrastructure.sqlite_store import SQLiteClassRepository
+        return SQLiteClassRepository(active)
     database = os.environ.get("ESTUDIO_EXPERIMENTAL_SQLITE")
     if database:
         from infrastructure.sqlite_store import SQLiteClassRepository
