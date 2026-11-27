@@ -10,6 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 from nucleo import resumen, motor
 from nucleo.servicio_clases import ServicioClases
 from copy import deepcopy
+import subprocess
+from nucleo import almacen
 
 
 class RepositorioFalso:
@@ -103,6 +105,37 @@ class ContratosTest(unittest.TestCase):
             self.assertEqual(repo.clase["asignatura"], "a")
             servicio.borrar({"id": "clase"})
             self.assertIsNone(repo.clase)
+
+    def test_audio_adapter(self):
+        class FakeAudio:
+            def open(self, selection, callback, log):
+                callback(16000, [0.1])
+                return object(), "fake"
+        engine = motor.Motor(log=lambda _: None, transcriptor=TranscriptorFalso(),
+                             repositorio=RepositorioFalso(), audio_input=FakeAudio(),
+                             load_config=lambda: {"ajustes": {}})
+        engine._abrir_stream(None)
+        self.assertEqual(engine.microfono_actual, "fake")
+        self.assertEqual(engine.cola_audio.get_nowait(), (16000, [0.1]))
+
+    def test_cross_process_storage(self):
+        cid = almacen.crear_clase("test", "Test", "manual")
+        source = ("import sys; sys.path.insert(0, 'agente'); "
+                  "from nucleo import almacen; "
+                  "cid=sys.argv[1]; "
+                  "[(almacen.anadir_segmentos(cid, [{'ini': i, 'fin': i+1, 'texto': 'test'}])) "
+                  "for i in range(20)]")
+        processes = [subprocess.Popen([sys.executable, "-c", source, cid]) for _ in range(3)]
+        try:
+            for process in processes:
+                self.assertEqual(process.wait(timeout=60), 0)
+            self.assertEqual(len(almacen.leer(cid)["segmentos"]), 60)
+        finally:
+            for process in processes:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+            almacen.eliminar(cid)
 
     def test_seleccion_proveedores(self):
         for nombre, tipo in [("claude", resumen.ClaudeProvider),
