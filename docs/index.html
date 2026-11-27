@@ -88,13 +88,6 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .row.past{opacity:.55}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:7px}
 .pill{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:color-mix(in srgb,var(--c,#54657B) 14%,white);color:color-mix(in srgb,var(--c,#54657B) 60%,#0D2340)}
-.chip{position:absolute;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:10px 14px;font-size:13.5px;box-shadow:0 18px 40px -20px rgba(13,35,64,.5);animation:float 6s ease-in-out infinite;z-index:2}
-.chip b{display:block;font-size:13.5px}
-.chip small{color:var(--mute);font-size:12px}
-.chip .ico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;background:var(--c);flex:none}
-.chip.a{left:-44px;top:96px}.chip.b{right:-40px;top:40px;animation-delay:-2s}.chip.c{right:-28px;bottom:54px;animation-delay:-4s}
-@keyframes float{50%{transform:translateY(-8px)}}
-
 /* Facts strip */
 .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:28px}
 .facts li{background:color-mix(in srgb,var(--card) 88%,transparent);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;font-size:14.5px;font-weight:600;color:var(--ink)}
@@ -250,7 +243,6 @@ footer{background:var(--ink);color:#B9C6DA;font-size:14px;padding-block:28px}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer a{color:#fff}
 
-@media (max-width:1100px){.chip{display:none}}
 @media (max-width:900px){.notes{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){
  .links{display:none}
@@ -279,66 +271,96 @@ footer a{color:#fff}
  .skyrun::before{position:absolute;inset:0;height:auto;margin:0}
 }
 
-/* Mis clases previews */
-.hero .stage{--wing-offset:clamp(-84px,calc((1100px - 100vw) / 2 - 4px),-4px);isolation:isolate;container-type:inline-size; padding-top:clamp(64px,9vw,114px)}
-.hero .frame,.hero .show-wing{
-  border:1px solid var(--line);background:linear-gradient(160deg,#dcecff,#f4f8fe 75%);
-  box-shadow:0 20px 48px -24px #0d234080;
+/* Layered desktop previews from the landing reference */
+.hero{padding-top:8px}
+.hero-copy{gap:7px}
+.hero h1{font-size:clamp(34px,4vw,50px);max-width:22ch;line-height:.93}
+.hero p.lede{font-size:clamp(14px,1.15vw,15px);line-height:1.2;max-width:64ch}
+.hero .tag,.hero .platforms{font-size:11px}
+.hero .tag{padding-block:4px}
+.hero .cta .btn{min-height:36px;padding:7px 17px;font-size:12px}
+.hero .stage{isolation:isolate;container-type:inline-size;max-width:1100px;margin-top:12px}
+.hero .frame,.hero .show-wing{border:1px solid #ffffff85;background:linear-gradient(155deg,#e5effc,#f1f6fd);box-shadow:0 24px 44px -19px #16385e80}
+.hero .frame{position:relative;z-index:1;width:67%;margin-inline:auto;border-radius:20px}
+.hero .frame-bar{background:#ffffff65;padding:8px 16px;gap:6px}
+.hero .frame-bar .d{width:8px;height:8px;background:#fb535c}
+.hero .frame-bar .d:nth-child(2){background:#ffbd31}
+.hero .frame-bar .d:nth-child(3){background:#26bd51}
+.hero .desktop{display:grid;grid-template-columns:19% minmax(0,1fr);font-size:clamp(10px,1.02cqw,11px)}
+.hero .desktop svg.i,.hero .show-wing svg.i{width:1.2em;height:1.2em}
+.hero .sidebar{background:#ffffff37;padding:10px 9px}
+.hero .show-brand{display:flex;align-items:center;gap:5px;font:700 clamp(14px,1.45cqw,17px) var(--disp);margin:0 5px 14px}
+.hero .show-brand i{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#ffd2a8,var(--sun) 68%);flex:none}
+.hero .sidebar li{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:6px;font-weight:600}
+.hero .sidebar .active{color:#1658bd;background:#d6e7fb}
+.hero .dashboard{padding:9px clamp(9px,1.5cqw,17px) 15px;min-width:0}
+.hero .desk-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--mute);font-size:.9em}
+.hero .desk-search{display:flex;align-items:center;gap:5px;padding:2px 8px;border:1px solid #d8e5f3;border-radius:20px}
+.hero .desk-search small{margin-left:10px}
+.hero .desk-avatar{border-radius:50%;background:#2354ac;color:#fff;padding:2px 6px}
+.hero .dashboard h2{font:700 clamp(19px,2.3cqw,25px)/1.05 var(--disp);margin-top:4px}
+.hero .desk-sub{color:var(--mute);margin:3px 0 10px}
+.hero .app{padding:0;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:9px;background:none}
+.hero .app-hero,.hero .mini,.hero .quick span{background:#ffffff95;border-radius:11px}
+.hero .app-hero{padding:9px}
+.hero .app-hero h4,.hero .mini h4{display:flex;align-items:center;gap:5px;justify-content:flex-start;text-align:left;font-size:inherit}
+.hero .mini h4 span{margin-left:auto;font-size:.85em}
+.hero .app h4 svg,.hero .quick svg{color:var(--blue)}
+.hero .app-hero svg#arcsvg{margin:8px auto 0;max-width:280px}
+.hero .app-hero h3{margin:0 auto;max-width:18ch;font-size:clamp(14px,1.8cqw,20px);line-height:1.06}
+.hero .app-hero p{font-size:.94em;margin-top:4px}
+.hero .app-side{display:flex;gap:8px}
+.hero .mini{padding:8px 9px}
+.hero .row{grid-template-columns:auto minmax(0,1fr) auto;gap:5px;padding:2px 0;font-size:inherit;line-height:1.25}
+.hero .row time,.hero .row .pill{font-size:.83em}
+.hero .row .pill{padding-inline:4px}
+.hero .row .dot{width:6px;height:6px;margin-right:3px}
+.hero .quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
+.hero .quick span{display:flex;align-items:center;gap:5px;padding:7px;font-size:.88em;font-weight:650;line-height:1.2}
+.hero .show-wing{position:absolute;width:38%;max-height:82%;overflow:hidden;border-radius:17px;pointer-events:none;font-size:clamp(10px,1.02cqw,11px)}
+.hero .show-left{left:1%;top:10%;transform:perspective(900px) rotateY(10deg) rotate(-2deg)}
+.hero .show-right{right:1%;top:13%;transform:perspective(900px) rotateY(-10deg) rotate(2deg)}
+.hero .wing-body{padding:12px 16px 17px}
+.hero .wing-body h3{font:700 1.18em var(--disp)}
+.hero .week-title{margin:7px 0;text-align:center;font-weight:700}
+.hero .week{display:grid;grid-template-columns:36px repeat(5,minmax(0,1fr));gap:2px;text-align:center;font-size:.82em}
+.hero .week>*{min-height:18px;padding:1px;border-bottom:1px solid var(--line)}
+.hero .week .lesson{border-radius:4px;background:color-mix(in srgb,var(--c) 18%,white);color:var(--ink);border-left:3px solid var(--c);font-weight:700;overflow-wrap:anywhere}
+.hero .show-right .wing-body{padding-left:36%;min-height:230px}
+.hero .report-top{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.hero .report-top b{display:flex;align-items:center;gap:3px;background:#fff9;padding:3px 7px;border-radius:5px;color:#2354ac}
+.hero .report-page{background:#fff8;padding:10px;border-radius:8px;margin-top:8px}
+.hero .report-page p{font-size:.85em;color:var(--mute);margin:5px 0}
+.hero .report-line{display:block;height:5px;background:#cfdef0;border-radius:4px;margin:7px 0}
+.hero .report-line.short{width:72%}
+.hero .report-page .report-graph{display:block;width:100%;height:58px;margin-top:10px;color:#6b9acc}
+.hero .facts{max-width:880px;margin:22px auto 0;gap:12px}
+.hero .facts li{font-size:12px;padding:9px;gap:7px}
+.hero .facts .ico{width:30px;height:30px}
+@media(min-width:901px){
+ .nav{padding-block:4px}
+ .nav .wrap{max-width:860px}
+ .nav .brand{font-size:18px}
+ .nav .brand i{width:17px;height:17px}
+ .nav .links a{padding:5px 12px;font-size:12px}
+ .nav .nav-cta .btn{min-height:33px;padding:5px 12px;font-size:12px}
 }
-.hero .frame{position:relative;z-index:1;width:76%;margin-inline:auto}
-.hero .frame-bar{background:var(--card);gap:clamp(4px,1cqw,10px);padding:10px clamp(8px,1.6cqw,18px);font-size:clamp(11px,1.3cqw,13px)}
-.hero .frame-bar .d{width:7px;height:7px;flex:none}
-.hero .frame-bar .t{margin-left:auto}
-.hero .show-top{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;padding:10px clamp(8px,1.8cqw,18px)}
-.hero .show-brand{display:inline-flex;align-items:center;gap:5px;font:700 clamp(12px,1.6cqw,17px)/1 var(--disp)}
-.hero .show-brand i{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#ffd2a8,var(--sun) 65%);box-shadow:0 0 8px #ff7a2f66}
-.hero .show-brand small{font:550 .72em var(--ui);color:var(--mute)}
-.hero .show-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;border-radius:999px;padding:3px;background:var(--card);font-weight:600;font-size:clamp(9px,1.05cqw,11px);color:var(--mute)}
-.hero .show-nav span{display:flex;align-items:center;gap:3px;white-space:nowrap;padding:4px clamp(3px,.65cqw,7px);border-radius:999px}
-.hero .show-nav .active{background:var(--ink);color:#fff}
-.hero .show-nav svg{width:1em;height:1em}
-.hero .app{background:none;padding:0 clamp(8px,1.8cqw,18px) clamp(8px,1.8cqw,18px);grid-template-columns:minmax(0,1fr)}
-.hero .app-hero h3{font-size:clamp(16px,3cqw,24px);margin-top:0}
-.hero .app-hero svg{max-width:480px;margin-inline:auto}
-.hero .app-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.hero .mini{padding:10px clamp(8px,1.4cqw,16px)}
-.hero .row{gap:5px;grid-template-columns:auto minmax(0,1fr) auto;font-size:clamp(11px,1.35cqw,13.5px)}
-.hero .row time,.hero .row .pill{font-size:clamp(9px,1.15cqw,12px)}
-.hero .row .pill{padding-inline:5px}
-.hero .show-wing{position:absolute;width:46%;overflow:hidden;border-radius:22px;pointer-events:none}
-.hero .show-left{left:var(--wing-offset);top:20px;transform:rotate(-4deg)}
-.hero .show-right{right:var(--wing-offset);top:0;transform:rotate(4deg)}
-.hero .wing-body{padding:0 clamp(8px,1.5cqw,16px) 16px;font-size:clamp(9px,1.2cqw,12px)}
-.hero .wing-body h3{font:650 clamp(16px,2.4cqw,26px) var(--disp);margin-bottom:2px}
-.hero .wing-body p{color:var(--mute);margin-bottom:10px}
-.hero .wing-card{background:var(--card);border-radius:12px;padding:8px}
-.hero .wing-card h4{margin-bottom:6px}
-.hero .wing-card small,.hero .subject-meta{color:var(--mute)}
-.hero .week{display:grid;grid-template-columns:2em repeat(5,minmax(0,1fr));gap:2px;text-align:center;font-size:.85em}
-.hero .week > *{min-width:0;padding:4px 0}
-.hero .week > span{background:var(--paper);border-radius:4px}
-.hero .week > .lesson,.hero .subject-code{
-  background:color-mix(in srgb,var(--c) 15%,white);color:color-mix(in srgb,var(--c) 65%,var(--ink));
-  font-weight:700;border-radius:5px;
-}
-.hero .subjects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.hero .subject-top{display:flex;align-items:center;gap:5px;margin-bottom:6px}
-.hero .subject-code{padding:4px;font-family:var(--mono);flex:none}
-.hero .subject-top small{display:block}
-.hero .subject-meta{display:flex;justify-content:space-between;gap:4px;border-top:1px solid var(--line);padding-top:3px}
-.hero .subject-meta b{color:var(--ink)}
-.hero .chip.a{left:2%;top:54%}.hero .chip.b{right:1%;top:38%}.hero .chip.c{right:0;bottom:6%}
-@media(max-width:900px){.hero .show-nav svg{display:none}}
-@media(max-width:760px){
- .hero .stage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:0}
+@media(max-width:1050px){.hero .frame{width:76%}}
+@media(max-width:840px){
+ .hero .stage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
  .hero .frame{grid-area:1/1/2/-1;width:100%}
- .hero .show-wing{position:relative;inset:auto;width:auto;transform:none;border-radius:16px}
- .hero .show-top{justify-content:center}
- .hero .show-wing .show-top{padding-inline:4px}
+ .hero .show-wing{position:relative;inset:auto;width:auto;max-height:none;transform:none}
+ .hero .show-right .wing-body{padding-left:16px;min-height:0}
 }
-@media(max-width:540px){
- .hero .stage{grid-template-columns:minmax(0,1fr)}
- .hero .app-side{grid-template-columns:minmax(0,1fr)}
+@media(max-width:570px){
+ .hero .stage,.hero .desktop,.hero .app{grid-template-columns:minmax(0,1fr)}
+ .hero .sidebar{padding:8px 9px}
+ .hero .show-brand{margin:0 0 5px}
+ .hero .sidebar ul{display:flex;flex-wrap:wrap}
+ .hero .sidebar li{padding:3px 5px}
+ .hero .desk-search{display:none}
+ .hero .quick{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .hero .cta .btn{flex:0 1 auto}
 }
 </style>
 </head>
@@ -368,98 +390,88 @@ footer a{color:#fff}
     </div>
     <div class="stage">
       <div class="show-wing show-left" aria-hidden="true">
-        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div>
-        <div class="show-top">
-          <b class="show-brand"><i></i>estudio <small>Mis clases</small></b>
-          <div class="show-nav">
-            <span><i data-i="home"></i>Hoy</span>
-            <span><i data-i="book"></i>Asignaturas</span>
-            <span><i data-i="list"></i>Tareas</span>
-            <span class="active"><i data-i="cal"></i>Calendario</span>
-            <span><i data-i="chart"></i>Estadísticas</span>
-          </div>
-        </div>
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
         <div class="wing-body">
-          <h3>Calendario</h3>
-          <p>7 clases a la semana en tu horario.</p>
-          <div class="wing-card">
-            <h4>Horario semanal <small>· 23 al 27 de noviembre</small></h4>
-            <div class="week">
-              <b></b><b>Lun 23</b><b>Mar 24</b><b>Mié 25</b><b>Jue 26</b><b>Vie 27</b>
-              <time>09</time><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-eda)">EDA</span><span class="lesson" style="--c:var(--c-eda)">EDA</span>
-              <time>11</time><span class="lesson" style="--c:var(--c-calc)">CAL</span><span></span><span></span><span class="lesson" style="--c:var(--c-calc)">CAL</span><span></span>
-              <time>15</time><span></span><span class="lesson" style="--c:var(--c-fis)">FIS</span><span></span><span class="lesson" style="--c:var(--c-fis)">FIS</span><span></span>
-              <time>17</time><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-est)">EST</span><span></span>
-            </div>
+          <h3>‹ &nbsp; Horario</h3>
+          <p class="week-title">24 – 30 de noviembre</p>
+          <div class="week">
+              <b></b><b>Lun</b><b>Mar</b><b>Mié</b><b>Jue</b><b>Vie</b>
+              <time>08:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>09:00</time><span class="lesson" style="--c:var(--c-eda)">Estructuras</span><span></span><span></span><span></span><span></span>
+              <time>10:00</time><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-eda)">EDA</span><span></span>
+              <time>11:00</time><span class="lesson" style="--c:var(--c-calc)">Cálculo II</span><span></span><span></span><span></span><span></span>
+              <time>12:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>13:00</time><span></span><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-calc)">Cálculo II</span>
+              <time>14:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>15:00</time><span class="lesson" style="--c:var(--c-fis)">Física I</span><span></span><span></span><span></span><span></span>
+              <time>16:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>17:00</time><span></span><span></span><span></span><span></span><span></span>
           </div>
         </div>
       </div>
       <div class="show-wing show-right" aria-hidden="true">
-        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b></div>
-        <div class="show-top">
-          <b class="show-brand"><i></i>estudio <small>Mis clases</small></b>
-          <div class="show-nav">
-            <span><i data-i="home"></i>Hoy</span>
-            <span class="active"><i data-i="book"></i>Asignaturas</span>
-            <span><i data-i="list"></i>Tareas</span>
-            <span><i data-i="cal"></i>Calendario</span>
-            <span><i data-i="chart"></i>Estadísticas</span>
-          </div>
-        </div>
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
         <div class="wing-body">
-          <h3>Asignaturas</h3>
-          <p>Tus 4 asignaturas. Entra en una para ver sus clases grabadas y sus resúmenes.</p>
-          <div class="subjects">
-            <div class="wing-card" style="--c:var(--c-calc)">
-              <div class="subject-top"><span class="subject-code">CAL</span><div><b>Cálculo II</b><small>1 clase grabada</small></div></div>
-              <div class="subject-meta"><span>Próxima clase</span><b>mañana 10:00</b></div>
-              <div class="subject-meta"><span>Tareas pendientes</span><b>0</b></div>
-            </div>
-            <div class="wing-card" style="--c:var(--c-fis)">
-              <div class="subject-top"><span class="subject-code">FIS</span><div><b>Física I</b><small>2 clases grabadas</small></div></div>
-              <div class="subject-meta"><span>Próxima clase</span><b>hoy 15:00</b></div>
-              <div class="subject-meta"><span>Tareas pendientes</span><b>0</b></div>
-            </div>
-            <div class="wing-card" style="--c:var(--c-est)">
-              <div class="subject-top"><span class="subject-code">EST</span><div><b>Estadística</b><small>3 clases grabadas</small></div></div>
-              <div class="subject-meta"><span>Próxima clase</span><b>hoy 17:30</b></div>
-              <div class="subject-meta"><span>Tareas pendientes</span><b>1</b></div>
-            </div>
-            <div class="wing-card" style="--c:var(--c-eda)">
-              <div class="subject-top"><span class="subject-code">EDA</span><div><b>Estructuras de Datos</b><small>4 clases grabadas</small></div></div>
-              <div class="subject-meta"><span>Próxima clase</span><b>mañana 09:00</b></div>
-              <div class="subject-meta"><span>Tareas pendientes</span><b>1</b></div>
-            </div>
+          <div class="report-top"><strong>Resúmenes</strong><b><i data-i="down"></i>PDF</b></div>
+          <div class="report-page">
+            <h3>Resumen — Física I</h3>
+            <p>Movimiento armónico simple</p>
+            <span class="report-line"></span><span class="report-line short"></span>
+            <span class="report-line"></span><span class="report-line"></span>
+            <span class="report-line short"></span>
+            <svg class="report-graph" viewBox="0 0 160 58" fill="none" stroke="currentColor">
+              <path d="M10 5v46h146" opacity=".6"/>
+              <path d="M10 29h146" opacity=".4"/>
+              <path d="M10 29c12 0 14-19 27-19s15 38 29 38 16-38 30-38 15 38 29 38 16-19 30-19"/>
+            </svg>
           </div>
         </div>
       </div>
-      <div class="chip a" style="--c:var(--c-calc)"><span class="ico"><i data-i="spark"></i></span><span><b>Resumen listo</b><small>Cálculo II · por temas</small></span></div>
-      <div class="chip b" style="--c:var(--sun)"><span class="ico"><i data-i="clock"></i></span><span><b>Entrega el viernes</b><small>Lo dijo la profe en EDA</small></span></div>
-      <div class="chip c" style="--c:var(--c-eda)"><span class="ico"><i data-i="cal"></i></span><span><b>Horario leído</b><small>Desde tu captura de pantalla</small></span></div>
       <div class="frame" aria-hidden="true">
-        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b>· Hoy, jueves 26 de noviembre · <span class="t" id="hero-time">16:42</span></div>
-        <div class="show-top">
-          <b class="show-brand"><i></i>estudio <small>Mis clases</small></b>
-          <div class="show-nav">
-            <span class="active"><i data-i="home"></i>Hoy</span>
-            <span><i data-i="book"></i>Asignaturas</span>
-            <span><i data-i="list"></i>Tareas</span>
-            <span><i data-i="cal"></i>Calendario</span>
-            <span><i data-i="chart"></i>Estadísticas</span>
-          </div>
-        </div>
-        <div class="app">
-          <div class="app-hero"><svg viewBox="0 0 1000 380" id="arcsvg"></svg><h3 id="hero-title">Estás en Física I, hasta las 17:00</h3><p id="hero-sub">Lab. F1 · grabando la clase</p></div>
-          <div class="app-side">
-            <div class="mini"><h4>Clases de hoy <span>4</span></h4>
-              <div class="row" data-end="11" style="--c:var(--c-eda)"><time>09:00</time><span><i class="dot"></i>Estructuras de Datos</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
-              <div class="row" data-end="13" style="--c:var(--c-calc)"><time>11:30</time><span><i class="dot"></i>Cálculo II</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
-              <div class="row" data-end="17" style="--c:var(--c-fis)"><time>15:00</time><span><i class="dot"></i>Física I</span><span class="pill" id="st-fis">En curso</span></div>
-              <div class="row" data-end="19" style="--c:var(--c-est)"><time>17:30</time><span><i class="dot"></i>Estadística</span><span class="pill" id="st-est" style="visibility:hidden">—</span></div>
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+        <div class="desktop">
+          <aside class="sidebar">
+            <b class="show-brand"><i></i>estudio</b>
+            <ul>
+              <li class="active"><i data-i="home"></i>Inicio</li>
+              <li><i data-i="book"></i>Clases</li>
+              <li><i data-i="cal"></i>Horario</li>
+              <li><i data-i="mic"></i>Grabaciones</li>
+              <li><i data-i="doc"></i>Resúmenes</li>
+              <li><i data-i="list"></i>Tareas</li>
+              <li><i data-i="check"></i>Exámenes</li>
+              <li><i data-i="toggle"></i>Ajustes</li>
+            </ul>
+          </aside>
+          <div class="dashboard">
+            <div class="desk-top"><span>Hoy, jueves 26 de noviembre · <span id="hero-time">16:42</span></span><span class="desk-search"><i data-i="search"></i>Buscar en tus clases… <small>Ctrl K</small></span><b class="desk-avatar">G</b></div>
+            <h2>Buenas tardes</h2>
+            <p class="desk-sub">Tienes 2 clases esta tarde y 1 entrega esta semana.</p>
+            <div class="app">
+              <div class="app-hero">
+                <h4><i data-i="chart"></i>Progreso semanal</h4>
+                <svg viewBox="0 0 1000 380" id="arcsvg"></svg>
+                <h3 id="hero-title">Estás en Física I, hasta las 17:00</h3>
+                <p id="hero-sub">Lab. F1 · grabando la clase</p>
+              </div>
+              <div class="app-side">
+                <div class="mini"><h4><i data-i="cal"></i>Clases de hoy</h4>
+                  <div class="row" data-end="11" style="--c:var(--c-eda)"><time>09:00</time><span><i class="dot"></i>Estructuras de Datos</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
+                  <div class="row" data-end="13" style="--c:var(--c-calc)"><time>11:30</time><span><i class="dot"></i>Cálculo II</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
+                  <div class="row" data-end="17" style="--c:var(--c-fis)"><time>15:00</time><span><i class="dot"></i>Física I</span><span class="pill" id="st-fis">En curso</span></div>
+                  <div class="row" data-end="19" style="--c:var(--c-est)"><time>17:30</time><span><i class="dot"></i>Estadística</span><span class="pill" id="st-est" style="visibility:hidden">—</span></div>
+                </div>
+                <div class="mini"><h4><i data-i="check"></i>Tareas <span>de tus clases</span></h4>
+                  <div class="row" style="--c:var(--c-eda)"><time>Vie</time><span>Práctica 3: árboles AVL</span><span class="pill" style="--c:#E0560F">Entrega</span></div>
+                  <div class="row" style="--c:var(--c-est)"><time>12 dic</time><span>Parcial de los temas 1 a 5</span><span class="pill" style="--c:var(--c-est)">Examen</span></div>
+                </div>
+              </div>
             </div>
-            <div class="mini"><h4>Tareas <span>de tus clases</span></h4>
-              <div class="row" style="--c:var(--c-eda)"><time>Vie</time><span>Práctica 3: árboles AVL</span><span class="pill" style="--c:#E0560F">Entrega</span></div>
-              <div class="row" style="--c:var(--c-est)"><time>12 dic</time><span>Parcial de los temas 1 a 5</span><span class="pill" style="--c:var(--c-est)">Examen</span></div>
+            <div class="quick">
+              <span><i data-i="mic"></i>Graba una clase</span>
+              <span><i data-i="doc"></i>Resume apuntes</span>
+              <span><i data-i="cal"></i>Añade tu horario</span>
+              <span><i data-i="gh"></i>Código en GitHub</span>
             </div>
           </div>
         </div>
@@ -613,6 +625,7 @@ footer a{color:#fff}
 <script>
 (function(){
 const P={
+ search:'<circle cx="10" cy="10" r="5"/><path d="m14 14 5 5"/>',
  home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
  book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zm0 0v14"/>',
  list:'<path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/>',
