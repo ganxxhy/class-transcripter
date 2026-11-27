@@ -57,7 +57,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .btn.icon{padding:8px 12px}
 
 /* Hero */
-.hero{padding-block:36px 56px}
+.hero{--hero-section-gap:40px;padding-block:36px 56px}
 .hero-copy{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;animation:rise .9s var(--ease) both}
 @keyframes rise{from{transform:translateY(18px)}}
 .tag{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--on-sky);background:color-mix(in srgb,var(--card) 65%,transparent);padding:6px 14px 6px 8px;border-radius:999px}
@@ -67,7 +67,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .cta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .platforms{font-size:13.5px;color:var(--on-sky-mute);display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 .platforms b{color:var(--on-sky);font-weight:650}
-.stage{position:relative;max-width:1060px;margin:40px auto 0}
+.stage{position:relative;max-width:1060px;margin:var(--hero-section-gap) auto 0}
 .frame{background:var(--card);border-radius:28px;box-shadow:0 2px 4px rgba(13,35,64,.06),0 40px 80px -40px rgba(13,35,64,.55);overflow:hidden;animation:rise 1.1s .1s var(--ease) both}
 .frame-bar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute)}
 .frame-bar .d{width:10px;height:10px;border-radius:50%;background:var(--line)}
@@ -88,15 +88,8 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .row.past{opacity:.55}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:7px}
 .pill{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:color-mix(in srgb,var(--c,#54657B) 14%,white);color:color-mix(in srgb,var(--c,#54657B) 60%,#0D2340)}
-.chip{position:absolute;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:10px 14px;font-size:13.5px;box-shadow:0 18px 40px -20px rgba(13,35,64,.5);animation:float 6s ease-in-out infinite;z-index:2}
-.chip b{display:block;font-size:13.5px}
-.chip small{color:var(--mute);font-size:12px}
-.chip .ico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;background:var(--c);flex:none}
-.chip.a{left:-44px;top:96px}.chip.b{right:-40px;top:40px;animation-delay:-2s}.chip.c{right:-28px;bottom:54px;animation-delay:-4s}
-@keyframes float{50%{transform:translateY(-8px)}}
-
 /* Facts strip */
-.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:28px}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:var(--hero-section-gap)}
 .facts li{background:color-mix(in srgb,var(--card) 88%,transparent);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;font-size:14.5px;font-weight:600;color:var(--ink)}
 .facts .ico{width:36px;height:36px;border-radius:12px;background:var(--paper);display:grid;place-items:center;color:var(--blue);flex:none}
 
@@ -104,6 +97,8 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .band{background:var(--paper);color:var(--ink);position:relative}
 .chap{padding-block:88px}
 .chap + .chap{padding-top:24px}
+#como{scroll-margin-top:calc(56px + env(safe-area-inset-top,0px))}
+#horario,#descargar{scroll-margin-top:calc(96px + env(safe-area-inset-top,0px))}
 .h2{font-family:var(--disp);font-weight:650;font-size:clamp(32px,4.2vw,54px);line-height:1.02;letter-spacing:-.035em;text-wrap:balance;max-width:20ch}
 .lead{font-size:18px;color:var(--mute);max-width:56ch;margin-top:14px}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:56px;align-items:start}
@@ -164,7 +159,8 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .formats span{font-family:var(--mono);font-size:13px;padding:6px 12px;border-radius:999px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
 
 /* Sky chapter (scroll-scrubbed) */
-.skyrun{height:220vh;position:relative}
+.skyrun{height:220vh;position:relative;isolation:isolate}
+.skyrun::before{content:'';position:sticky;top:0;display:block;height:100vh;margin-bottom:-100vh;background:linear-gradient(180deg,var(--bg-a) 0,var(--bg-b) 55%,var(--bg-c) 100%);pointer-events:none;z-index:-1}
 .skypin{position:sticky;top:0;height:100vh;display:grid;align-content:center;text-align:center;color:var(--on-sky)}
 .skypin .h2{margin:0 auto;font-size:clamp(36px,5.2vw,70px);max-width:16ch;color:var(--on-sky)}
 .skypin .lead{color:var(--on-sky-mute);margin-inline:auto}
@@ -226,13 +222,13 @@ pre .c{color:#8EA3C0}pre .p{color:#FFB37A}
 .links-list a:hover svg{transform:translateX(3px)}
 .links-list small{display:block;font-weight:400;color:var(--mute);font-size:14.5px}
 
-/* Honest install notes */
-.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px;position:relative}
-.note{border-radius:18px;padding:16px 18px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);font-size:14.5px;color:#B9C6DA}
-.note h4{margin:0 0 6px;color:#fff;font-family:var(--disp);font-size:16px;letter-spacing:-.01em}
+/* Installation and recording information */
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,.16);position:relative}
+.note{font-size:14.5px;color:#B9C6DA}
+.note h3{margin:0 0 8px;color:#fff;font-family:var(--disp);font-size:17px;letter-spacing:-.01em}
 .note li{padding-left:14px;position:relative;margin-top:4px}
 .note li::before{content:"";position:absolute;left:0;top:.65em;width:5px;height:5px;border-radius:50%;background:#FFB37A}
-.note code{font-family:var(--mono);font-size:13px;color:#FFD2A8}
+.note code{font-family:var(--mono);font-size:13px;color:#FFD2A8;overflow-wrap:anywhere}
 .ver{font-family:var(--mono);font-size:12.5px;color:var(--mute)}
 .hl{display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .hl div{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;padding:10px 12px;border-radius:14px;background:var(--paper)}
@@ -249,8 +245,10 @@ footer{background:var(--ink);color:#B9C6DA;font-size:14px;padding-block:28px}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer a{color:#fff}
 
-@media (max-width:1100px){.chip{display:none}}
-@media (max-width:900px){.notes{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){
+ .notes{grid-template-columns:minmax(0,1fr);gap:20px}
+ .note + .note{padding-top:20px;border-top:1px solid rgba(255,255,255,.16)}
+}
 @media (max-width:900px){
  .links{display:none}
  .nav-cta{margin-left:auto}
@@ -275,6 +273,94 @@ footer a{color:#fff}
  *,*::before,*::after{animation:none!important;transition:none!important}
  .tt span{transform:none;opacity:1}.bars i{height:var(--h)}
  .skyrun{height:auto}.skypin{position:static;height:auto;padding-block:96px}
+ .skyrun::before{position:absolute;inset:0;height:auto;margin:0}
+}
+
+/* Layered desktop previews from the landing reference */
+.hero .stage{isolation:isolate;container-type:inline-size;max-width:1140px}
+.hero .frame,.hero .show-wing{border:1px solid #ffffff85;background:linear-gradient(155deg,#e5effc,#f1f6fd);box-shadow:0 24px 44px -19px #16385e80}
+.hero .frame{position:relative;z-index:1;width:67%;margin-inline:auto;border-radius:20px}
+.hero .frame-bar{background:#ffffff65;padding:8px 16px;gap:6px}
+.hero .frame-bar .d{width:8px;height:8px;background:#fb535c}
+.hero .frame-bar .d:nth-child(2){background:#ffbd31}
+.hero .frame-bar .d:nth-child(3){background:#26bd51}
+.hero .desktop{display:grid;grid-template-columns:19% minmax(0,1fr);font-size:clamp(10px,1.02cqw,11px)}
+.hero .desktop svg.i,.hero .show-wing svg.i{width:1.2em;height:1.2em}
+.hero .sidebar{background:#ffffff37;padding:10px 9px}
+.hero .show-brand{display:flex;align-items:center;gap:5px;font:700 clamp(14px,1.45cqw,17px) var(--disp);margin:0 5px 14px}
+.hero .show-brand i{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#ffd2a8,var(--sun) 68%);flex:none}
+.hero .sidebar li{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:6px;font-weight:600}
+.hero .sidebar .active{color:#1658bd;background:#d6e7fb}
+.hero .dashboard{padding:9px clamp(9px,1.5cqw,17px) 15px;min-width:0}
+.hero .desk-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--mute);font-size:.9em}
+.hero .desk-search{display:flex;align-items:center;gap:5px;padding:2px 8px;border:1px solid #d8e5f3;border-radius:20px}
+.hero .desk-search small{margin-left:10px}
+.hero .desk-avatar{border-radius:50%;background:#2354ac;color:#fff;padding:2px 6px}
+.hero .dashboard h2{font:700 clamp(19px,2.3cqw,25px)/1.05 var(--disp);margin-top:4px}
+.hero .desk-sub{color:var(--mute);margin:3px 0 10px}
+.hero .app{padding:0;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:9px;background:none}
+.hero .app-hero,.hero .mini,.hero .quick span{background:#ffffff95;border-radius:11px}
+.hero .app-hero{padding:9px}
+.hero .app-hero h4,.hero .mini h4{display:flex;align-items:center;gap:5px;justify-content:flex-start;text-align:left;font-size:inherit}
+.hero .mini h4 span{margin-left:auto;font-size:.85em}
+.hero .app h4 svg,.hero .quick svg{color:var(--blue)}
+.hero .app-hero svg#arcsvg{margin:8px auto 0;max-width:280px}
+.hero .app-hero h3{margin:0 auto;max-width:18ch;font-size:clamp(14px,1.8cqw,20px);line-height:1.06}
+.hero .app-hero p{font-size:.94em;margin-top:4px}
+.hero .app-side{display:flex;gap:8px}
+.hero .mini{padding:8px 9px}
+.hero .row{grid-template-columns:auto minmax(0,1fr) auto;gap:5px;padding:2px 0;font-size:inherit;line-height:1.25}
+.hero .row time,.hero .row .pill{font-size:.83em}
+.hero .row .pill{padding-inline:4px}
+.hero .row .dot{width:6px;height:6px;margin-right:3px}
+.hero .quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
+.hero .quick span{display:flex;align-items:center;gap:5px;padding:7px;font-size:.88em;font-weight:650;line-height:1.2}
+.hero .show-wing{position:absolute;width:38%;max-height:82%;overflow:hidden;border-radius:17px;pointer-events:none;font-size:clamp(10px,1.02cqw,11px)}
+.hero .show-left{left:1%;top:10%;transform:perspective(900px) rotateY(10deg) rotate(-2deg)}
+.hero .show-right{right:1%;top:13%;transform:perspective(900px) rotateY(-10deg) rotate(2deg)}
+.hero .wing-body{padding:12px 16px 17px}
+.hero .wing-body h3{font:700 1.18em var(--disp)}
+.hero .week-title{margin:7px 0;text-align:center;font-weight:700}
+.hero .week{display:grid;grid-template-columns:36px repeat(5,minmax(0,1fr));gap:2px;text-align:center;font-size:.82em}
+.hero .week>*{min-height:18px;padding:1px;border-bottom:1px solid var(--line)}
+.hero .week .lesson{border-radius:4px;background:color-mix(in srgb,var(--c) 18%,white);color:var(--ink);border-left:3px solid var(--c);font-weight:700;overflow-wrap:anywhere}
+.hero .show-right .wing-body{padding-left:36%;min-height:230px}
+.hero .report-top{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.hero .report-top b{display:flex;align-items:center;gap:3px;background:#fff9;padding:3px 7px;border-radius:5px;color:#2354ac}
+.hero .report-page{background:#fff8;padding:10px;border-radius:8px;margin-top:8px}
+.hero .report-page p{font-size:.85em;color:var(--mute);margin:5px 0}
+.hero .report-line{display:block;height:5px;background:#cfdef0;border-radius:4px;margin:7px 0}
+.hero .report-line.short{width:72%}
+.hero .report-page .report-graph{display:block;width:100%;height:58px;margin-top:10px;color:#6b9acc}
+@media(min-width:1200px){
+ .hero .stage{width:min(calc(100vw - 48px),1480px);max-width:none;margin-inline:0;left:50%;transform:translateX(-50%)}
+ .hero .show-wing{opacity:.8}
+ .hero .show-left{top:7%}
+ .hero .show-right{top:10%}
+}
+@keyframes preview-float{
+ 50%{translate:0 -8px}
+}
+@media (min-width:841px) and (prefers-reduced-motion:no-preference){
+ .hero .frame{animation:rise 1.1s .1s var(--ease) both,preview-float 8s ease-in-out 1.2s infinite}
+ .hero .show-left{animation:preview-float 9s ease-in-out -2s infinite}
+ .hero .show-right{animation:preview-float 10s ease-in-out -5s infinite}
+}
+@media(max-width:1050px){.hero .frame{width:76%}}
+@media(max-width:840px){
+ .hero .stage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .hero .frame{grid-area:1/1/2/-1;width:100%}
+ .hero .show-wing{position:relative;inset:auto;width:auto;max-height:none;transform:none}
+ .hero .show-right .wing-body{padding-left:16px;min-height:0}
+}
+@media(max-width:570px){
+ .hero .stage,.hero .desktop,.hero .app{grid-template-columns:minmax(0,1fr)}
+ .hero .sidebar{padding:8px 9px}
+ .hero .show-brand{margin:0 0 5px}
+ .hero .sidebar ul{display:flex;flex-wrap:wrap}
+ .hero .sidebar li{padding:3px 5px}
+ .hero .desk-search{display:none}
+ .hero .quick{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 </head>
@@ -303,23 +389,89 @@ footer a{color:#fff}
       <p class="platforms"><span><b>Windows</b> disponible</span><span><b>Linux</b> disponible</span><span>macOS, en estudio</span></p>
     </div>
     <div class="stage">
-      <div class="chip a" style="--c:var(--c-calc)"><span class="ico"><i data-i="spark"></i></span><span><b>Resumen listo</b><small>Cálculo II · por temas</small></span></div>
-      <div class="chip b" style="--c:var(--sun)"><span class="ico"><i data-i="clock"></i></span><span><b>Entrega el viernes</b><small>Lo dijo la profe en EDA</small></span></div>
-      <div class="chip c" style="--c:var(--c-eda)"><span class="ico"><i data-i="cal"></i></span><span><b>Horario leído</b><small>Desde tu captura de pantalla</small></span></div>
+      <div class="show-wing show-left" aria-hidden="true">
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+        <div class="wing-body">
+          <h3>‹ &nbsp; Horario</h3>
+          <p class="week-title">24 – 30 de noviembre</p>
+          <div class="week">
+              <b></b><b>Lun</b><b>Mar</b><b>Mié</b><b>Jue</b><b>Vie</b>
+              <time>08:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>09:00</time><span class="lesson" style="--c:var(--c-eda)">Estructuras</span><span></span><span></span><span></span><span></span>
+              <time>10:00</time><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-eda)">EDA</span><span></span>
+              <time>11:00</time><span class="lesson" style="--c:var(--c-calc)">Cálculo II</span><span></span><span></span><span></span><span></span>
+              <time>12:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>13:00</time><span></span><span></span><span></span><span></span><span class="lesson" style="--c:var(--c-calc)">Cálculo II</span>
+              <time>14:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>15:00</time><span class="lesson" style="--c:var(--c-fis)">Física I</span><span></span><span></span><span></span><span></span>
+              <time>16:00</time><span></span><span></span><span></span><span></span><span></span>
+              <time>17:00</time><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+      <div class="show-wing show-right" aria-hidden="true">
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+        <div class="wing-body">
+          <div class="report-top"><strong>Resúmenes</strong><b><i data-i="down"></i>PDF</b></div>
+          <div class="report-page">
+            <h3>Resumen — Física I</h3>
+            <p>Movimiento armónico simple</p>
+            <span class="report-line"></span><span class="report-line short"></span>
+            <span class="report-line"></span><span class="report-line"></span>
+            <span class="report-line short"></span>
+            <svg class="report-graph" viewBox="0 0 160 58" fill="none" stroke="currentColor">
+              <path d="M10 5v46h146" opacity=".6"/>
+              <path d="M10 29h146" opacity=".4"/>
+              <path d="M10 29c12 0 14-19 27-19s15 38 29 38 16-38 30-38 15 38 29 38 16-19 30-19"/>
+            </svg>
+          </div>
+        </div>
+      </div>
       <div class="frame" aria-hidden="true">
-        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span><b>estudio</b>· Hoy, jueves 26 de noviembre · <span class="t" id="hero-time">16:42</span></div>
-        <div class="app">
-          <div class="app-hero"><svg viewBox="0 0 1000 380" id="arcsvg"></svg><h3 id="hero-title">Estás en Física I, hasta las 17:00</h3><p id="hero-sub">Lab. F1 · grabando la clase</p></div>
-          <div class="app-side">
-            <div class="mini"><h4>Clases de hoy <span>4</span></h4>
-              <div class="row" data-end="11" style="--c:var(--c-eda)"><time>09:00</time><span><i class="dot"></i>Estructuras de Datos</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
-              <div class="row" data-end="13" style="--c:var(--c-calc)"><time>11:30</time><span><i class="dot"></i>Cálculo II</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
-              <div class="row" data-end="17" style="--c:var(--c-fis)"><time>15:00</time><span><i class="dot"></i>Física I</span><span class="pill" id="st-fis">En curso</span></div>
-              <div class="row" data-end="19" style="--c:var(--c-est)"><time>17:30</time><span><i class="dot"></i>Estadística</span><span class="pill" id="st-est" style="visibility:hidden">—</span></div>
+        <div class="frame-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+        <div class="desktop">
+          <aside class="sidebar">
+            <b class="show-brand"><i></i>estudio</b>
+            <ul>
+              <li class="active"><i data-i="home"></i>Inicio</li>
+              <li><i data-i="book"></i>Clases</li>
+              <li><i data-i="cal"></i>Horario</li>
+              <li><i data-i="mic"></i>Grabaciones</li>
+              <li><i data-i="doc"></i>Resúmenes</li>
+              <li><i data-i="list"></i>Tareas</li>
+              <li><i data-i="check"></i>Exámenes</li>
+              <li><i data-i="toggle"></i>Ajustes</li>
+            </ul>
+          </aside>
+          <div class="dashboard">
+            <div class="desk-top"><span>Hoy, jueves 26 de noviembre · <span id="hero-time">16:42</span></span><span class="desk-search"><i data-i="search"></i>Buscar en tus clases… <small>Ctrl K</small></span><b class="desk-avatar">G</b></div>
+            <h2>Buenas tardes</h2>
+            <p class="desk-sub">Tienes 2 clases esta tarde y 1 entrega esta semana.</p>
+            <div class="app">
+              <div class="app-hero">
+                <h4><i data-i="chart"></i>Progreso semanal</h4>
+                <svg viewBox="0 0 1000 380" id="arcsvg"></svg>
+                <h3 id="hero-title">Estás en Física I, hasta las 17:00</h3>
+                <p id="hero-sub">Lab. F1 · grabando la clase</p>
+              </div>
+              <div class="app-side">
+                <div class="mini"><h4><i data-i="cal"></i>Clases de hoy</h4>
+                  <div class="row" data-end="11" style="--c:var(--c-eda)"><time>09:00</time><span><i class="dot"></i>Estructuras de Datos</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
+                  <div class="row" data-end="13" style="--c:var(--c-calc)"><time>11:30</time><span><i class="dot"></i>Cálculo II</span><span class="pill" style="--c:#16A34A">Resumen listo</span></div>
+                  <div class="row" data-end="17" style="--c:var(--c-fis)"><time>15:00</time><span><i class="dot"></i>Física I</span><span class="pill" id="st-fis">En curso</span></div>
+                  <div class="row" data-end="19" style="--c:var(--c-est)"><time>17:30</time><span><i class="dot"></i>Estadística</span><span class="pill" id="st-est" style="visibility:hidden">—</span></div>
+                </div>
+                <div class="mini"><h4><i data-i="check"></i>Tareas <span>de tus clases</span></h4>
+                  <div class="row" style="--c:var(--c-eda)"><time>Vie</time><span>Práctica 3: árboles AVL</span><span class="pill" style="--c:#E0560F">Entrega</span></div>
+                  <div class="row" style="--c:var(--c-est)"><time>12 dic</time><span>Parcial de los temas 1 a 5</span><span class="pill" style="--c:var(--c-est)">Examen</span></div>
+                </div>
+              </div>
             </div>
-            <div class="mini"><h4>Tareas <span>de tus clases</span></h4>
-              <div class="row" style="--c:var(--c-eda)"><time>Vie</time><span>Práctica 3: árboles AVL</span><span class="pill" style="--c:#E0560F">Entrega</span></div>
-              <div class="row" style="--c:var(--c-est)"><time>12 dic</time><span>Parcial de los temas 1 a 5</span><span class="pill" style="--c:var(--c-est)">Examen</span></div>
+            <div class="quick">
+              <span><i data-i="mic"></i>Graba una clase</span>
+              <span><i data-i="doc"></i>Resume apuntes</span>
+              <span><i data-i="cal"></i>Añade tu horario</span>
+              <span><i data-i="gh"></i>Código en GitHub</span>
             </div>
           </div>
         </div>
@@ -434,9 +586,9 @@ footer a{color:#fff}
           <article class="os"><span class="st maybe">En estudio</span><h3><i data-i="apple"></i>macOS</h3><p>Estamos valorando una versión para Mac. Si la necesitas, <a href="https://github.com/ganxxhy/class-transcripter/issues">cuéntanoslo en GitHub</a>.</p></article>
         </div>
         <div class="notes">
-          <div class="note"><h4>Qué necesitas</h4><ul><li>Windows 10 u 11 de 64 bits, o Linux de 64 bits</li><li>Un micrófono (el del portátil vale)</li><li>Hasta 1,6 GB libres para el modelo de transcripción</li><li>Una cuenta de Claude para el panel</li></ul></div>
-          <div class="note"><h4>"Windows protegió tu PC"</h4><p>La app no está firmada, así que Windows puede avisarte al abrir el instalador. Pulsa <b>Más información</b> y luego <b>Ejecutar de todas formas</b>. El código es público para que veas qué instalas.</p></div>
-          <div class="note"><h4>Antes de grabar</h4><p>Pide permiso al profesorado y comprueba las normas de tu universidad. Tú eres responsable del uso de las grabaciones. Tus datos se guardan en <code>Documentos\AgenteClases</code> (Windows) o en <code>~/.local/share/estudio</code> (Linux).</p></div>
+          <section class="note"><h3>Qué necesitas</h3><ul><li>Windows 10 u 11 de 64 bits, o Linux de 64 bits</li><li>Un micrófono (el del portátil vale)</li><li>Hasta 1,6 GB libres para el modelo de transcripción</li><li>Una cuenta de Claude para el panel</li></ul></section>
+          <section class="note"><h3>"Windows protegió tu PC"</h3><p>La app no está firmada, así que Windows puede avisarte al abrir el instalador. Pulsa <b>Más información</b> y luego <b>Ejecutar de todas formas</b>. El código es público para que veas qué instalas.</p></section>
+          <section class="note"><h3>Antes de grabar</h3><p>Pide permiso al profesorado y comprueba las normas de tu universidad. Tú eres responsable del uso de las grabaciones. Tus datos se guardan en <code>Documentos\AgenteClases</code> (Windows) o en <code>~/.local/share/estudio</code> (Linux).</p></section>
         </div>
       </div>
     </section>
@@ -472,7 +624,13 @@ footer a{color:#fff}
 <script src="sky.js"></script>
 <script>
 (function(){
-const P={gh:'<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
+const P={
+ search:'<circle cx="10" cy="10" r="5"/><path d="m14 14 5 5"/>',
+ home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
+ book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zm0 0v14"/>',
+ list:'<path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/>',
+ chart:'<path d="M3 3v18h18M8 16v-4m5 4V8m5 8V5"/>',
+gh:'<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',down:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
  win:'<path d="M4 5.5 11 4.5v7H4zM13 4.2 20 3v8.5h-7zM4 12.5h7v7l-7-1zM13 12.5h7V21l-7-1z"/>',
  linux:'<path d="M12 3c-2.2 0-3.5 1.8-3.5 4.5 0 1.6-.6 2.7-1.6 4.2C5.8 13.3 5 15 5 16.8 5 19.5 8 21 12 21s7-1.5 7-4.2c0-1.8-.8-3.5-1.9-5.1-1-1.5-1.6-2.6-1.6-4.2C15.5 4.8 14.2 3 12 3z"/><path d="M10.5 8h.01M13.5 8h.01M11 10.5h2"/>',
@@ -557,11 +715,11 @@ function onScroll(){
  drawArc(16.7+Math.max(0,Math.min(1,y/(hero.offsetHeight*.8)))*(21-16.7));
  const r=run.getBoundingClientRect(),span=run.offsetHeight-innerHeight,p=-r.top/span;
  if(p>=0&&p<=1){inSky=true;if(!manual){const h=Math.min(23.9,6+p*18);Sky.preview(h);range.value=h;clock(h)}}
- else if(inSky){inSky=false;manual=false;Sky.live();const n=new Date();clock(n.getHours()+n.getMinutes()/60)}
+ else if(inSky||!manual){inSky=false;manual=false;const h=p>1?23.9:6;Sky.preview(h);range.value=h;clock(h)}
 }
 addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});
 fetch('https://api.github.com/repos/ganxxhy/class-transcripter/releases/latest').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.tag_name)document.getElementById('ver').textContent='Última versión: '+j.tag_name}).catch(()=>{});
-const n0=new Date();clock(n0.getHours()+n0.getMinutes()/60);onScroll();
+clock(6);range.value=6;Sky.preview(6);onScroll();
 })();
 </script>
 </body>
