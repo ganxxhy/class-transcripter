@@ -1,5 +1,5 @@
 """Explicit adapter for the existing JSON class store."""
-from nucleo import almacen
+from . import json_store as almacen
 
 
 class JsonClassRepository:
