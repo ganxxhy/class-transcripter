@@ -164,7 +164,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .formats span{font-family:var(--mono);font-size:13px;padding:6px 12px;border-radius:999px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
 
 /* Sky chapter (scroll-scrubbed) */
-.skyrun{height:250vh;position:relative}
+.skyrun{height:280vh;position:relative}
 html.sky-scrubbing{transition:none}
 html.sky-scrubbing body::after{transition:none}
 .skypin{--sky-exit:0}
@@ -273,7 +273,7 @@ footer a{color:#fff}
  .step{min-height:auto;padding:16px 0}
  .sticky{position:static}
  .device{min-height:0}
- .skyrun{height:200vh}
+ .skyrun{height:220vh}
  .dl{padding:28px 20px;border-radius:24px}
  .tt{gap:4px}.tt span{font-size:0;padding:6px 4px;min-height:34px;display:grid;place-items:center}.tt span::before{content:attr(data-c);font-family:var(--mono);font-size:11px}
  .card{padding:18px}
@@ -568,9 +568,20 @@ function onScroll(){
  const r=run.getBoundingClientRect(),span=run.offsetHeight-innerHeight,p=-r.top/span;
  if(p>=0&&p<=1){
   inSky=true;document.documentElement.classList.add('sky-scrubbing');
-  const blend=smooth((p-.8)/.2),fade=smooth((p-.8)/.18);
-  const h=manual?manualHour:Math.min(23.99,6+clamp(p/.8)*18);
-  Sky.preview(h,blend);range.value=h;clock(h);pin.style.setProperty('--sky-exit',fade);
+  const entry=smooth(p/.18),exit=smooth((p-.8)/.2),fade=smooth((p-.8)/.18);
+  const now=new Date(),liveHour=now.getHours()+now.getMinutes()/60;
+  const h=manual?manualHour:Math.min(23.99,6+clamp((p-.18)/.62)*18);
+  const blend=manual?exit:Math.max(1-entry,exit);
+  // During entry the displayed clock follows the shortest route to 06:00.
+  const delta=((6-liveHour+36)%24)-12;
+  const shown=(!manual&&p<.18)?(liveHour+delta*entry+24)%24:h;
+  Sky.preview(h,blend);range.value=shown;clock(shown);
+  if(!manual&&p<.18){
+   const hh=clockEl.textContent;
+   document.querySelector('[data-sky-label]').textContent='Transición al amanecer · '+hh;
+   document.querySelector('[data-sky-how]').textContent='De la hora actual a las 06:00.';
+  }
+  pin.style.setProperty('--sky-exit',fade);
  }else{
   pin.style.setProperty('--sky-exit',p>1?1:0);
   if(inSky){inSky=false;manual=false;Sky.live();const n=new Date();clock(n.getHours()+n.getMinutes()/60);document.documentElement.classList.remove('sky-scrubbing')}
