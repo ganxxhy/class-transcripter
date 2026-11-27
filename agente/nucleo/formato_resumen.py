@@ -61,11 +61,11 @@ Tu trabajo:
 
 
 
-def sistema():
+def sistema(cfg=None):
     """Instrucciones con el perfil del usuario (config.json -> perfil)."""
     try:
         from .config import cargar
-        perfil = cargar().get("perfil") or {}
+        perfil = (cfg if cfg is not None else cargar()).get("perfil") or {}
     except Exception:
         perfil = {}
     nombre = (perfil.get("nombre") or "").strip()
