@@ -1,0 +1,156 @@
+"""Experimental SQLite repository preserving the legacy class record contract."""
+import json
+import sqlite3
+from contextlib import contextmanager
+from datetime import datetime
+from pathlib import Path
+
+
+class SQLiteClassRepository:
+    def __init__(self, path):
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.transaction() as connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS classes (id TEXT PRIMARY KEY, payload TEXT NOT NULL)")
+            connection.execute("CREATE TABLE IF NOT EXISTS segments (class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE, position INTEGER NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(class_id, position))")
+            connection.execute("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY)")
+            connection.execute("INSERT OR IGNORE INTO schema_migrations VALUES (1)")
+
+    @contextmanager
+    def transaction(self):
+        connection = sqlite3.connect(self.path, timeout=30)
+        try:
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute("BEGIN IMMEDIATE")
+            yield connection
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+
+    @staticmethod
+    def _encode(value):
+        return json.dumps(value, ensure_ascii=False, allow_nan=False)
+
+    @staticmethod
+    def _validate_id(class_id):
+        if not class_id or "/" in class_id or chr(92) in class_id or ".." in class_id:
+            raise ValueError("Invalid class ID")
+
+    def _read(self, connection, class_id):
+        self._validate_id(class_id)
+        row = connection.execute("SELECT payload FROM classes WHERE id = ?", (class_id,)).fetchone()
+        if row is None:
+            raise FileNotFoundError(class_id)
+        record = json.loads(row[0])
+        record["segmentos"] = [json.loads(row[0]) for row in connection.execute(
+            "SELECT payload FROM segments WHERE class_id = ? ORDER BY position", (class_id,))]
+        return record
+
+    def _append(self, connection, class_id, segments):
+        start = connection.execute("SELECT COALESCE(MAX(position) + 1, 0) FROM segments WHERE class_id = ?", (class_id,)).fetchone()[0]
+        connection.executemany("INSERT INTO segments VALUES (?, ?, ?)",
+                               ((class_id, start + index, self._encode(segment)) for index, segment in enumerate(segments)))
+
+    def _insert(self, connection, record):
+        payload = dict(record)
+        class_id = payload["id"]
+        self._validate_id(class_id)
+        segments = payload.pop("segmentos", [])
+        connection.execute("INSERT INTO classes VALUES (?, ?)", (class_id, self._encode(payload)))
+        self._append(connection, class_id, segments)
+
+    def crear_clase(self, asignatura, nombre, modo, inicio=None, aula=""):
+        start = inicio or datetime.now()
+        base_id = f"{start:%Y-%m-%d_%H%M%S}_{asignatura}"
+        with self.transaction() as connection:
+            class_id = base_id
+            suffix = 1
+            while connection.execute("SELECT 1 FROM classes WHERE id = ?", (class_id,)).fetchone():
+                class_id = f"{base_id}_{suffix}"
+                suffix += 1
+            self._insert(connection, {
+                "id": class_id, "asignatura": asignatura, "nombre_asignatura": nombre,
+                "aula": aula, "modo": modo, "fecha": f"{start:%Y-%m-%d}",
+                "inicio": start.isoformat(timespec="seconds"), "fin": None,
+                "en_curso": True, "segmentos": [], "estado_resumen": "pendiente",
+                "resumen": None, "error_resumen": None,
+            })
+        return class_id
+
+    def leer(self, cid):
+        with self.transaction() as connection:
+            return self._read(connection, cid)
+
+    def _update(self, connection, class_id, fields):
+        record = self._read(connection, class_id)
+        if fields.get("id", class_id) != class_id:
+            raise ValueError("Cannot change class ID")
+        record.update(fields)
+        payload = dict(record)
+        segments = payload.pop("segmentos")
+        connection.execute("UPDATE classes SET payload = ? WHERE id = ?", (self._encode(payload), class_id))
+        if "segmentos" in fields:
+            connection.execute("DELETE FROM segments WHERE class_id = ?", (class_id,))
+            self._append(connection, class_id, segments)
+        return record
+
+    def actualizar(self, cid, **campos):
+        with self.transaction() as connection:
+            return self._update(connection, cid, campos)
+
+    def anadir_segmentos(self, cid, segmentos):
+        if not segmentos:
+            return
+        self._validate_id(cid)
+        with self.transaction() as connection:
+            if not connection.execute("SELECT 1 FROM classes WHERE id = ?", (cid,)).fetchone():
+                raise FileNotFoundError(cid)
+            self._append(connection, cid, segmentos)
+
+    def cerrar(self, cid, fin=None):
+        return self.actualizar(cid, fin=(fin or datetime.now()).isoformat(timespec="seconds"), en_curso=False)
+
+    def listar(self, incluir_segmentos=False):
+        with self.transaction() as connection:
+            records = []
+            for (class_id,) in connection.execute("SELECT id FROM classes ORDER BY id DESC"):
+                record = self._read(connection, class_id)
+                if not incluir_segmentos:
+                    segments = record.pop("segmentos")
+                    record.update(n_segmentos=len(segments),
+                                  palabras=sum(len(segment["texto"].split()) for segment in segments),
+                                  duracion_s=int(segments[-1]["fin"]) if segments else 0)
+                records.append(record)
+            return records
+
+    def eliminar(self, cid):
+        self._validate_id(cid)
+        with self.transaction() as connection:
+            if not connection.execute("DELETE FROM classes WHERE id = ?", (cid,)).rowcount:
+                raise FileNotFoundError(cid)
+
+    def claim_summary(self, cid):
+        with self.transaction() as connection:
+            if self._read(connection, cid).get("estado_resumen") == "generando":
+                return False
+            self._update(connection, cid, {"estado_resumen": "generando", "error_resumen": None})
+            return True
+
+    def import_records(self, records):
+        """Import a snapshot atomically; reject conflicting records rather than overwrite."""
+        imported = 0
+        with self.transaction() as connection:
+            for record in records:
+                class_id = record["id"]
+                try:
+                    existing = self._read(connection, class_id)
+                except FileNotFoundError:
+                    self._insert(connection, record)
+                    imported += 1
+                else:
+                    if existing != record:
+                        raise ValueError(f"Conflicting class: {class_id}")
+        return imported
