@@ -57,7 +57,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .btn.icon{padding:8px 12px}
 
 /* Hero */
-.hero{padding-block:36px 56px}
+.hero{--hero-section-gap:40px;padding-block:36px 56px}
 .hero-copy{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;animation:rise .9s var(--ease) both}
 @keyframes rise{from{transform:translateY(18px)}}
 .tag{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--on-sky);background:color-mix(in srgb,var(--card) 65%,transparent);padding:6px 14px 6px 8px;border-radius:999px}
@@ -67,7 +67,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .cta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .platforms{font-size:13.5px;color:var(--on-sky-mute);display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 .platforms b{color:var(--on-sky);font-weight:650}
-.stage{position:relative;max-width:1060px;margin:40px auto 0}
+.stage{position:relative;max-width:1060px;margin:var(--hero-section-gap) auto 0}
 .frame{background:var(--card);border-radius:28px;box-shadow:0 2px 4px rgba(13,35,64,.06),0 40px 80px -40px rgba(13,35,64,.55);overflow:hidden;animation:rise 1.1s .1s var(--ease) both}
 .frame-bar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute)}
 .frame-bar .d{width:10px;height:10px;border-radius:50%;background:var(--line)}
@@ -89,7 +89,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:7px}
 .pill{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:color-mix(in srgb,var(--c,#54657B) 14%,white);color:color-mix(in srgb,var(--c,#54657B) 60%,#0D2340)}
 /* Facts strip */
-.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:28px}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:var(--hero-section-gap)}
 .facts li{background:color-mix(in srgb,var(--card) 88%,transparent);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;font-size:14.5px;font-weight:600;color:var(--ink)}
 .facts .ico{width:36px;height:36px;border-radius:12px;background:var(--paper);display:grid;place-items:center;color:var(--blue);flex:none}
 
