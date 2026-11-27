@@ -120,6 +120,21 @@ class SQLiteStoreTests(unittest.TestCase):
             self.assertEqual(process.wait(timeout=60), 0)
         self.assertEqual(self.repository.listar()[0]["n_segmentos"], 60)
 
+    def test_mandatory_storage_preserves_legacy_backup(self):
+        from infrastructure.storage_activation import ensure_sqlite
+        root = self.root / "mandatory"
+        source = root / "clases"
+        source.mkdir(parents=True)
+        class_id = self.repository.crear_clase("math", "Math", "manual")
+        record = self.repository.leer(class_id)
+        filename = class_id + ".json"
+        (source / filename).write_text(json.dumps(record), encoding="utf-8")
+        database = ensure_sqlite(root)
+        self.assertFalse(source.exists())
+        self.assertEqual(json.loads((root / "clases-json-backup" / filename).read_text(encoding="utf-8")), record)
+        self.assertEqual(SQLiteClassRepository(database).leer(class_id), record)
+        self.assertEqual(ensure_sqlite(root), database)
+
 
 if __name__ == "__main__":
     unittest.main()

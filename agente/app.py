@@ -462,8 +462,9 @@ class DialogoAjustes(tk.Toplevel):
         if cambio_modelo:
             messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
         if resumen_en_pc(self.cfg):
-            for cid in resumen.pendientes():
-                resumen.en_segundo_plano(cid)
+            repository = build_repository()
+            for cid in resumen.pendientes(repositorio=repository):
+                resumen.en_segundo_plano(cid, repositorio=repository)
         self.destroy()
 
 

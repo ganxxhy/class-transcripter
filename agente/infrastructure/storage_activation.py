@@ -70,3 +70,19 @@ def activate_sqlite(data_directory, *, offline_confirmed=False):
             os.replace(candidate, database)
         os.replace(marker, root / MARKER)
     return database
+
+
+def ensure_sqlite(data_directory):
+    """Serialize first-use migration across the desktop and MCP processes."""
+    from .file_lock import FileLock
+    root = Path(data_directory)
+    with FileLock(str(root / ".storage.lock")).hold():
+        database = activate_sqlite(root, offline_confirmed=True)
+        # Keep legacy files outside the path used by old Hub versions.
+        source = root / "clases"
+        backup = root / "clases-json-backup"
+        if source.exists():
+            if backup.exists():
+                raise RuntimeError("Both legacy class directories exist; review before continuing")
+            source.rename(backup)
+        return database

@@ -1,27 +1,13 @@
 """Composition root for desktop and MCP entry points."""
-from infrastructure.repository import JsonClassRepository
 from infrastructure.audio import SoundDeviceInput
 from nucleo.config import cargar, RUTA_DATOS
 
 
 def build_repository():
-    """Select activated storage or an explicit experimental database."""
-    import os
-    from pathlib import Path
-    from infrastructure.storage_activation import active_database
-    active = active_database(RUTA_DATOS)
-    if active is not None:
-        from infrastructure.sqlite_store import SQLiteClassRepository
-        return SQLiteClassRepository(active)
-    database = os.environ.get("ESTUDIO_EXPERIMENTAL_SQLITE")
-    if database:
-        from infrastructure.sqlite_store import SQLiteClassRepository
-        path = Path(database)
-        if not path.is_absolute() or not path.is_file():
-            raise ValueError("Experimental SQLite requires an existing absolute database path")
-        SQLiteClassRepository.validate_existing(path)
-        return SQLiteClassRepository(path)
-    return JsonClassRepository()
+    """Open mandatory SQLite storage, migrating legacy data on first use."""
+    from infrastructure.storage_activation import ensure_sqlite
+    from infrastructure.sqlite_store import SQLiteClassRepository
+    return SQLiteClassRepository(ensure_sqlite(RUTA_DATOS))
 
 
 def build_class_service():
