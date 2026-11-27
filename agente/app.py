@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from nucleo import almacen, horario, resumen  # noqa: E402
 from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre_asignatura, resumen_en_pc  # noqa: E402
 from nucleo.motor import microfonos  # noqa: E402
-from bootstrap import build_motor  # noqa: E402
+from bootstrap import build_motor, build_repository  # noqa: E402
 import tema  # noqa: E402
 from version import VERSION  # noqa: E402
 
@@ -69,7 +69,8 @@ class App:
         self.root = root
         self.cfg = cargar()
         self.logs = []
-        self.motor = build_motor(log=self.log)
+        self.repository = build_repository()
+        self.motor = build_motor(log=self.log, repository=self.repository)
         self.url_hub = self.cfg["ajustes"].get("url_hub") or "https://claude.ai/code/artifacts"
         self.icono = None
         self._construir()
@@ -131,12 +132,12 @@ class App:
 
     def _recuperar(self):
         """Cierra clases que quedaron abiertas si el agente se cortó y resume lo pendiente."""
-        for cid in almacen.clases_abiertas_huerfanas():
-            almacen.cerrar(cid)
+        for cid in self.repository.clases_abiertas_huerfanas():
+            self.repository.cerrar(cid)
             self.log(f"Recuperada clase sin cerrar: {cid}")
         if resumen_en_pc(self.cfg):
-            for cid in resumen.pendientes():
-                resumen.en_segundo_plano(cid, self.log)
+            for cid in resumen.pendientes(repositorio=self.repository):
+                resumen.en_segundo_plano(cid, self.log, repositorio=self.repository)
 
     # ---------- interfaz ----------
     def _construir(self):
