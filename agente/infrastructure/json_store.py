@@ -130,3 +130,13 @@ def marcar_hecho(clave, hecho):
         st["hechos"] = sorted(s)
         _escribir(RUTA_ESTADO, st)
         return st
+
+
+def claim_summary(cid):
+    """Claim a summary job atomically without changing the persisted schema."""
+    with _lock.hold():
+        record = leer(cid)
+        if record.get("estado_resumen") == "generando":
+            return False
+        actualizar(cid, estado_resumen="generando", error_resumen=None)
+        return True
