@@ -9,13 +9,14 @@ import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from nucleo.servicio_clases import ServicioClases, MAX_SEGMENTOS  # noqa: E402
+from nucleo.servicio_clases import MAX_SEGMENTOS
+from bootstrap import build_class_service  # noqa: E402
 
 NOMBRE = "agente_clases"
 VERSION = "1.0.0"
 
 
-servicio = ServicioClases()
+servicio = build_class_service()
 t_estado = servicio.estado
 t_listar = servicio.listar
 t_leer = servicio.leer
