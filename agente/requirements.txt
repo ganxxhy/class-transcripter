@@ -6,3 +6,4 @@ pystray
 pillow
 # On Linux the window uses the system WebKitGTK through PyGObject (see README); the AppImage build installs PyGObject itself
 pywebview>=5.0
+PyJWT[crypto]>=2.10,<3

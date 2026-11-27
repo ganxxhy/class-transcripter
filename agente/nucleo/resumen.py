@@ -4,7 +4,7 @@ from datetime import datetime
 
 from . import almacen
 from .interfaces import IAIProvider, IClassRepository
-from .proveedores import (ClaudeProvider, GeminiProvider, OpenAIProvider, elegir_proveedor,
+from .proveedores import (ClaudeProvider, GeminiProvider, OpenAIProvider, ChatGPTProvider, elegir_proveedor,
                           _con_claude, _con_gemini, _con_openai, _chat_url, _sin_additional)
 from .formato_resumen import ESQUEMA, SISTEMA, sistema, extract_json, check_summary
 from .config import api_key, cargar, resumen_en_pc

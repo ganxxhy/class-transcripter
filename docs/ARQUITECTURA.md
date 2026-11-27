@@ -28,3 +28,8 @@ Esta es una migración incremental, no una arquitectura hexagonal completa. La c
 ## Final audit hardening
 
 Capture owns the transcription end marker. Storage errors are logged and incomplete classes are marked as errors. Class IDs are allocated under the storage lock. Local summary jobs claim the generating state atomically; interrupted jobs require resetting that state before retrying. External MCP summary writers still use the legacy protocol. Regression tests cover these changes. Existing Spanish identifiers and wire keys remain for compatibility.
+
+
+## ChatGPT subscription provider
+
+`infrastructure/chatgpt.py` owns the official OAuth public-client flow, account registrations, local credentials, refresh serialization, model catalog and streaming inference. `ChatGPTProvider` implements the existing `IAIProvider` contract and reuses the existing summary schema and validation. The application use case and persisted summary format remain unchanged. The wizard exposes only account labels and model metadata to its webview. The local pywebview `PanelApi` hosts the same `hub/mis-clases.html` as the Claude artifact, with an explicit local mode. It calls the existing class service, local task state and summary service without using Claude or ChatGPT conversation storage. The Windows and Linux builds bundle this HTML. See [CHATGPT.md](CHATGPT.md) for setup and manual validation.

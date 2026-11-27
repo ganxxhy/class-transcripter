@@ -6,7 +6,16 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## Sin publicar
 
+### Novedades
+- Nuevo proveedor ChatGPT (inicio de sesión con cuenta y uso autorizado del plan, sin clave API independiente).
+- Selección de cuenta y modelo, desconexión, control de límites y visor local de apuntes y transcripciones por asignatura.
+
+### Panel
+- El panel web «Mis clases» funciona también en local para ChatGPT, con las vistas existentes de Hoy, Asignaturas, Tareas, Calendario y Estadísticas.
+- Consulta del horario desde la ventana principal y edición independiente desde Ajustes, conservando el resto de la configuración.
+
 ### Arreglos
+- Se separa la barra de estado de los botones inferiores para que el Registro no quede oculto. El importador de horarios ofrece abrir ChatGPT y copiar el mensaje desde Windows.
 - Mejoras en el cierre de las grabaciones para procesar los fragmentos pendientes antes de finalizar la transcripción.
 - Mejor gestión de errores de transcripción y almacenamiento, evitando generar automáticamente resúmenes locales de clases detectadas como incompletas.
 - Se evitan colisiones de identificadores al crear clases en el mismo segundo.

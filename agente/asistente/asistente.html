@@ -241,6 +241,30 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight
           </div>
         </label>
         <label class="modo">
+          <input type="radio" name="modo" value="chatgpt">
+          <div class="cuerpo">
+            <div class="t">Con mi cuenta de ChatGPT <span class="etiqueta">Plus / Pro</span></div>
+            <div class="ayuda">Usa tu plan de ChatGPT si es compatible. No necesitas una clave API. Los resúmenes se generan al terminar la clase y se guardan en Estudio.</div>
+            <div class="fila">
+              <button type="button" class="btn oscuro" id="chatgptConnect" data-oai-siwc-button>Continuar con ChatGPT</button>
+              <button type="button" class="btn" id="chatgptAdd" hidden>Otra cuenta</button>
+              <button type="button" class="btn" id="chatgptDisconnect" hidden>Desconectar</button>
+              <button type="button" class="btn" id="chatgptResume" hidden>Reanudar resúmenes</button>
+            </div>
+            <div class="campo" id="chatgptAccountsField" hidden>
+              <label for="chatgptAccounts">Cuenta de ChatGPT</label>
+              <select id="chatgptAccounts"></select>
+            </div>
+            <div class="campo" id="chatgptModelsField" hidden>
+              <label for="chatgptModel">Modelo</label>
+              <select id="chatgptModel"></select>
+            </div>
+            <div class="ayuda" id="chatgptStatus" role="status" aria-live="polite"></div>
+            <div class="ayuda"><a href="#" id="chatgptUsage">Gestionar uso y límites en ChatGPT</a></div>
+            <div class="aviso"><div class="txt" style="font-size:13px;line-height:1.5">Solo se envía el texto de la clase a ChatGPT, no el audio. Comprueba los permisos de tu universidad. Consulta los límites del plan y desactiva el uso de créditos adicionales en ChatGPT si no los deseas.</div></div>
+          </div>
+        </label>
+        <label class="modo">
           <input type="radio" name="modo" value="clave">
           <div class="cuerpo">
             <div class="t">Con una clave de API o un modelo propio</div>
@@ -352,8 +376,9 @@ dialog h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight
 <dialog id="dlgCaptura" style="width:520px">
   <form method="dialog" id="formCaptura">
     <h2>Leer el horario de una captura</h2>
-    <p style="color:var(--fg2)">1. Abre Claude con las instrucciones ya escritas, adjunta la captura de tu horario y envíalo.</p>
-    <div><button type="button" class="btn oscuro" id="btnAbrirHorario">Abrir Claude<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></button></div>
+    <p style="color:var(--fg2)">1. Abre Claude o ChatGPT con las instrucciones, adjunta la captura de tu horario y envíalo.</p>
+    <div class="fila" style="flex-wrap:wrap"><button type="button" class="btn oscuro" id="btnAbrirHorario">Abrir Claude<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+    <button type="button" class="btn-sec" id="btnAbrirChatGPT">Abrir ChatGPT ↗</button></div>
     <div class="fila" style="gap:8px;flex-wrap:wrap">
       <span class="ayuda">¿No usas Claude? Copia el mensaje y pégaselo a la IA que quieras (ChatGPT, Gemini…) junto con la captura.</span>
       <button type="button" class="btn-texto acento" id="btnCopiarHorario" style="height:32px">Copiar mensaje</button>
@@ -392,6 +417,10 @@ function simulada() {
     nivel: async () => { n += 0.4; return Math.abs(Math.sin(n)) * 0.8; },
     guardar: async (d) => { console.log("guardar", d); return { ok: true }; },
     abrir_claude_horario: async () => {}, abrir_claude_panel: async () => {}, abrir: async () => {},
+    chatgpt_status: async () => ({ active: "", connected: false, accounts: [] }),
+    chatgpt_sign_in: async () => ({ ok: false, error: "La conexión solo está disponible en la aplicación." }),
+    chatgpt_select: async () => ({ ok: false }), chatgpt_sign_out: async () => ({ ok: false }), chatgpt_resume: async () => ({ ok: false }),
+    chatgpt_models: async () => ({ ok: false }),
     terminar: async (s) => console.log("terminar", s),
   };
 }
@@ -402,10 +431,11 @@ const E = { paso: 1, asignaturas: [], horario: [], colores: [], micros: [], urlH
 function pintarPasos() {
   $("#pasos").innerHTML = "";
   NOMBRES_PASOS.forEach((nombre, i) => {
+    if (E.scheduleOnly && i !== 1) return;
     const li = document.createElement("li");
     const n = i + 1;
     li.className = n < E.paso ? "hecho" : n === E.paso ? "actual" : "";
-    li.innerHTML = `<span class="num">${n < E.paso ? ICONO_OK : n}</span>`;
+    li.innerHTML = `<span class="num">${E.scheduleOnly ? 1 : n < E.paso ? ICONO_OK : n}</span>`;
     li.append(nombre);
     if (n === E.paso) li.setAttribute("aria-current", "step");
     $("#pasos").append(li);
@@ -418,21 +448,32 @@ function irA(paso) {
   E.paso = paso;
   document.querySelectorAll("section[data-paso]").forEach((s) => { s.hidden = Number(s.dataset.paso) !== paso; });
   $("#pie").hidden = paso === 5;
-  $("#btnAtras").hidden = paso === 1 || paso === 5;
+  $("#errorGuardar").hidden = true;
+  $("#btnAtras").hidden = paso === 1 || paso === 5 || (E.summaryOnly && paso === 4);
   $("#puntos").hidden = paso !== 1;
   $("#btnLuego").hidden = !(paso === 2 || paso === 4);
   $("#btnLuego").textContent = paso === 2 ? "Lo pongo luego" : "Lo hago luego";
   $("#btnSig").textContent = paso === 1 ? "Empezar" : "Siguiente";
+  if (E.scheduleOnly) {
+    $("#btnAtras").hidden = false; $("#btnAtras").textContent = "Cancelar";
+    $("#btnLuego").hidden = true; $("#btnSig").textContent = "Guardar horario";
+    document.querySelector('section[data-paso="2"] .eyebrow').textContent = "Editar horario";
+  }
   validar();
   pintarPasos();
   if (paso === 2) pintarHorario();
   if (paso === 3) entrarMicro();
+  if (paso === 4 && E.chatgptConnected && !$("#chatgptModel").options.length) loadChatGPTModels(E.chatgptSavedModel);
   if (paso === 5) terminarAsistente();
 }
 
 function validar() {
   let ok = true;
   if (E.paso === 1) ok = $("#permiso").checked;
+  if (E.paso === 4 && E.chatgptBusy) ok = false;
+  if (E.paso === 4 && document.querySelector("input[name=modo]:checked").value === "chatgpt") {
+    ok = !E.chatgptBusy && E.chatgptConnected && !!$("#chatgptModel").value;
+  }
   $("#btnSig").disabled = !ok;
 }
 
@@ -584,6 +625,7 @@ $("#claseBorrar").onclick = () => { E.horario = E.horario.filter((c) => c !== cl
 
 $("#btnCaptura").onclick = () => { $("#capturaTexto").value = ""; $("#capturaError").hidden = true; $("#promptManual").hidden = true; $("#dlgCaptura").showModal(); };
 $("#btnAbrirHorario").onclick = () => api("abrir_claude_horario");
+$("#btnAbrirChatGPT").onclick = () => api("open_chatgpt_schedule");
 $("#btnCopiarHorario").onclick = async () => {
   const boton = $("#btnCopiarHorario");
   let ok = false;
@@ -678,7 +720,7 @@ const SERVICIOS = {
 };
 const LOCAL_AYUDA = "No hace falta clave. El servidor tiene que estar abierto al acabar la clase. Sube el contexto del modelo (en Ollama, num_ctx; en LM Studio, Context Length): una clase son muchos tokens y, si no caben, se recortan sin avisar.";
 const AYUDA_SERVICIO = {
-  openai: "Consigue la clave en platform.openai.com, en «API keys». La suscripción de ChatGPT no incluye la API: se paga aparte. Escribe el nombre del modelo que quieras usar.",
+  openai: "Consigue la clave en platform.openai.com, en «API keys». Esta modalidad API se factura aparte. Para usar tu plan, elige la opción de cuenta de ChatGPT. Escribe el nombre del modelo que quieras usar.",
   ollama: LOCAL_AYUDA + " Escribe el nombre del modelo que hayas descargado.",
   lmstudio: LOCAL_AYUDA,
   llamacpp: LOCAL_AYUDA,
@@ -711,6 +753,70 @@ function servicioPorUrl(url) {
 }
 $("#clave").addEventListener("input", () => { if ($("#clave").value) marcarClave(); });
 
+// ChatGPT uses its own OAuth provider, independent of the API-key provider.
+function renderChatGPT(status) {
+  E.chatgptConnected = !!status.connected;
+  const accounts = $("#chatgptAccounts");
+  accounts.replaceChildren();
+  for (const account of status.accounts || []) {
+    accounts.add(new Option(account.label, account.id));
+  }
+  accounts.value = status.active || "";
+  $("#chatgptAccountsField").hidden = !accounts.options.length;
+  $("#chatgptAdd").hidden = !accounts.options.length;
+  $("#chatgptDisconnect").hidden = !(status.connected || status.signed_in);
+  $("#chatgptResume").hidden = !status.paused;
+  E.chatgptPaused = !!status.paused;
+  $("#chatgptModelsField").hidden = !status.connected;
+  $("#chatgptConnect").textContent = "Continuar con ChatGPT";
+  $("#chatgptStatus").textContent = status.connected ? (status.paused ? "Límite alcanzado. Gestiona el uso y reanuda cuando esté disponible." : "Usando tu plan de ChatGPT.") : "Conecta una cuenta y autoriza el uso de su plan.";
+  validar();
+}
+function chatgptBusy(busy) {
+  E.chatgptBusy = busy;
+  for (const id of ["chatgptConnect", "chatgptAdd", "chatgptDisconnect", "chatgptResume", "chatgptAccounts", "chatgptModel", "btnLuego", "btnAtras"]) $("#" + id).disabled = busy;
+  validar();
+}
+async function loadChatGPTModels(preferred = "") {
+  chatgptBusy(true);
+  try {
+    const result = await api("chatgpt_models");
+    if (!result.ok) throw new Error(result.error);
+    const select = $("#chatgptModel");
+    select.replaceChildren();
+    for (const model of result.result) select.add(new Option(model.name, model.id));
+    if (Array.from(select.options).some(o => o.value === preferred)) select.value = preferred;
+    $("#chatgptStatus").textContent = select.options.length ? (E.chatgptPaused ? "Límite alcanzado. Gestiona el uso y reanuda cuando esté disponible." : "Usando tu plan de ChatGPT. Elige el modelo.") : "No hay modelos disponibles para este plan.";
+  } catch (e) {
+    $("#chatgptModel").replaceChildren();
+    $("#chatgptStatus").textContent = e.message || "No se pudieron cargar los modelos.";
+  } finally { chatgptBusy(false); }
+}
+async function chatgptAction(method, ...args) {
+  document.querySelector('input[name=modo][value=chatgpt]').checked = true;
+  chatgptBusy(true);
+  $("#chatgptStatus").textContent = method === "chatgpt_sign_in" ? "Completa el inicio de sesión en el navegador (hasta 3 minutos)." : "Un momento…";
+  try {
+    const result = await api(method, ...args);
+    if (!result.ok) throw new Error(result.error);
+    $("#chatgptModel").replaceChildren();
+    renderChatGPT(result.result);
+    if (result.result.first_use) alert("Estás usando tu plan de ChatGPT. Las peticiones compatibles de Estudio consumirán sus límites. Puedes gestionar el uso y los créditos desde los ajustes de ChatGPT.");
+    if (result.result.warning) $("#chatgptStatus").textContent = result.result.warning;
+    if (result.result.connected) await loadChatGPTModels();
+  } catch (e) {
+    $("#chatgptStatus").textContent = e.message || "No se pudo completar la operación.";
+  } finally { chatgptBusy(false); }
+}
+$("#chatgptConnect").onclick = e => { e.preventDefault(); chatgptAction("chatgpt_sign_in", $("#chatgptAccounts").value); };
+$("#chatgptAdd").onclick = e => { e.preventDefault(); chatgptAction("chatgpt_sign_in", ""); };
+$("#chatgptResume").onclick = e => { e.preventDefault(); chatgptAction("chatgpt_resume"); };
+$("#chatgptDisconnect").onclick = e => { e.preventDefault(); chatgptAction("chatgpt_sign_out"); };
+$("#chatgptAccounts").onchange = () => chatgptAction("chatgpt_select", $("#chatgptAccounts").value);
+$("#chatgptModel").onchange = validar;
+$("#chatgptUsage").onclick = e => { e.preventDefault(); api("abrir", "https://chatgpt.com/settings/usage"); };
+document.querySelectorAll("input[name=modo]").forEach(radio => radio.addEventListener("change", validar));
+
 // ---------- paso 5 ----------
 function proximaClase() {
   if (!E.horario.length) return null;
@@ -741,27 +847,43 @@ async function terminarAsistente() {
   }
   const modo = document.querySelector("input[name=modo]:checked").value;
   E.urlHub = $("#urlHub").value.trim();
-  $("#btnHub").hidden = !E.urlHub;
+  $("#btnHub").hidden = !E.urlHub || modo === "chatgpt";
+  $("#btnFin").disabled = true;
+  $("#btnHub").disabled = true;
   const r = await api("guardar", {
     nombre, estudios: $("#estudios").value.trim(), permiso: $("#permiso").checked,
     asignaturas: E.asignaturas, horario: E.horario,
     microfono: $("#mic").value || null,
     modelo_whisper: document.querySelector("input[name=calidad]:checked").value,
-    proveedor: modo === "clave" ? $("#proveedor").value : null,
+    proveedor: modo === "chatgpt" ? "chatgpt" : modo === "clave" ? $("#proveedor").value : null,
+    modelo_chatgpt: modo === "chatgpt" ? $("#chatgptModel").value : "",
+    skip_chatgpt: !!E.skipChatGPT,
     clave: modo === "clave" ? $("#clave").value : "",
     base_url: modo === "clave" ? $("#baseUrl").value.trim() : "",
     modelo_openai: modo === "clave" ? $("#modeloOpenai").value.trim() : "",
     url_hub: E.urlHub,
   });
-  if (!r || !r.ok) { $("#errorGuardar").textContent = "No he podido guardar la configuración: " + ((r && r.error) || "error desconocido"); $("#errorGuardar").hidden = false; }
+  if (r && r.ok) { $("#btnFin").disabled = false; $("#btnHub").disabled = false; }
+  else { $("#errorGuardar").textContent = "No he podido guardar la configuración: " + ((r && r.error) || "error desconocido"); $("#errorGuardar").hidden = false; $("#btnAtras").hidden = false; $("#pie").hidden = false; }
 }
 $("#btnFin").onclick = () => api("terminar", "agente");
 $("#btnHub").onclick = () => { if (E.urlHub.startsWith("https://")) api("abrir", E.urlHub); api("terminar", "agente"); };
 
 // ---------- navegación ----------
-$("#btnSig").onclick = () => irA(E.paso + 1);
-$("#btnLuego").onclick = () => irA(E.paso + 1);
-$("#btnAtras").onclick = () => irA(E.paso - 1);
+$("#btnSig").onclick = async () => {
+  if (E.scheduleOnly) {
+    $("#btnSig").disabled = true;
+    try {
+      const result = await api("guardar", {asignaturas: E.asignaturas, horario: E.horario});
+      if (!result?.ok) throw new Error(result?.error || "No se pudo guardar el horario.");
+      await api("terminar", "agente");
+    } catch (e) { alert(e.message || "No se pudo guardar el horario."); $("#btnSig").disabled = false; }
+    return;
+  }
+  E.skipChatGPT = false; irA(E.paso + 1);
+};
+$("#btnLuego").onclick = () => { E.skipChatGPT = E.paso === 4 && document.querySelector("input[name=modo]:checked").value === "chatgpt"; irA(E.paso + 1); };
+$("#btnAtras").onclick = () => E.scheduleOnly ? api("terminar", "agente") : irA(E.paso - 1);
 $("#permiso").onchange = validar;
 document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.closest("dialog").close(); });
 
@@ -774,21 +896,27 @@ document.querySelectorAll("[data-cerrar]").forEach((b) => { b.onclick = () => b.
   E.promptHorario = s.prompt_horario || "";
   E.microfono = s.ajustes.microfono || "";
   E.so = s.so || "win32";
+  E.summaryOnly = !!s.summary_only;
+  E.scheduleOnly = !!s.schedule_only;
+  $("#permiso").checked = !!s.ajustes.permiso_grabar;
   if (E.so !== "win32") $("#textoFin").textContent = "Estudio se queda abierto en segundo plano y empezará a escuchar solo en tu próxima clase.";
   $("#nombre").value = (s.perfil && s.perfil.nombre) || "";
   $("#estudios").value = (s.perfil && s.perfil.estudios) || "";
   $("#hw").textContent = s.hardware.texto || "";
   const cal = document.querySelector(`input[name=calidad][value="${s.ajustes.modelo_whisper}"]`);
   if (cal) cal.checked = true;
-  $("#proveedor").value = s.ajustes.proveedor || "claude";
+  $("#proveedor").value = s.ajustes.proveedor === "chatgpt" ? "claude" : s.ajustes.proveedor || "claude";
   $("#baseUrl").value = s.ajustes.openai_base_url || SERVICIOS.openai.url;
   $("#modeloOpenai").value = s.ajustes.modelo_openai || "";
   $("#servicio").value = servicioPorUrl($("#baseUrl").value);
   $("#proveedor").onchange();
   if (s.ajustes.url_hub) $("#urlHub").value = s.ajustes.url_hub;
   if (s.ajustes.resumen_en_pc || s.ajustes.tiene_clave) { document.querySelector('input[name=modo][value=clave]').checked = true; }
+  E.chatgptSavedModel = s.ajustes.modelo_chatgpt || "";
+  renderChatGPT(s.ajustes.chatgpt || { accounts: [], connected: false });
+  if (s.ajustes.proveedor === "chatgpt") document.querySelector('input[name=modo][value=chatgpt]').checked = true;
   if (s.ajustes.tiene_clave) $("#clave").placeholder = "Ya tienes una clave guardada (déjalo vacío para mantenerla)";
-  irA(1);
+  irA(E.scheduleOnly ? 2 : E.summaryOnly ? 4 : 1);
   if (s.prueba) { irA(2); irA(3); await api("parar_medidor"); api("terminar", "prueba"); }
 })();
 </script>

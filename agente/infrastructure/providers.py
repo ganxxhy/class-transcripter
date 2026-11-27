@@ -21,9 +21,35 @@ class OpenAIProvider:
         return _con_openai(cfg, clave, usuario)
 
 
+class ChatGPTProvider:
+    """Use the signed-in ChatGPT plan; never fall back to API-key billing."""
+
+    def generar(self, cfg, clave, usuario):
+        from infrastructure.chatgpt import SESSION
+
+        account_id = cfg["ajustes"].get("chatgpt_account_id") or SESSION.status()["active"]
+        model = cfg["ajustes"].get("modelo_chatgpt", "").strip()
+        if not model:
+            raise RuntimeError("Selecciona un modelo de ChatGPT en el asistente.")
+        instructions = (sistema(cfg) + "\n\nDevuelve SOLO un objeto JSON que cumpla este esquema:\n"
+                        + json.dumps(ESQUEMA, ensure_ascii=False))
+        messages = [{"role": "user", "content": usuario}]
+        text, actual_model = SESSION.infer(model, instructions, messages, account_id=account_id)
+        try:
+            return check_summary(extract_json(text)), actual_model
+        except ValueError:
+            messages.extend([{"role": "assistant", "content": text},
+                             {"role": "user", "content": "Devuelve SOLO el JSON completo y válido con todos los campos."}])
+        text, actual_model = SESSION.infer(model, instructions, messages, account_id=account_id)
+        try:
+            return check_summary(extract_json(text)), actual_model
+        except ValueError:
+            raise RuntimeError("ChatGPT no devolvió un resumen válido tras dos intentos.") from None
+
+
 def elegir_proveedor(cfg) -> IAIProvider:
     tipo = cfg["ajustes"].get("proveedor")
-    return {"openai": OpenAIProvider, "gemini": GeminiProvider}.get(tipo, ClaudeProvider)()
+    return {"openai": OpenAIProvider, "gemini": GeminiProvider, "chatgpt": ChatGPTProvider}.get(tipo, ClaudeProvider)()
 
 
 def _con_claude(cfg, clave, usuario):

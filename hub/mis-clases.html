@@ -300,7 +300,8 @@ footer{color:var(--mute);font-size:12.5px;padding:8px 0 90px;max-width:80ch}
 </div>
 
 <script>
-const VERSION_PANEL = "1.1.2"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
+const LOCAL = window.ESTUDIO_LOCAL === true;
+const VERSION_PANEL = "1.1.3"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
 const HOST = "host:agente_clases";
 const POR_PARTE = 400; // segmentos por documento de transcripción
 const $ = (s, el = document) => el.querySelector(s);
@@ -371,6 +372,7 @@ const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n] 
 
 /* ---------- Estado ---------- */
 let db = null, mcp = null, sample = null, hostOK = false;
+let localSummaries = false, localSignature = "";
 let GEN = { asignaturas: [], horario: [], agente: null, sincronizado: null, nombre: "" };
 let CLASES = [], MAPA = {}, HECHOS = new Set(), cargado = false;
 let filtro = "pend";
@@ -442,14 +444,14 @@ function filaTarea(d, { clase = true } = {}) {
   const a = asig(d.clase.asignatura), w = cuando(d), hecho = HECHOS.has(d.clave);
   const pill = `<span class="pill${w.dias === 0 ? " hot" : ""}" style="--c:${TIPO_C[d.tipo] || "#475569"}">${esc(TIPOS[d.tipo] || d.tipo)} · ${esc(w.txt)}</span>`;
   return `<li class="task${hecho ? " done" : ""}" style="--c:${color(a.color)}">
-    <button class="chk" type="button" data-hecho="${esc(d.clave)}" aria-pressed="${hecho}" aria-label="Marcar «${esc(d.titulo)}» como hecho" ${db ? "" : "disabled"}>${ic("check")}</button>
+    <button class="chk" type="button" data-hecho="${esc(d.clave)}" aria-pressed="${hecho}" aria-label="Marcar «${esc(d.titulo)}» como hecho" ${db || (LOCAL && hostOK) ? "" : "disabled"}>${ic("check")}</button>
     <div><div class="t-title">${esc(d.titulo)}</div>${d.detalle ? `<div class="t-det">${esc(d.detalle)}</div>` : ""}
       ${!clase && d.cita ? `<div class="cita">«${esc(d.cita)}»${d.minuto ? ` · ${esc(d.minuto)}` : ""}</div>` : ""}
       <div class="t-sub">${pill}${d.importancia === "alta" ? `<span class="pill red">Muy importante</span>` : ""}${clase ? `<a href="${urlClase(d.clase.id)}">${esc(a.nombre)} · ${esc(fmtFecha(d.clase.fecha))}</a>` : ""}</div></div><span></span></li>`;
 }
 function estadoClase(c) {
   if (c.en_curso) return `<span class="state live"><i></i>Grabando</span>`;
-  if (resumiendo.has(c.id)) return `<span class="state wait"><i></i>Resumiendo</span>`;
+  if (resumiendo.has(c.id) || c.estado_resumen === "generando") return `<span class="state wait"><i></i>Resumiendo</span>`;
   if (c.resumen) return `<span class="state"><i></i>Resumen listo</span>`;
   if (c.estado_resumen === "vacio") return `<span class="state none"><i></i>Sin contenido</span>`;
   if (c.estado_resumen === "error") return `<span class="state err"><i></i>Sin resumen</span>`;
@@ -502,7 +504,8 @@ function renderEstado() {
   $("#av").textContent = nom ? nom.split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() : "·";
   $("#av").title = nom;
   const n = $("#syncNote");
-  if (!db) { n.hidden = false; n.textContent = "No puedo abrir la base de datos del panel. Inicia sesión en claude.ai y vuelve a abrirlo."; }
+  if (LOCAL) { n.hidden = hostOK; n.textContent = hostMsg || "Conectando con Estudio…"; }
+  else if (!db) { n.hidden = false; n.textContent = "No puedo abrir la base de datos del panel. Inicia sesión en claude.ai y vuelve a abrirlo."; }
   else if (!hostOK && (hostMsg || notaAccion)) {
     n.hidden = false; n.textContent = "";
     const t = document.createElement("span"); t.textContent = hostMsg; n.appendChild(t);
@@ -544,6 +547,13 @@ function suscribir() {
 let hostMsg = "", sincronizando = false, ultimoGen = "";
 let desktop = null, modo = "mcp", notaAccion = null, puedeInstalar = false; // modo: "mcp" (conector local) o "fs" (app instalada lee la carpeta)
 async function host(tool, input) {
+  if (LOCAL) {
+    const api = window.pywebview.api, a = input || {};
+    if (tool === "leer_clase") return api.read_class(a.id, a.desde || 0);
+    if (tool === "mover_clase") return api.move_class(a.id, a.asignatura);
+    if (tool === "borrar_clase") return api.delete_class(a.id);
+    throw new Error("Operación no disponible en el panel local");
+  }
   if (modo === "fs") return AG[tool](input || {});
   const r = await mcp.callTool(HOST, tool, input || {}, { cache: false });
   // Un error de la herramienta llega como respuesta con isError, no como excepción
@@ -730,7 +740,27 @@ async function ofrecerInstalar() {
     renderTodo();
   } catch (e) {}
 }
+async function refreshLocal() {
+  if (sincronizando) return;
+  sincronizando = true;
+  try {
+    const data = await window.pywebview.api.snapshot();
+    const wasOK = hostOK;
+    hostOK = true; hostMsg = ""; cargado = true;
+    localSummaries = !!data.local_summaries;
+    GEN = { ...GEN, asignaturas: data.asignaturas, horario: data.horario, agente: data.agente, nombre: data.nombre };
+    CLASES = data.clases.sort((a,b) => String(b.inicio).localeCompare(String(a.inicio)));
+    MAPA = Object.fromEntries(CLASES.map(c => [c.id, c]));
+    HECHOS = new Set(data.hechos || []);
+    const signature = JSON.stringify([GEN.asignaturas, GEN.horario, GEN.nombre, GEN.agente?.activo, GEN.agente?.estado, GEN.agente?.clase_id, CLASES.map(c => [c.id,c.version,c.error_resumen]), [...HECHOS], localSummaries]);
+    if (!wasOK || signature !== localSignature) { localSignature = signature; renderTodo(); }
+    else renderEstado();
+  } catch (e) {
+    hostOK = false; cargado = true; hostMsg = "No he podido leer los datos locales de Estudio. " + (e.message || ""); renderTodo();
+  } finally { sincronizando = false; }
+}
 async function sincronizar() {
+  if (LOCAL) return refreshLocal();
   if ((modo === "mcp" && !mcp) || !db || sincronizando) return;
   sincronizando = true;
   try {
@@ -795,6 +825,14 @@ async function subirClase(c, antes) {
 }
 
 async function leerTranscripcion(id) {
+  if (LOCAL) {
+    const segments = [];
+    while (true) {
+      const page = await host("leer_clase", { id, desde: segments.length });
+      segments.push(...page.segmentos);
+      if (!page.segmentos.length || segments.length >= page.total) return segments;
+    }
+  }
   const s = await db.collection(`clases/${id}/partes`).get();
   return s.docs.map((d) => d.data()).sort((a, b) => a.k - b.k).flatMap((p) => p.segmentos || []);
 }
@@ -866,6 +904,7 @@ function normalizar(r) {
   };
 }
 async function resumirClase(c) {
+  if (LOCAL) { await window.pywebview.api.summarize(c.id); await refreshLocal(); return; }
   const segs = await leerTranscripcion(c.id);
   if (!segs.length) { await db.doc("clases/" + c.id).update({ estado_resumen: "vacio" }); return; }
   const ini = new Date(c.inicio);
@@ -998,8 +1037,8 @@ function vClase(id) {
   if (!c) return cargado ? `<div class="head"><div><a class="crumb" href="#asignaturas">${ic("back")}Asignaturas</a><h1>No encuentro esa clase</h1><p>Puede que se haya borrado.</p></div></div>` : vacioInicial();
   const a = asig(c.asignatura), r = c.resumen, k = color(a.color);
   const ds = (r?.destacados || []).map((d, i) => ({ ...d, clase: c, clave: `${c.id}~${i}` }));
-  const estado = c.en_curso ? `Esta clase se está grabando ahora. La transcripción se actualiza mientras tengas el panel abierto en la app de Claude del ordenador, y el resumen se hace al terminar.`
-    : resumiendo.has(c.id) ? `Claude está resumiendo esta clase…`
+  const estado = c.en_curso ? `Esta clase se está grabando ahora. La transcripción se actualiza mientras tengas el panel abierto${LOCAL ? "" : " en la app de Claude del ordenador"}, y el resumen se hace al terminar.`
+    : (resumiendo.has(c.id) || c.estado_resumen === "generando") ? `Se está resumiendo esta clase…`
     : c.estado_resumen === "vacio" ? `No se transcribió nada en esta clase. ¿Estaba el micrófono silenciado?`
     : !r ? `Sin resumen todavía.${c.error_resumen ? ` Último intento: ${c.error_resumen}` : ""}` : "";
   const cuerpo = r ? `<div class="prose">${str(r.resumen).split(/\n+/).map((p) => p.trim()).filter(Boolean).map((p) => /^#{1,4}\s+/.test(p) ? `<h3>${esc(p.replace(/^#{1,4}\s+/, ""))}</h3>` : /^[-*•]\s+/.test(p) ? `<ul><li>${esc(p.replace(/^[-*•]\s+/, ""))}</li></ul>` : `<p>${esc(p)}</p>`).join("")}</div>` : `<p class="empty">${esc(estado)}</p>`;
@@ -1029,19 +1068,19 @@ function vClase(id) {
         ${r?.modelo ? `<li><span>Resumen</span><b>${esc(r.modelo)}</b></li>` : ""}
       </ul></section>
       <section class="card acts"><h2>Acciones</h2>
-        ${!c.en_curso && sample ? `<button class="btn sec" id="regen" type="button">${ic("spark")}${r ? "Rehacer resumen" : "Resumir con Claude"}</button>` : ""}
-        ${hostOK ? `<label class="field">Mover a otra asignatura<select id="mover">${GEN.asignaturas.map((x) => `<option value="${esc(x.id)}" ${x.id === c.asignatura ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
-        ${hostOK && !c.en_curso ? `<button class="btn sec danger" id="borrar" type="button">Borrar clase</button>` : ""}
-        <span class="muted" id="accMsg" style="font-size:13px">${hostOK ? "" : "Mover o borrar clases solo se puede desde la app de Claude de tu ordenador."}</span>
+        ${!c.en_curso && c.estado_resumen !== "generando" && !resumiendo.has(c.id) && (LOCAL ? localSummaries && hostOK && c.n_segmentos : sample) ? `<button class="btn sec" id="regen" type="button">${ic("spark")}${r ? "Rehacer resumen" : LOCAL ? "Generar resumen" : "Resumir con Claude"}</button>` : ""}
+        ${hostOK && (!LOCAL || (!c.en_curso && c.estado_resumen !== "generando")) ? `<label class="field">Mover a otra asignatura<select id="mover">${GEN.asignaturas.map((x) => `<option value="${esc(x.id)}" ${x.id === c.asignatura ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
+        ${hostOK && !c.en_curso && (!LOCAL || c.estado_resumen !== "generando") ? `<button class="btn sec danger" id="borrar" type="button">Borrar clase</button>` : ""}
+        <span class="muted" id="accMsg" style="font-size:13px">${hostOK ? "" : LOCAL ? "No hay conexión con los datos locales." : "Mover o borrar clases solo se puede desde la app de Claude de tu ordenador."}</span>
       </section>
     </div>
   </div>`;
 }
 async function cargarSegs() {
-  const c = MAPA[claseAbierta]; if (!c || !db) return;
+  const c = MAPA[claseAbierta]; if (!c || (!db && !(LOCAL && hostOK))) return;
   const v = `${c.id}|${c.n_segmentos}`;
   if (v === segsVersion) return;
-  try { SEGS = await leerTranscripcion(c.id); segsVersion = v; } catch (e) { SEGS = []; }
+  try { const segments = await leerTranscripcion(c.id); if (claseAbierta !== c.id) return; SEGS = segments; segsVersion = v; } catch (e) { if (claseAbierta === c.id) SEGS = []; }
   if (claseAbierta === c.id) pintarTrans();
 }
 function pintarTrans() {
@@ -1073,7 +1112,7 @@ function enlazarClase(c) {
     if (msg()) msg().textContent = `Moviendo a ${asig(nueva).nombre}…`;
     try {
       await host("mover_clase", { id: c.id, asignatura: nueva });
-      await db.doc("clases/" + c.id).update({ asignatura: nueva, nombre_asignatura: asig(nueva).nombre });
+      if (!LOCAL) await db.doc("clases/" + c.id).update({ asignatura: nueva, nombre_asignatura: asig(nueva).nombre });
       if (MAPA[c.id]) { MAPA[c.id].asignatura = nueva; MAPA[c.id].nombre_asignatura = asig(nueva).nombre; }
       pintarVista(true);
       if (msg()) msg().textContent = `Movida a ${asig(nueva).nombre}.`;
@@ -1091,9 +1130,11 @@ function enlazarClase(c) {
       if (!armado) { armado = true; bo.textContent = "Pulsa otra vez para borrarla del todo"; setTimeout(() => { armado = false; bo.textContent = "Borrar clase"; }, 4000); return; }
       try {
         await host("borrar_clase", { id: c.id });
-        const partes = await db.collection(`clases/${c.id}/partes`).get();
-        for (const p of partes.docs) await db.doc(`clases/${c.id}/partes/${p.id}`).delete();
-        await db.doc("clases/" + c.id).delete();
+        if (!LOCAL) {
+          const partes = await db.collection(`clases/${c.id}/partes`).get();
+          for (const p of partes.docs) await db.doc(`clases/${c.id}/partes/${p.id}`).delete();
+          await db.doc("clases/" + c.id).delete();
+        } else await refreshLocal();
         location.hash = "#asig=" + encodeURIComponent(c.asignatura);
       } catch (err) { $("#accMsg").textContent = "No se pudo borrar la clase."; }
     };
@@ -1145,7 +1186,7 @@ function vCal() {
   for (let d = 1; d <= nDias; d++) { const iso = isoLocal(new Date(base.getFullYear(), base.getMonth(), d)), e = ev[iso]; mc += `<span class="${iso === hoyIso ? "today" : ""}${e ? " ev" : ""}" ${e ? `style="--c:${TIPO_C[e[0].tipo] || "#475569"}" title="${esc(e.map((x) => x.titulo).join(" · "))}"` : ""}>${d}</span>`; }
   const delMes = Object.keys(ev).filter((k) => k.startsWith(isoLocal(base).slice(0, 7))).sort().flatMap((k) => ev[k]);
   const ini = new Date(lun), fin = new Date(lun); fin.setDate(fin.getDate() + 4);
-  return `<div class="head"><div><h1>Calendario</h1><p>${H.length ? `${H.length} ${H.length === 1 ? "clase" : "clases"} a la semana en tu horario.` : "Tu horario está vacío. Añádelo en el asistente o en los ajustes de la app del ordenador."}</p></div></div>
+  return `<div class="head"><div><h1>Calendario</h1><p>${H.length ? `${H.length} ${H.length === 1 ? "clase" : "clases"} a la semana en tu horario.` : "Tu horario está vacío. Añádelo desde Ajustes → Editar asignaturas y horario en Estudio."}</p>${LOCAL ? `<p>Para modificarlo, abre Ajustes → Editar asignaturas y horario en Estudio.</p>` : ""}</div></div>
   <div class="grid">
     <section class="card span3 tt-card"><h2>Horario semanal <span>semana del ${ini.getDate()} al ${fin.toLocaleDateString("es-ES", { day: "numeric", month: "long" })}</span></h2>${detalle}
       <div class="tt-wrap"><div class="tt" style="grid-template-columns:48px repeat(${dows.length},minmax(110px,1fr))"><div></div>${dows.map((d) => { const f = new Date(lun); f.setDate(f.getDate() + ((d + 6) % 7)); return `<div class="hd${d === hoyDow ? " today" : ""}">${DIAS[d].replace(/^./, (x) => x.toUpperCase())} ${f.getDate()}</div>`; }).join("")}<div class="hours" style="height:${(H1 - H0) * PX}px">${hours.join("")}</div>${cols}</div></div>${dayview}</section>
@@ -1164,7 +1205,7 @@ function vStats() {
   const datos = [
     mas ? `<li><b>${esc(asig(mas[0]).nombre)}</b>es la asignatura con más horas grabadas en las últimas cuatro semanas (${fmtH(mas[1])}).</li>` : "",
     `<li><b>${pend} ${pend === 1 ? "tarea pendiente" : "tareas pendientes"}</b>entre exámenes, trabajos y entregas que se han dicho en clase.</li>`,
-    sinRes ? `<li><b>${sinRes} ${sinRes === 1 ? "clase sin resumen" : "clases sin resumen"}</b>Puedes resumirlas con el botón de arriba.</li>` : `<li><b>Todo resumido</b>No queda ninguna clase grabada sin resumen.</li>`,
+    sinRes ? `<li><b>${sinRes} ${sinRes === 1 ? "clase sin resumen" : "clases sin resumen"}</b>${LOCAL ? "Abre una clase para generar su resumen." : "Puedes resumirlas con el botón de arriba."}</li>` : `<li><b>Todo resumido</b>No queda ninguna clase grabada sin resumen.</li>`,
   ].join("");
   return `<div class="head"><div><h1>Estadísticas</h1><p>Lo que has grabado, a partir de tus clases.</p></div></div>
   <div class="grid"><section class="card span3">${bloqueStats()}</section>
@@ -1183,7 +1224,7 @@ function pintarVista(forzar) {
   let sec = "hoy", html;
   if (h.startsWith("clase=")) {
     const id = h.slice(6), c = MAPA[id];
-    const firma = JSON.stringify([id, c?.version, c?.resumen?.generado, c?.asignatura, resumiendo.has(id), hostOK, !!sample, !!db, cargado, (c?.resumen?.destacados || []).map((_, i) => HECHOS.has(`${id}~${i}`))]);
+    const firma = JSON.stringify([id, c?.version, c?.resumen?.generado, c?.asignatura, resumiendo.has(id), hostOK, !!sample, !!db, localSummaries, cargado, (c?.resumen?.destacados || []).map((_, i) => HECHOS.has(`${id}~${i}`))]);
     if (!forzar && rutaPintada === h && firma === firmaClase) { cargarSegs(); return; }
     firmaClase = firma; sec = "asignaturas";
     if (claseAbierta !== id) { claseAbierta = id; SEGS = []; segsVersion = ""; busq = ""; }
@@ -1205,6 +1246,12 @@ function pintarVista(forzar) {
 window.addEventListener("hashchange", () => { pintarVista(true); scrollTo(0, 0); });
 $("#app").addEventListener("click", async (e) => {
   const h = e.target.closest("[data-hecho]");
+  if (h && LOCAL && hostOK) {
+    const key = h.dataset.hecho, on = !HECHOS.has(key);
+    try { await window.pywebview.api.mark_done(key, on); await refreshLocal(); }
+    catch (e) { hostMsg = "No se pudo actualizar la tarea."; $("syncNote").hidden = false; $("syncNote").textContent = hostMsg; }
+    return;
+  }
   if (h && db) {
     const ref = db.doc("hechos/" + h.dataset.hecho), on = !HECHOS.has(h.dataset.hecho);
     on ? HECHOS.add(h.dataset.hecho) : HECHOS.delete(h.dataset.hecho); pintarVista(true);
@@ -1221,8 +1268,19 @@ $("#app").addEventListener("click", async (e) => {
 setInterval(() => { if (!document.hidden && (ruta() === "hoy" || ruta() === "calendario")) pintarVista(true); }, 60000);
 
 /* ---------- Arranque ---------- */
+if (LOCAL && window.ESTUDIO_SECTION === "calendario") location.hash = "#calendario";
+if (LOCAL) {
+  $("footer").textContent = "Tus clases, apuntes y transcripciones se leen directamente de Estudio en este ordenador. El panel no sincroniza datos con Claude ni ChatGPT.";
+  $("footer").style.color = "var(--on-sky-mute)";
+}
 nav("hoy"); pintarVista(true); renderEstado();
 (async () => {
+  if (LOCAL) {
+    if (!window.pywebview?.api) await new Promise(resolve => window.addEventListener("pywebviewready", resolve, {once:true}));
+    await refreshLocal();
+    setInterval(refreshLocal, 4000);
+    return;
+  }
   db = await claude.use("db");
   if (!db) { cargado = true; renderTodo(); return; }
   suscribir();
