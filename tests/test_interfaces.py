@@ -8,6 +8,8 @@ from unittest.mock import patch
 os.environ["AGENTE_CLASES_DATOS"] = tempfile.mkdtemp()
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "agente"))
 from nucleo import resumen, motor
+from nucleo.servicio_clases import ServicioClases
+from copy import deepcopy
 
 
 class RepositorioFalso:
@@ -17,7 +19,13 @@ class RepositorioFalso:
         self.estados = []
 
     def leer(self, cid):
-        return self.clase
+        return deepcopy(self.clase)
+
+    def listar(self, incluir_segmentos=False):
+        return [self.leer('clase')]
+
+    def eliminar(self, cid):
+        self.clase = None
 
     def actualizar(self, cid, **campos):
         self.clase.update(campos)
@@ -77,6 +85,24 @@ class ContratosTest(unittest.TestCase):
             m._bucle_transcripcion()
         self.assertEqual(repo.clase["segmentos"][-1]["texto"], "Prueba")
         self.assertFalse(repo.clase["en_curso"])
+
+    def test_servicio_clases(self):
+        repo = RepositorioFalso()
+        cfg = {"asignaturas": [{"id": "a", "nombre": "Álgebra"}], "horario": []}
+        with tempfile.TemporaryDirectory() as ruta:
+            servicio = ServicioClases(repo, lambda: cfg, ruta)
+            self.assertFalse(servicio.estado({})["agente"]["activo"])
+            self.assertEqual(servicio.leer({"id": "clase"})["total"], 1)
+            self.assertEqual(servicio.leer({"id": "clase", "desde": 1})["segmentos"], [])
+            self.assertIn("version", servicio.listar({})["clases"][0])
+            servicio.guardar_resumen({"id": "clase", "resumen": {"titulo": "T"}})
+            self.assertEqual(repo.clase["estado_resumen"], "listo")
+            servicio.marcar_estado_resumen({"id": "clase", "estado": "error"})
+            self.assertEqual(repo.clase["estado_resumen"], "error")
+            servicio.mover({"id": "clase", "asignatura": "a"})
+            self.assertEqual(repo.clase["asignatura"], "a")
+            servicio.borrar({"id": "clase"})
+            self.assertIsNone(repo.clase)
 
     def test_seleccion_proveedores(self):
         for nombre, tipo in [("claude", resumen.ClaudeProvider),
