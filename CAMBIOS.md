@@ -6,7 +6,17 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## Sin publicar
 
+### Arreglos
+- Mejoras en el cierre de las grabaciones para procesar los fragmentos pendientes antes de finalizar la transcripción.
+- Mejor gestión de errores de transcripción y almacenamiento, evitando generar automáticamente resúmenes locales de clases detectadas como incompletas.
+- Se evitan colisiones de identificadores al crear clases en el mismo segundo.
+- Bloqueo de escrituras de clases entre procesos y protección frente a generaciones simultáneas de resúmenes locales.
+
 ### Cambios internos
+- Nueva arquitectura modular que separa dominio, aplicación e infraestructura, conservando los formatos de datos y las interfaces del Hub y MCP existentes.
+- Separación de los adaptadores de audio, transcripción, almacenamiento y proveedores de IA para facilitar futuras mejoras y la migración a SQLite.
+- Nuevas pruebas de regresión y documentación de arquitectura.
+- Las pull requests cancelan automáticamente sus compilaciones obsoletas al recibir nuevos commits, sin afectar a las releases ni a las ejecuciones manuales.
 - Se evitan las compilaciones redundantes tras fusionar cambios en `main`: solo se ejecutan las pruebas automatizadas.
 - Las pull requests y las releases mantienen las compilaciones completas de Windows y Linux, sin modificar el sistema de publicación y recuperación.
 
