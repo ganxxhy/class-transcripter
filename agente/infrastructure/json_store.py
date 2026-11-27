@@ -45,6 +45,12 @@ def crear_clase(asignatura, nombre, modo, inicio=None, aula=""):
         "error_resumen": None,
     }
     with _lock.hold():
+        base_id = cid
+        suffix = 1
+        while os.path.exists(_ruta(cid)):
+            cid = f"{base_id}_{suffix}"
+            suffix += 1
+        datos["id"] = cid
         _escribir(_ruta(cid), datos)
     return cid
 
