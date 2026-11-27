@@ -21,7 +21,8 @@ def generar(cid, *, proveedor: IAIProvider | None = None,
 
 def generar_seguro(cid, log=print, *, repositorio: IClassRepository = almacen):
     try:
-        generar(cid, repositorio=repositorio)
+        if generar(cid, repositorio=repositorio) is False:
+            return False
         log(f"Resumen listo: {cid}")
         return True
     except Exception as e:
