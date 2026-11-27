@@ -5,6 +5,7 @@ import threading
 from datetime import datetime
 
 from . import almacen
+from .interfaces import IAIProvider, IClassRepository
 from .config import api_key, cargar, resumen_en_pc
 
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
@@ -91,35 +92,29 @@ def _formatear(segmentos):
     return "\n".join(lineas)
 
 
-def generar(cid):
+def generar(cid, *, proveedor: IAIProvider | None = None,
+            repositorio: IClassRepository = almacen):
     """Genera el resumen de una clase y lo guarda. Lanza excepción si falla."""
     cfg = cargar()
     clave = api_key(cfg)
     if not resumen_en_pc(cfg):
         raise RuntimeError("Falta configurar los resúmenes (clave o servidor) en el asistente.")
-    d = almacen.leer(cid)
+    d = repositorio.leer(cid)
     if not d["segmentos"]:
-        almacen.actualizar(cid, estado_resumen="vacio", error_resumen="No se transcribió nada en esta clase.")
+        repositorio.actualizar(cid, estado_resumen="vacio", error_resumen="No se transcribió nada en esta clase.")
         return
-    almacen.actualizar(cid, estado_resumen="generando", error_resumen=None)
+    repositorio.actualizar(cid, estado_resumen="generando", error_resumen=None)
     ini = datetime.fromisoformat(d["inicio"])
     usuario = (
         f"Asignatura: {d['nombre_asignatura']}\n"
         f"Fecha de la clase: {DIAS[ini.weekday()]} {ini:%Y-%m-%d}, empezó a las {ini:%H:%M}\n\n"
         f"Transcripción:\n{_formatear(d['segmentos'])}"
     )
-    proveedor = cfg["ajustes"].get("proveedor")
-    if proveedor == "openai":
-        res, modelo = _con_openai(cfg, clave, usuario)
-    else:
-        if proveedor == "gemini":
-            texto, modelo = _con_gemini(cfg, clave, usuario)
-        else:
-            texto, modelo = _con_claude(cfg, clave, usuario)
-        res = json.loads(texto)
+    proveedor = proveedor if proveedor is not None else elegir_proveedor(cfg)
+    res, modelo = proveedor.generar(cfg, clave, usuario)
     res["generado"] = datetime.now().isoformat(timespec="seconds")
     res["modelo"] = modelo
-    almacen.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
+    repositorio.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
 
 
 def _con_claude(cfg, clave, usuario):
@@ -310,22 +305,45 @@ def _con_openai(cfg, clave, usuario):
         raise RuntimeError(f"El modelo no devolvió un resumen válido tras dos intentos: {e}")
 
 
-def generar_seguro(cid, log=print):
+class ClaudeProvider:
+    def generar(self, cfg, clave, usuario):
+        texto, modelo = _con_claude(cfg, clave, usuario)
+        return json.loads(texto), modelo
+
+
+class GeminiProvider:
+    def generar(self, cfg, clave, usuario):
+        texto, modelo = _con_gemini(cfg, clave, usuario)
+        return json.loads(texto), modelo
+
+
+class OpenAIProvider:
+    def generar(self, cfg, clave, usuario):
+        return _con_openai(cfg, clave, usuario)
+
+
+def elegir_proveedor(cfg) -> IAIProvider:
+    tipo = cfg["ajustes"].get("proveedor")
+    return {"openai": OpenAIProvider, "gemini": GeminiProvider}.get(tipo, ClaudeProvider)()
+
+
+def generar_seguro(cid, log=print, *, repositorio: IClassRepository = almacen):
     try:
-        generar(cid)
+        generar(cid, repositorio=repositorio)
         log(f"Resumen listo: {cid}")
         return True
     except Exception as e:
         log(f"No se pudo resumir {cid}: {e}")
         try:
-            almacen.actualizar(cid, estado_resumen="error", error_resumen=str(e))
+            repositorio.actualizar(cid, estado_resumen="error", error_resumen=str(e))
         except Exception:
             pass
         return False
 
 
-def en_segundo_plano(cid, log=print):
-    threading.Thread(target=generar_seguro, args=(cid, log), daemon=True).start()
+def en_segundo_plano(cid, log=print, *, repositorio: IClassRepository = almacen):
+    threading.Thread(target=generar_seguro, args=(cid, log),
+                     kwargs={"repositorio": repositorio}, daemon=True).start()
 
 
 def pendientes():
