@@ -86,7 +86,7 @@ class Motor:
             return
         if self.transcribiendo():
             raise RuntimeError("Todavía estoy terminando de transcribir la sesión anterior. Espera un momento.")
-        self.cfg = cargar()
+        self.cfg = self.load_config()
         self.modo, self.asig_manual = modo, asignatura
         self._abrir_stream(self.cfg["ajustes"].get("microfono"))
         self.activo = True
