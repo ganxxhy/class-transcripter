@@ -22,7 +22,12 @@ def generate_summary(cid, *, repositorio: IClassRepository, proveedor: IAIProvid
     if not d["segmentos"]:
         repositorio.actualizar(cid, estado_resumen="vacio", error_resumen="No se transcribió nada en esta clase.")
         return
-    repositorio.actualizar(cid, estado_resumen="generando", error_resumen=None)
+    claim = getattr(repositorio, "claim_summary", None)
+    if claim is not None:
+        if not claim(cid):
+            return False
+    else:
+        repositorio.actualizar(cid, estado_resumen="generando", error_resumen=None)
     ini = datetime.fromisoformat(d["inicio"])
     usuario = (
         f"Asignatura: {d['nombre_asignatura']}\n"
@@ -34,4 +39,5 @@ def generate_summary(cid, *, repositorio: IClassRepository, proveedor: IAIProvid
     res["generado"] = datetime.now().isoformat(timespec="seconds")
     res["modelo"] = modelo
     repositorio.actualizar(cid, estado_resumen="listo", resumen=res, error_resumen=None)
+    return True
 
