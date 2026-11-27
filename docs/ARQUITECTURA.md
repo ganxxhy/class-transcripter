@@ -24,3 +24,7 @@ Esta es una migración incremental, no una arquitectura hexagonal completa. La c
 ## Application boundary
 
 `application/classes.py` and `application/summaries.py` contain use cases with injected dependencies. `infrastructure/status.py` reads agent and panel state. Legacy `nucleo` facades preserve the existing public API. Import-boundary tests prevent domain and application packages from importing concrete adapters. Recording orchestration lives in `application/recording.py`, provider and Whisper implementations in `infrastructure/providers.py` and `infrastructure/whisper.py`. Recording output files are handled by `infrastructure/recording_files.py`. Legacy modules retain compatibility exports. The JSON repository delegates to `infrastructure/json_store.py`; persisted keys and public legacy method names are unchanged.
+
+## Final audit hardening
+
+Capture owns the transcription end marker. Storage errors are logged and incomplete classes are marked as errors. Class IDs are allocated under the storage lock. Local summary jobs claim the generating state atomically; interrupted jobs require resetting that state before retrying. External MCP summary writers still use the legacy protocol. Regression tests cover these changes. Existing Spanish identifiers and wire keys remain for compatibility.
