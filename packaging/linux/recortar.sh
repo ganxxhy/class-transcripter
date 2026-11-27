@@ -5,7 +5,7 @@
 # that PyInstaller copied from the build machine (GTK, GLib, Pango, Cairo, fontconfig...) must NOT
 # travel in the AppImage: it would clash with the newer WebKitGTK of the user's distribution.
 # We keep only what Python, Tk (libXss is not installed by default on every distribution), the pip libraries
-# and libgirepository-1.0 (Arch and other new distributions only ship the 2.0 one, which PyGObject 3.50 cannot use) need.
+# PortAudio's own dependencies (ALSA and JACK, as before: not every system has them) and libgirepository-1.0 (Arch and other new distributions only ship the 2.0 one, which PyGObject 3.50 cannot use) need.
 # Usage: bash packaging/linux/recortar.sh dist/Estudio
 set -euo pipefail
 
@@ -21,7 +21,7 @@ for f in "$DIR"/lib*.so*; do
   n=$(basename "$f")
   case "$n" in
     libpython*|libportaudio*|libffi*|libssl*|libcrypto*|libz.so*|libbz2*|liblzma.so*|libsqlite3*|\
-    libtcl*|libtk*|libXss*|libgirepository-1.0*|libreadline*|libtinfo*|libuuid*|libexpat*|libmvec*) continue ;;
+    libtcl*|libtk*|libXss*|libgirepository-1.0*|libasound*|libjack*|libdb-*|libreadline*|libtinfo*|libuuid*|libexpat*|libmvec*) continue ;;
   esac
   [[ "$n" =~ -[0-9a-f]{8}\.so ]] && continue
   rm -f "$f"

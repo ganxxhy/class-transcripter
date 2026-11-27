@@ -242,6 +242,7 @@ jobs:
           --hidden-import version
           --hidden-import mcp_servidor
           --hidden-import linux_desktop
+          --hidden-import comprobar
           agente/app.py
 
       - name: Recortar el AppImage (sin GTK propio: usa el WebKitGTK del sistema)
@@ -283,6 +284,11 @@ jobs:
           echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
             | ./Estudio-*-x86_64.AppImage --appimage-extract-and-run --mcp | tee salida.txt
           grep -q agente_clases salida.txt
+
+      - name: Prueba de las dependencias (audio, transcripción, Tk, WebKitGTK) dentro del AppImage
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}/datos-comprobar
+        run: xvfb-run -a timeout 120 ./Estudio-*-x86_64.AppImage --appimage-extract-and-run --comprobar
 
       - name: Prueba del asistente (abre la ventana y se cierra sola)
         env:

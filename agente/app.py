@@ -42,6 +42,9 @@ if sys.platform.startswith("linux") and CONGELADA:
         import ctypes.util
         _find_library = ctypes.util.find_library
         ctypes.util.find_library = lambda n: _portaudio if n == "portaudio" else _find_library(n)
+    # The bundle now carries PyGObject (for the web windows), which makes pystray try AppIndicator and fail:
+    # keep the X11 backend it always used here
+    os.environ.setdefault("PYSTRAY_BACKEND", "xorg")
 
 os.makedirs(RUTA_DATOS, exist_ok=True)
 RUTA_LOG = os.path.join(RUTA_DATOS, "agente.log")
@@ -471,6 +474,10 @@ def main():
     if "--integrar" in args or "--quitar-integracion" in args:
         import linux_desktop
         (linux_desktop.uninstall if "--quitar-integracion" in args else linux_desktop.install)()
+        return
+    if "--comprobar" in args:
+        import comprobar
+        comprobar.main()
         return
     if "--asistente" in args:
         from asistente.asistente import ejecutar

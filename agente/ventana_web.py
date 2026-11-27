@@ -38,14 +38,16 @@ def importar_webview():
     return webview
 
 
-def iniciar(webview):
-    """webview.start() for this platform. Returns False (after telling the user) if WebKitGTK is missing."""
+def iniciar(webview, avisar=True):
+    """webview.start() for this platform. Returns False if the window could not be opened because
+    WebKitGTK is missing (telling the user, unless avisar is False: background checks should not nag)."""
     try:
         webview.start(gui=GUI)
     except webview.errors.WebViewException:
         if not LINUX:
             raise
-        avisar_sin_webkit()
+        if avisar:
+            avisar_sin_webkit()
         return False
     return True
 
