@@ -19,6 +19,7 @@ import numpy as np
 from . import almacen, horario, resumen
 from .config import RUTA_DATOS, cargar, nombre_asignatura, resumen_en_pc
 from .transcripcion import Transcriptor
+from .interfaces import ITranscriber, IClassRepository
 
 SR = 16000
 MIN_FRAG_S = 18     # a partir de aquí se busca un silencio para cortar
@@ -86,10 +87,12 @@ def buscar_microfono(eleccion, log=print):
 
 
 class Motor:
-    def __init__(self, log=print):
+    def __init__(self, log=print, *, transcriptor: ITranscriber | None = None,
+                 repositorio: IClassRepository = almacen):
         self.log = log
         self.cfg = cargar()
-        self.transcriptor = Transcriptor(self.cfg["ajustes"], log=log)
+        self.transcriptor = transcriptor if transcriptor is not None else Transcriptor(self.cfg["ajustes"], log=log)
+        self.repositorio = repositorio
         self.lock = threading.Lock()
         self.activo = False
         self.modo = None             # "auto" | "manual"
@@ -231,7 +234,7 @@ class Motor:
 
     def _abrir_clase(self, asig, aula):
         nombre = nombre_asignatura(self.cfg, asig)
-        self.clase_id = almacen.crear_clase(asig, nombre, self.modo, aula=aula)
+        self.clase_id = self.repositorio.crear_clase(asig, nombre, self.modo, aula=aula)
         self.clase_asig = asig
         self.clase_muestras = 0
         self.ultimas_lineas = []
@@ -306,9 +309,9 @@ class Motor:
                 break
             if item[0] == "cerrar":
                 cid = item[1]
-                almacen.cerrar(cid)
+                self.repositorio.cerrar(cid)
                 if resumen_en_pc(cargar()):
-                    resumen.en_segundo_plano(cid, self.log)  # si no hay clave, lo resume el hub
+                    resumen.en_segundo_plano(cid, self.log, repositorio=self.repositorio)  # si no hay clave, lo resume el hub
                 self.guardar_estado()
                 continue
             _, cid, audio, offset = item
@@ -324,7 +327,7 @@ class Motor:
                 except Exception as e:
                     self.log(f"No se pudo cambiar de modelo: {e}")
             if segs:
-                almacen.anadir_segmentos(cid, segs)
+                self.repositorio.anadir_segmentos(cid, segs)
                 contexto[cid] = (contexto.get(cid, "") + " " + " ".join(s["texto"] for s in segs))[-400:]
                 self.ultimas_lineas = (self.ultimas_lineas + [s["texto"] for s in segs])[-40:]
         if not self.activo:
