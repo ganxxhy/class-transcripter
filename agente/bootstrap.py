@@ -5,8 +5,9 @@ from nucleo.config import cargar, RUTA_DATOS
 
 
 def build_class_service():
-    from nucleo.servicio_clases import ServicioClases
-    return ServicioClases(JsonClassRepository(), cargar, RUTA_DATOS)
+    from application.classes import ClassService
+    from infrastructure.status import read_status
+    return ClassService(JsonClassRepository(), cargar, lambda: read_status(RUTA_DATOS))
 
 
 def build_motor(log=print):
