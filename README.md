@@ -13,6 +13,7 @@ Ve a [Releases](../../releases), descarga `Estudio-…-instalador.exe` y ábrelo
 Descarga `Estudio-…-x86_64.AppImage`, hazlo ejecutable (`chmod +x Estudio-*.AppImage`) y ábrelo. Hace falta una distribución de 64 bits con PipeWire o PulseAudio (la de casi cualquier escritorio actual); la app usa PipeWire, luego PulseAudio y solo al final ALSA directo.
 
 - Al acabar el asistente crea su lanzador en el menú y arranca con tu sesión. Si mueves el AppImage, se corrige solo al abrirlo.
+- Las ventanas del asistente usan **WebKitGTK**, que casi todos los escritorios GNOME y KDE ya traen. Si falta, Estudio te lo dice y te da el comando: Debian/Ubuntu `sudo apt install gir1.2-webkit2-4.1`, Fedora `sudo dnf install webkit2gtk4.1`, Arch `sudo pacman -S webkit2gtk-4.1 gobject-introspection-runtime`, openSUSE `sudo zypper install typelib-1_0-WebKit2-4_1`.
 - En GNOME hace falta la extensión AppIndicator para ver el icono junto al reloj; si no, la ventana se minimiza.
 - Si no tienes la app de escritorio de Claude (en Linux no hay una versión oficial confirmada), lo más sencillo es hacer los resúmenes con una clave de API de Claude o Gemini (paso «Resúmenes» del asistente). El panel «Mis clases» se conecta con las versiones de la comunidad que usen `~/.config/Claude`.
 
@@ -76,6 +77,8 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 - `CAMBIOS.md`: novedades de cada versión (salen en Releases y en el aviso de actualización).
 - `tests/`: pruebas (`python tests/test_horario.py`, `python tests/test_linux.py` y `python tests/test_resumen.py`).
 
-Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, y PortAudio).
+**Tamaño del AppImage.** Pesa unos 110 MB (con Qt WebEngine, que lleva su propio Chromium, pesaba 290 MB). Las ventanas del asistente y de actualizaciones usan el **WebKitGTK del sistema** con `pywebview` y PyGObject, igual que en Windows se usa el WebView2 de Edge, y por eso hay que tenerlo instalado (ver «Linux»). `packaging/linux/recortar.sh` quita del AppImage el GTK y los typelibs de la máquina de compilación, que chocarían con el WebKitGTK más nuevo de la distribución del usuario. Si WebKitGTK falta, Estudio lo dice con un diálogo y el comando para instalarlo (`agente/ventana_web.py`). El aspecto de las ventanas puede variar un poco respecto a Windows (motor WebKit en vez de Chromium).
+
+Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, PortAudio, y PyGObject con WebKitGTK: `python3-gi` y `gir1.2-webkit2-4.1` en Debian/Ubuntu, `python3-gobject` y `webkit2gtk4.1` en Fedora, `python-gobject` y `webkit2gtk-4.1` en Arch).
 
 El instalador de Windows y el AppImage los compila GitHub Actions en cada cambio (pestaña Actions). Para publicar una versión: añade su sección `## X.Y.Z` en `CAMBIOS.md`, crea la etiqueta `vX.Y.Z` y se sube sola a Releases. Las apps ya instaladas avisarán de la actualización.

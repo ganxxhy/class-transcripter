@@ -197,12 +197,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libportaudio2 xvfb libfuse2 libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 \
             libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libegl1 libnss3 \
-            libxcomposite1 libxdamage1 libxrandr2 libxtst6 libasound2 libxkbfile1 python3-tk
+            libxcomposite1 libxdamage1 libxrandr2 libxtst6 libasound2 libxkbfile1 python3-tk \
+            pkg-config libgirepository1.0-dev libcairo2-dev gir1.2-gtk-3.0 gir1.2-webkit2-4.1
 
       - name: Dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install -r agente/requirements.txt pyinstaller
+          # The windows use the system's WebKitGTK through PyGObject (3.50 is the last one for Ubuntu 22.04's GLib)
+          pip install -r agente/requirements.txt pyinstaller "PyGObject<3.51"
 
       - name: Pruebas
         run: |
@@ -241,6 +243,9 @@ jobs:
           --hidden-import mcp_servidor
           --hidden-import linux_desktop
           agente/app.py
+
+      - name: Recortar el AppImage (sin GTK propio: usa el WebKitGTK del sistema)
+        run: bash packaging/linux/recortar.sh dist/Estudio
 
       - name: Montar el AppImage
         run: |

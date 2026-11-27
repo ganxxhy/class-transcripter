@@ -293,13 +293,14 @@ class Api:
 
 
 def _ventana(info, modo):
-    import webview
+    import ventana_web
+    webview = ventana_web.importar_webview()
     api = Api(info, modo)
     with open(os.path.join(AQUI, "asistente", "actualizacion.html"), encoding="utf-8") as f:
         html = f.read()
     api._ventana = webview.create_window("Estudio", html=html, js_api=api, width=640, height=600,
                                          min_size=(520, 480), background_color="#CFE6FF")
-    webview.start(gui="qt" if sys.platform.startswith("linux") else None)
+    ventana_web.iniciar(webview)
 
 
 def comprobar_y_avisar(forzar=False):

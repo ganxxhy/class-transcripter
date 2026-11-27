@@ -1,6 +1,6 @@
 """Asistente de la primera vez: perfil, asignaturas y horario, micrófono, resúmenes.
 
-Es una ventana web (pywebview: Edge en Windows, Qt en Linux) para que se vea
+Es una ventana web (pywebview: Edge en Windows, WebKitGTK en Linux) para que se vea
 bien. La interfaz está en asistente.html y llama a la clase Api de aquí.
 Se lanza con: AgenteClases.exe --asistente   (o python app.py --asistente)
 """
@@ -18,8 +18,7 @@ sys.path.insert(0, os.path.dirname(AQUI))
 
 from nucleo import config  # noqa: E402
 
-# On Linux the web windows use Qt: its wheels come from pip, so the AppImage carries everything
-GUI = "qt" if sys.platform.startswith("linux") else None
+import ventana_web  # noqa: E402
 
 REPO = "ganxxhy/class-transcripter"
 URL_HUB_HTML = f"https://raw.githubusercontent.com/{REPO}/main/hub/mis-clases.html"
@@ -214,12 +213,13 @@ def html():
 
 def ejecutar():
     """Abre el asistente y bloquea hasta que se cierra. Devuelve qué abrir después."""
-    import webview
+    webview = ventana_web.importar_webview()
 
     api = Api()
     api._ventana = webview.create_window("Estudio", html=html(), js_api=api, width=1000, height=700,
                                         min_size=(900, 640), background_color="#CFE6FF")
-    webview.start(gui=GUI)
+    if not ventana_web.iniciar(webview):
+        return None
     api.parar_medidor()
     return api._terminado
 

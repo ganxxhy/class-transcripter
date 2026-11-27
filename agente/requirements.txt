@@ -4,5 +4,5 @@ numpy
 anthropic>=2.13
 pystray
 pillow
-pywebview>=5.0; sys_platform != "linux"
-pywebview[qt]>=5.0; sys_platform == "linux"
+# On Linux the window uses the system WebKitGTK through PyGObject (see README); the AppImage build installs PyGObject itself
+pywebview>=5.0
