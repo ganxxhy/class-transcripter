@@ -11,3 +11,7 @@ class JsonClassRepository:
     listar = staticmethod(almacen.listar)
     eliminar = staticmethod(almacen.eliminar)
     claim_summary = staticmethod(almacen.claim_summary)
+
+    clases_abiertas_huerfanas = staticmethod(almacen.clases_abiertas_huerfanas)
+    leer_estado = staticmethod(almacen.leer_estado)
+    marcar_hecho = staticmethod(almacen.marcar_hecho)
