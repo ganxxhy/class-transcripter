@@ -1,4 +1,4 @@
-/* Sky engine: sets --bg-a/--bg-b/--bg-c, --on-sky, --on-sky-mute, --stars on <html>
+/* Sky engine: independent live root and simulated chapter palettes
    from the sun's altitude at the viewer's local time and (approximate) location. */
 (function(){
 const CITIES={
@@ -25,24 +25,28 @@ const K=[[-90,'#060B1A','#0B1530','#14223F'],[-14,'#08122A','#11204A','#1D2F5C']
 const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mix=(a,b,t)=>'#'+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
 function colors(alt){let i=0;while(i<K.length-2&&alt>K[i+1][0])i++;const a=K[i],b=K[i+1],t=Math.max(0,Math.min(1,(alt-a[0])/(b[0]-a[0])));return[1,2,3].map(j=>mix(a[j],b[j],t))}
 const load=k=>{try{return localStorage.getItem(k)}catch(e){return null}},store=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-const S={city:load('sky-city')||'auto',preview:null,blend:0};
+const S={city:load('sky-city')||'auto',preview:6};
 function place(){return S.city!=='auto'&&CITIES[S.city]?{name:S.city,ll:CITIES[S.city],how:'elegida por ti'}:autoPlace()}
-function when(){if(S.preview==null)return new Date();const d=new Date();d.setHours(Math.floor(S.preview),Math.round(S.preview%1*60),0,0);return d}
-function apply(){
- const p=place(),t=when(),previewAlt=sunAlt(t.getTime(),p.ll[0],p.ll[1]),liveAlt=sunAlt(Date.now(),p.ll[0],p.ll[1]),alt=previewAlt+(liveAlt-previewAlt)*S.blend,root=document.documentElement.style;
- const [a,b,c]=colors(previewAlt).map((color,i)=>mix(color,colors(liveAlt)[i],S.blend));
+function paint(el,alt){
+ const [a,b,c]=colors(alt),root=el.style,dark=alt<-1;
  root.setProperty('--bg-a',a);root.setProperty('--bg-b',b);root.setProperty('--bg-c',c);
- const dark=alt<-1;root.setProperty('--on-sky',dark?'#F2F5FA':'#0D2340');root.setProperty('--on-sky-mute',dark?'#B9C6DA':'#3F5068');
+ root.setProperty('--on-sky',dark?'#F2F5FA':'#0D2340');root.setProperty('--on-sky-mute',dark?'#B9C6DA':'#3F5068');
  root.setProperty('--stars',String(Math.max(0,Math.min(1,(-alt-4)/10))));
- document.documentElement.dataset.sky=dark?'night':alt<8?'golden':'day';
+ el.dataset.sky=dark?'night':alt<8?'golden':'day';
+}
+function apply(){
+ const p=place(),now=new Date(),altAt=t=>sunAlt(t.getTime(),p.ll[0],p.ll[1]);
+ paint(document.documentElement,altAt(now));
+ const chapter=document.getElementById('cielo');if(!chapter)return;
+ const t=new Date(now);t.setHours(Math.floor(S.preview),Math.floor(S.preview%1*60),0,0);
+ const alt=altAt(t);paint(chapter,alt);
  const hh=t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
  const phase=alt<-12?'Noche':alt<-1?(t.getHours()<12?'Amanecer':'Anochecer'):alt<8?(t.getHours()<12?'Mañana temprana':'Atardecer'):'Día';
- document.querySelectorAll('[data-sky-label]').forEach(el=>el.textContent=`${phase} · ${hh} · ${p.name}`);
- document.querySelectorAll('[data-sky-how]').forEach(el=>el.textContent=S.preview==null?`Hora real de tu dispositivo. Ubicación: ${p.name} (${p.how}).`:`Vista previa a las ${hh} en ${p.name}.`);
- document.querySelectorAll('[data-sky-range]').forEach(el=>{if(S.preview==null){const n=new Date();el.value=n.getHours()+n.getMinutes()/60}});
+ chapter.querySelectorAll('[data-sky-label]').forEach(el=>el.textContent=`${phase} · ${hh} · ${p.name}`);
+ chapter.querySelectorAll('[data-sky-how]').forEach(el=>el.textContent=`Vista previa a las ${hh} en ${p.name}.`);
 }
 window.Sky={cities:Object.keys(CITIES),get city(){return S.city},
  setCity(c){S.city=c;store('sky-city',c);apply()},
- preview(h,blend=0){S.preview=h;S.blend=Math.max(0,Math.min(1,blend));apply()},live(){S.preview=null;S.blend=0;apply()},apply};
-apply();setInterval(()=>{if(S.preview==null)apply()},60000);
+ preview(h){S.preview=h;apply()},live(){S.preview=6;apply()},apply};
+apply();setInterval(apply,60000);
 })();
