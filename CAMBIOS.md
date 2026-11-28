@@ -31,9 +31,9 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 - SQLite pasa a ser el almacenamiento obligatorio de clases y transcripciones. La primera apertura migra y verifica los datos anteriores; los JSON se conservan en `datos/clases-json-backup`.
 - Si falla la migración, Estudio no vuelve silenciosamente al almacenamiento anterior.
 
-### Panel
-- El Hub 1.1.3 utiliza MCP para acceder a las clases en SQLite. Actualiza el artefacto existente en Claude antes de usarlo con la nueva versión.
-- La generación de resúmenes y la sincronización del Hub con SQLite quedan pendientes de validación manual, al igual que la migración en Linux.
+### Compatibilidad y validación
+- El artefacto opcional de Claude requiere una versión compatible con SQLite y acceso mediante MCP. El Hub local no requiere Claude.
+- Generación con ChatGPT y recuperación de resúmenes interrumpidos verificadas manualmente en Windows. Las pruebas automatizadas de Windows y Linux han pasado; quedan pendientes las pruebas manuales de migración en Linux y del actualizador en condiciones reales.
 
 ### Arreglos
 - Mejoras en el cierre de las grabaciones para procesar los fragmentos pendientes antes de finalizar la transcripción.
