@@ -34,7 +34,7 @@ from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre
 from nucleo.motor import microfonos  # noqa: E402
 from bootstrap import build_motor, build_repository  # noqa: E402
 import tema  # noqa: E402
-from device_choices import DEVICE_CHOICES, device_label, device_value  # noqa: E402
+from device_choices import DEVICE_CHOICES, device_help, device_label, device_value  # noqa: E402
 from version import VERSION  # noqa: E402
 
 if sys.platform.startswith("linux") and CONGELADA:
@@ -470,8 +470,13 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
         ttk.Label(f, text="Dispositivo de transcripción (OpenVINO y Vulkan son opcionales; ver README)", style="Card.TLabel").pack(anchor="w")
         self.var_disp = tk.StringVar(value=device_label(aj.get("dispositivo", "auto")))
-        ttk.Combobox(f, textvariable=self.var_disp, values=[text for _, text in DEVICE_CHOICES], state="readonly",
-                     width=58).pack(anchor="w", pady=(2, 10))
+        self.cmb_disp = ttk.Combobox(f, textvariable=self.var_disp, values=[text for _, text in DEVICE_CHOICES], state="readonly",
+                     width=58)
+        self.cmb_disp.pack(anchor="w", pady=(2, 2))
+        self.var_disp_ayuda = tk.StringVar(value=device_help(aj.get("dispositivo", "auto")))
+        ttk.Label(f, textvariable=self.var_disp_ayuda, style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(0, 10))
+        self.cmb_disp.bind("<<ComboboxSelected>>", lambda _e: self.var_disp_ayuda.set(
+            device_help(device_value(self.var_disp.get(), aj.get("dispositivo", "auto")))))
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         if edit_schedule:

@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agente"))
 
-from device_choices import DEVICE_CHOICES, device_label, device_value
+from device_choices import DEVICE_CHOICES, device_help, device_label, device_value
 
 
 class DeviceChoicesTests(unittest.TestCase):
@@ -15,6 +15,13 @@ class DeviceChoicesTests(unittest.TestCase):
     def test_labels_round_trip_to_stored_values(self):
         for value, _ in DEVICE_CHOICES:
             self.assertEqual(device_value(device_label(value)), value)
+
+    def test_labels_are_short_and_every_device_has_help(self):
+        self.assertEqual(device_label("auto"), "Automático")
+        for value, label in DEVICE_CHOICES:
+            self.assertNotIn("(NVIDIA,", label)
+            self.assertTrue(device_help(value))
+        self.assertEqual(device_help("hand-edited"), "")
 
     def test_unknown_stored_value_is_kept(self):
         self.assertEqual(device_label("hand-edited"), "hand-edited")

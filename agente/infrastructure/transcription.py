@@ -41,8 +41,8 @@ class LocalTranscriber:
         if device == "vulkan":
             return [("Vulkan", self.vulkan)]
         if device == "auto":
-            return [(name, backend) for name, backend in (("OpenVINO", self.openvino), ("Vulkan", self.vulkan))
-                    if backend.installed()]
+            # Vulkan measured slower than CPU on the tested hardware, so it is only used when chosen explicitly.
+            return [("OpenVINO", self.openvino)] if self.openvino.installed() else []
         return []
 
     def _accelerator_name(self, backend):

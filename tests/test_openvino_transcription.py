@@ -98,11 +98,19 @@ class OpenVinoSelectionTests(unittest.TestCase):
         self.backend.vulkan.cargar.assert_not_called()
         self.assertFalse(self.backend.puede_aligerar())
 
-    def test_auto_falls_back_from_openvino_to_vulkan(self):
+    def test_auto_falls_back_from_openvino_to_cpu(self):
         self.backend.openvino.cargar.side_effect = RuntimeError("no model")
         self.backend.cargar()
-        self.assertIs(self.backend.active, self.backend.vulkan)
-        self.assertTrue(any("OpenVINO" in call.args[0] and "no model" in call.args[0] for call in self.log.call_args_list))
+        self.make_legacy.assert_called_once_with({"dispositivo": "cpu"}, self.log)
+        self.backend.vulkan.cargar.assert_not_called()
+        self.assertTrue(any("OpenVINO" in c.args[0] and "no model" in c.args[0] and "Se usará CPU" in c.args[0]
+                            for c in self.log.call_args_list))
+
+    def test_failed_cuda_startup_still_tries_openvino(self):
+        self.cuda.return_value = True
+        self.make_legacy.return_value.cargar.side_effect = RuntimeError("CUDA probe failed")
+        self.backend.cargar()
+        self.assertIs(self.backend.active, self.backend.openvino)
 
     def test_auto_without_optional_engines_uses_faster_whisper(self):
         self.backend.openvino.installed.return_value = False

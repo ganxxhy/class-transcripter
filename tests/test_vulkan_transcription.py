@@ -41,10 +41,12 @@ class VulkanSelectionTests(unittest.TestCase):
         self.assertIs(self.backend.modelo, self.legacy)
 
     def test_cuda_has_priority(self):
+        self.backend.openvino.installed.return_value = True
         self.cuda.return_value = True
         self.backend.cargar()
         self.make_legacy.assert_called_once_with({"dispositivo": "cuda"}, self.log)
         self.backend.vulkan.cargar.assert_not_called()
+        self.backend.openvino.cargar.assert_not_called()
 
     def test_explicit_legacy_modes_skip_vulkan(self):
         for device in ("cpu", "cuda"):
@@ -56,17 +58,12 @@ class VulkanSelectionTests(unittest.TestCase):
         self.cuda.assert_not_called()
         self.backend.vulkan.installed.assert_not_called()
 
-    def test_auto_uses_vulkan_when_cuda_is_absent(self):
+    def test_auto_ignores_installed_vulkan(self):
+        self.backend.vulkan.installed.return_value = True
         self.backend.cargar()
-        self.assertIs(self.backend.active, self.backend.vulkan)
-        self.assertFalse(self.backend.puede_aligerar())
-        self.make_legacy.assert_not_called()
-
-    def test_failed_cuda_startup_still_tries_vulkan(self):
-        self.cuda.return_value = True
-        self.legacy.cargar.side_effect = RuntimeError("CUDA probe failed")
-        self.backend.cargar()
-        self.assertIs(self.backend.active, self.backend.vulkan)
+        self.make_legacy.assert_called_once_with({"dispositivo": "auto"}, self.log)
+        self.backend.vulkan.cargar.assert_not_called()
+        self.backend.vulkan.installed.assert_not_called()
 
     def test_explicit_vulkan_startup_failure_selects_cpu(self):
         self.backend.settings["dispositivo"] = "vulkan"
@@ -77,6 +74,7 @@ class VulkanSelectionTests(unittest.TestCase):
         self.assertTrue(any("driver missing" in call.args[0] for call in self.log.call_args_list))
 
     def test_inference_failure_retries_once_and_keeps_cpu(self):
+        self.backend.settings["dispositivo"] = "vulkan"
         result = [{"ini": 3.0, "fin": 4.0, "texto": "Matrices"}]
         self.legacy.transcribir.return_value = result
         self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
@@ -88,6 +86,7 @@ class VulkanSelectionTests(unittest.TestCase):
         self.assertTrue(any("Velocidad de transcripción:" in call.args[0] for call in self.log.call_args_list))
 
     def test_inference_failure_loads_cpu_before_retry(self):
+        self.backend.settings["dispositivo"] = "vulkan"
         self.legacy.transcribir.return_value = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
         order = Mock()
         order.attach_mock(self.legacy.cargar, "cargar")
@@ -98,6 +97,7 @@ class VulkanSelectionTests(unittest.TestCase):
         self.assertIs(self.backend.modelo, self.legacy)
 
     def test_fallback_speed_excludes_cpu_model_load(self):
+        self.backend.settings["dispositivo"] = "vulkan"
         self.legacy.transcribir.return_value = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
         self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
         self.legacy.descripcion = "cpu"
@@ -106,6 +106,7 @@ class VulkanSelectionTests(unittest.TestCase):
         self.assertIn("1.00×", self.log.call_args_list[-1].args[0])
 
     def test_failed_cpu_load_does_not_keep_the_dead_vulkan_backend(self):
+        self.backend.settings["dispositivo"] = "vulkan"
         self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
         self.legacy.cargar.side_effect = RuntimeError("model unavailable")
         with self.assertRaisesRegex(RuntimeError, "model unavailable"):
