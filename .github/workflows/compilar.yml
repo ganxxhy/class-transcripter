@@ -67,6 +67,8 @@ jobs:
           python tests/test_device_choices.py
           python tests/test_openvino_transcription.py
           python tests/test_openvino_runtime.py
+          python tests/test_gpu_detection.py
+          python tests/test_acceleration_advice.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -135,6 +137,8 @@ jobs:
           python tests/test_device_choices.py
           python tests/test_openvino_transcription.py
           python tests/test_openvino_runtime.py
+          python tests/test_gpu_detection.py
+          python tests/test_acceleration_advice.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -304,6 +308,8 @@ jobs:
           python tests/test_device_choices.py
           python tests/test_openvino_transcription.py
           python tests/test_openvino_runtime.py
+          python tests/test_gpu_detection.py
+          python tests/test_acceleration_advice.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 

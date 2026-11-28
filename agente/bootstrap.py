@@ -44,6 +44,21 @@ def download_openvino_model(log=print):
     download(Path(RUTA_DATOS) / "openvino", cargar()["ajustes"], log)
 
 
+def acceleration_status(log=print):
+    """Detect GPU vendors and installed engines without loading any GPU runtime."""
+    from pathlib import Path
+    from acceleration_advice import AccelerationStatus
+    from infrastructure.gpu_detection import detect_gpu_vendors
+    from infrastructure.openvino_runtime import install_running, pack_available
+    from infrastructure.openvino_whisper import OpenVinoWhisper
+    from infrastructure.vulkan_whisper import VulkanWhisper
+    settings = cargar()["ajustes"]
+    data = Path(RUTA_DATOS)
+    return AccelerationStatus(detect_gpu_vendors(), OpenVinoWhisper(data / "openvino", settings, log).ready(),
+                              VulkanWhisper(data / "vulkan", settings, log).installed(),
+                              pack_available(), install_running(data / "openvino"))
+
+
 def install_openvino_pack(log=print, include_model=True):
     """Download the OpenVINO runtime and model for Intel GPUs (the acceleration pack)."""
     from pathlib import Path

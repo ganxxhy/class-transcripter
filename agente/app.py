@@ -15,6 +15,7 @@ Opciones (las usa el instalador):
   --buscar-actualizacion [--forzar]  aviso de versión nueva (--forzar: aunque se saltara)
 """
 import os
+import queue
 import subprocess
 import sys
 
@@ -34,7 +35,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from nucleo import almacen, horario, resumen  # noqa: E402
 from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre_asignatura, resumen_en_pc  # noqa: E402
 from nucleo.motor import microfonos  # noqa: E402
-from bootstrap import build_motor, build_repository  # noqa: E402
+from bootstrap import acceleration_status, build_motor, build_repository, install_openvino_pack  # noqa: E402
+from acceleration_advice import acceleration_advice, install_done_text  # noqa: E402
 import tema  # noqa: E402
 from device_choices import DEVICE_CHOICES, device_help, device_label, device_value  # noqa: E402
 from version import VERSION  # noqa: E402
@@ -479,6 +481,13 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Label(f, textvariable=self.var_disp_ayuda, style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(0, 10))
         self.cmb_disp.bind("<<ComboboxSelected>>", lambda _e: self.var_disp_ayuda.set(
             device_help(device_value(self.var_disp.get(), aj.get("dispositivo", "auto")))))
+        self.cola_accel = queue.Queue()
+        self.var_accel = tk.StringVar(value="")
+        self.zona_accel = ttk.Frame(f, style="Card.TFrame")  # filled in once the GPU has been detected
+        self.zona_accel.pack(anchor="w", fill="x")
+        self.btn_accel = None
+        threading.Thread(target=self._detectar_aceleracion, daemon=True).start()
+        self._accel_job = self.after(200, self._sondear_aceleracion)
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         if edit_schedule:
@@ -494,6 +503,61 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Button(fila, text="Guardar", style="Pri.TButton", command=self._guardar).pack(side="right")
         ttk.Button(fila, text="Cancelar", command=self.destroy).pack(side="right", padx=6)
         self.grab_set()
+
+    def destroy(self):
+        try:
+            self.after_cancel(self._accel_job)
+        except (AttributeError, tk.TclError):
+            pass
+        super().destroy()
+
+    def _dispositivo_elegido(self):
+        return device_value(self.var_disp.get(), self.cfg["ajustes"].get("dispositivo", "auto"))
+
+    def _detectar_aceleracion(self):
+        try:
+            estado = acceleration_status(log=lambda *_: None)
+            self.cola_accel.put(("advice", acceleration_advice(estado, self.cfg["ajustes"].get("dispositivo", "auto"))))
+        except Exception:
+            pass  # detection is a hint only; Settings keeps working without it
+
+    def _instalar_aceleracion(self):
+        if not messagebox.askyesno("Aceleración Intel", "Se descargarán unos 1,7 GB (motor OpenVINO y modelo de voz). "
+                                   "Puede tardar un rato. ¿Continuar?", parent=self):
+            return
+        self.btn_accel.configure(state="disabled")
+        self.var_accel.set("Descargando… puede tardar unos minutos. Puedes cerrar Ajustes; la descarga sigue.")
+        cola = self.cola_accel
+
+        def trabajo():
+            try:
+                install_openvino_pack(lambda mensaje: cola.put(("log", mensaje)))
+                cola.put(("done", None))
+            except Exception as error:
+                cola.put(("done", str(error)))
+        threading.Thread(target=trabajo, daemon=True).start()
+
+    def _sondear_aceleracion(self):
+        while not self.cola_accel.empty():
+            tipo, dato = self.cola_accel.get()
+            if tipo == "advice" and dato is not None:
+                self.var_accel.set(dato.text)
+                ttk.Label(self.zona_accel, textvariable=self.var_accel, style="CardSub.TLabel",
+                          wraplength=380).pack(anchor="w", pady=(0, 6))
+                if dato.can_install:
+                    self.btn_accel = ttk.Button(self.zona_accel, text="Activar aceleración Intel",
+                                                command=self._instalar_aceleracion)
+                    self.btn_accel.pack(anchor="w", pady=(0, 10))
+            elif tipo == "log" and self.btn_accel is not None and dato and "%" not in dato:
+                self.var_accel.set(dato)
+            elif tipo == "done" and self.btn_accel is not None:
+                if dato is None:
+                    self.var_accel.set(install_done_text(self._dispositivo_elegido()))
+                    self.btn_accel.pack_forget()
+                else:
+                    self.var_accel.set(f"No se pudo instalar: {dato}")
+                    self.btn_accel.configure(state="normal")
+        self._accel_job = self.after(200, self._sondear_aceleracion)
 
     def _guardar(self):
         aj = self.cfg["ajustes"]
