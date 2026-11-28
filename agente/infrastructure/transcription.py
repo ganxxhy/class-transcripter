@@ -16,6 +16,11 @@ class LocalTranscriber:
         self.lock = Lock()
 
     @property
+    def modelo(self):
+        """Return the loaded backend, or None; keeps the legacy UI check working."""
+        return self.active
+
+    @property
     def descripcion(self):
         active = self.active
         return active.descripcion if active is not None else "sin cargar"

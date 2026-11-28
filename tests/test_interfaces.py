@@ -50,6 +50,7 @@ class ProveedorFalso:
 
 class TranscriptorFalso:
     descripcion = "simulado"
+    modelo = None
 
     def cargar(self):
         pass

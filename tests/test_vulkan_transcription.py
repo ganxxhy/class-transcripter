@@ -32,6 +32,12 @@ class VulkanSelectionTests(unittest.TestCase):
         self.cuda.assert_not_called()
         self.backend.vulkan.cargar.assert_not_called()
 
+    def test_legacy_loaded_check_reflects_active_backend(self):
+        self.backend.vulkan.installed.return_value = False
+        self.assertIsNone(self.backend.modelo)
+        self.backend.cargar()
+        self.assertIs(self.backend.modelo, self.legacy)
+
     def test_cuda_has_priority(self):
         self.cuda.return_value = True
         self.backend.cargar()
@@ -78,6 +84,19 @@ class VulkanSelectionTests(unittest.TestCase):
         self.backend.vulkan.transcribir.assert_called_once()
         self.backend.vulkan.close.assert_called_once()
         self.assertTrue(any("Velocidad de transcripción:" in call.args[0] for call in self.log.call_args_list))
+
+
+class TranscriberContractTests(unittest.TestCase):
+    def test_transcribers_expose_ui_contract(self):
+        from infrastructure.whisper import Transcriptor
+        with TemporaryDirectory() as directory:
+            backends = [LocalTranscriber({}, directory), Transcriptor({})]
+        for backend in backends:
+            with self.subTest(backend=type(backend).__name__):
+                for name in ("cargar", "transcribir", "puede_aligerar", "aligerar"):
+                    self.assertTrue(callable(getattr(backend, name)))
+                self.assertIsNone(backend.modelo)
+                self.assertEqual(backend.descripcion, "sin cargar")
 
 
 class VulkanProtocolTests(unittest.TestCase):
