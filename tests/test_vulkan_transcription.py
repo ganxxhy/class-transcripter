@@ -99,6 +99,18 @@ class TranscriberContractTests(unittest.TestCase):
                 self.assertEqual(backend.descripcion, "sin cargar")
 
 
+class PrefetchTests(unittest.TestCase):
+    def test_prefetch_maps_vulkan_to_legacy_auto(self):
+        from bootstrap import prefetch_speech_model
+        with patch("infrastructure.whisper.Transcriptor") as legacy:
+            prefetch_speech_model({"dispositivo": "vulkan"})
+            legacy.assert_called_once_with({"dispositivo": "auto"}, print)
+            legacy.return_value.cargar.assert_called_once_with()
+            legacy.reset_mock()
+            prefetch_speech_model({"dispositivo": "cpu"})
+            legacy.assert_called_once_with({"dispositivo": "cpu"}, print)
+
+
 class VulkanProtocolTests(unittest.TestCase):
     def test_worker_requires_voice_activity_model_before_launch(self):
         with TemporaryDirectory() as directory:
@@ -109,6 +121,19 @@ class VulkanProtocolTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "detección de voz"):
                     adapter.cargar()
             launch.assert_not_called()
+
+    def test_missing_files_name_directory_and_remedy(self):
+        with TemporaryDirectory() as directory:
+            adapter = VulkanWhisper(directory, {}, Mock())
+            with self.assertRaisesRegex(RuntimeError, "README") as caught:
+                adapter.cargar()
+            self.assertIn(str(Path(directory).resolve()), str(caught.exception))
+            adapter.worker.touch()
+            with self.assertRaisesRegex(RuntimeError, "--descargar-modelo-vulkan"):
+                adapter.cargar()
+            adapter.model.touch()
+            with self.assertRaisesRegex(RuntimeError, "--descargar-modelo-vulkan"):
+                adapter.cargar()
 
     def test_response_preserves_class_offsets_and_filters_silence(self):
         transcript = "Álgebra lineal".encode()

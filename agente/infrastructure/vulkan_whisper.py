@@ -69,11 +69,11 @@ class VulkanWhisper:
 
     def cargar(self):
         if not self.installed():
-            raise RuntimeError("No se encontró el motor opcional de Vulkan.")
+            raise RuntimeError(f"No se encontró el motor opcional de Vulkan en {self.worker.parent}; hay que compilarlo (README, sección Vulkan).")
         if self.model.parent != self.worker.parent or not self.model.is_file():
-            raise RuntimeError(f"No se encontró el modelo Vulkan {self.model_name!r}.")
+            raise RuntimeError(f"No se encontró el modelo Vulkan {self.model_name!r} en {self.model.parent}; descárgalo con --descargar-modelo-vulkan.")
         if not self.vad_model.is_file():
-            raise RuntimeError("No se encontró el modelo de detección de voz para Vulkan.")
+            raise RuntimeError(f"No se encontró el modelo de detección de voz para Vulkan en {self.vad_model.parent}; descárgalo con --descargar-modelo-vulkan.")
         if any(c in str(self.model) + str(self.vad_model) + self.language for c in "\r\n"):
             raise RuntimeError("Ruta del modelo o idioma no válido para Vulkan.")
         # PyInstaller can redirect library lookup to the app bundle on Linux.

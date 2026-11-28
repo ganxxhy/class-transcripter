@@ -48,7 +48,16 @@ Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks
    ```
 
 3. Put `studio-whisper-vulkan` (Linux) or `studio-whisper-vulkan.exe` (Windows, typically under `build/vulkan/Release`) in the `datos/vulkan` subdirectory of Estudio's data root. The default is `~/.local/share/estudio/datos/vulkan` for the AppImage and `Documents\AgenteClases\datos\vulkan` on Windows. When running from source it is `agente/datos/vulkan`. If you set `AGENTE_CLASES_DATOS`, use its `datos/vulkan` subdirectory.
-4. Download [the Silero voice activity model](https://huggingface.co/ggml-org/whisper-vad/blob/main/ggml-silero-v6.2.0.bin) as `ggml-silero-v6.2.0.bin` and [the GGML large-v3-turbo model](https://huggingface.co/ggerganov/whisper.cpp/blob/main/ggml-large-v3-turbo.bin) into that directory as `ggml-large-v3-turbo.bin`. If you explicitly set `modelo_whisper` to another model, install the matching `ggml-<model>.bin` there.
+4. Download the two GGML models into that directory. The simplest way is to let Estudio do it (it verifies size and SHA-256 of what it downloads, and keeps files already present if their size matches): `python agente/app.py --descargar-modelo-vulkan` from source, or run the installed executable with the same argument. The manual alternative is:
+
+   ```sh
+   cd <datos/vulkan directory>
+   curl -fLO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin   # 1624555275 bytes
+   curl -fLO https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v6.2.0.bin      # 885098 bytes
+   sha256sum ggml-*.bin
+   ```
+
+   Expected SHA-256: `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69` (large-v3-turbo) and `2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987` (Silero). The worker itself is not downloaded; build it as in step 2. If you explicitly set `modelo_whisper` to another model, install the matching `ggml-<model>.bin` there by hand. If a file is missing, the log names it and the folder where Estudio looks for it, then falls back to CPU.
 5. Restart Estudio. In the `ajustes` object of `config.json`, `"dispositivo": "auto"` keeps CUDA first, then tries the optional Vulkan worker, then uses CPU. Set `"dispositivo": "vulkan"` to try Vulkan first with CPU fallback, or use `"cpu"` or `"cuda"` to select an existing backend directly.
 
 The transcription log shows the active model and device, any fallback reason, and a real-time speed multiplier per chunk. To compare Vulkan with CPU, transcribe the same sample with `modelo_whisper` set to `large-v3-turbo` for both runs and compare the speed after model startup. A value above `1.0×` means the chunk was processed faster than it was recorded.

@@ -565,10 +565,18 @@ def main():
             actualizacion.novedades_si_toca()
         actualizacion.comprobar_y_avisar(forzar="--forzar" in args)
         return
-    if "--descargar-modelo" in args:
-        from bootstrap import build_transcriber
+    if "--descargar-modelo-vulkan" in args:
+        from bootstrap import download_vulkan_models
         try:
-            build_transcriber().cargar()
+            download_vulkan_models()
+        except Exception as error:
+            print(f"No se pudieron descargar los modelos de Vulkan: {error}")
+            sys.exit(1)
+        return
+    if "--descargar-modelo" in args:
+        from bootstrap import prefetch_speech_model
+        try:
+            prefetch_speech_model()
         except Exception:
             pass  # se volverá a intentar al abrir el agente
         return
