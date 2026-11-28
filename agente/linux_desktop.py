@@ -45,7 +45,7 @@ def _entry(extra_args, hidden_hint="", hub=False):
     name = "Estudio Hub" if hub else "Estudio"
     icon = "estudio-hub" if hub else NAME
     return (f"[Desktop Entry]\nType=Application\nName={name}\n"
-            "Comment=Graba, transcribe y resume tus clases\n"
+            f"Comment={'Consulta y gestiona tus clases' if hub else 'Graba, transcribe y resume tus clases'}\n"
             f"Exec={exec_line}\nIcon={icon}\nTerminal=false\nCategories=Education;AudioVideo;\n"
             f"{hidden_hint}")
 
