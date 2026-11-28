@@ -48,6 +48,23 @@ class ActualizacionTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 a._verificar_descarga(p, info)
 
+    def test_windows_installer_launch(self):
+        with patch.object(a.sys, "frozen", False, create=True), patch.object(a.subprocess, "Popen") as launch:
+            a.launch_windows_installer("updates/installer.exe", "updates/install.log")
+            args, kwargs = launch.call_args
+            self.assertIn("/LOG=updates/install.log", args[0])
+            self.assertEqual(kwargs["cwd"], "updates")
+            self.assertEqual(kwargs["env"]["PYINSTALLER_RESET_ENVIRONMENT"], "1")
+
+    def test_installer_early_failure(self):
+        from unittest.mock import Mock
+        process = Mock()
+        process.wait.return_value = 5
+        with self.assertRaisesRegex(RuntimeError, "5"):
+            a.check_installer_start(process)
+        process.wait.side_effect = a.subprocess.TimeoutExpired("installer", 5)
+        a.check_installer_start(process)
+
 
 if __name__ == "__main__":
     unittest.main()
