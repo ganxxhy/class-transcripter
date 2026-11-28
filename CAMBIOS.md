@@ -6,6 +6,9 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## Sin publicar
 
+### Web
+- Mejora del contraste del texto sobre el cielo dinámico durante el amanecer, el atardecer y la noche.
+
 ## 1.3.0
 
 ### Panel
