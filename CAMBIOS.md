@@ -6,6 +6,8 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## Sin publicar
 
+## 1.3.0
+
 ### Novedades
 - SQLite pasa a ser el almacenamiento obligatorio de clases y transcripciones. La primera apertura migra y verifica los datos anteriores; los JSON se conservan en `datos/clases-json-backup`.
 - Si falla la migración, Estudio no vuelve silenciosamente al almacenamiento anterior.
