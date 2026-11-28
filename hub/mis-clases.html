@@ -301,7 +301,7 @@ footer{color:var(--mute);font-size:12.5px;padding:8px 0 90px;max-width:80ch}
 
 <script>
 const LOCAL = window.ESTUDIO_LOCAL === true;
-const VERSION_PANEL = "1.1.4"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
+const VERSION_PANEL = "1.1.5"; // súbela al cambiar este archivo: el agente avisa a los paneles más viejos
 const HOST = "host:agente_clases";
 const POR_PARTE = 400; // segmentos por documento de transcripción
 const $ = (s, el = document) => el.querySelector(s);
@@ -451,6 +451,7 @@ function filaTarea(d, { clase = true } = {}) {
 }
 function estadoClase(c) {
   if (c.en_curso) return `<span class="state live"><i></i>Grabando</span>`;
+  if (c.estado_resumen === "en_cola") return `<span class="state wait"><i></i>En cola</span>`;
   if (resumiendo.has(c.id) || c.estado_resumen === "generando") return `<span class="state wait"><i></i>Resumiendo</span>`;
   if (c.resumen) return `<span class="state"><i></i>Resumen listo</span>`;
   if (c.estado_resumen === "vacio") return `<span class="state none"><i></i>Sin contenido</span>`;
@@ -771,7 +772,7 @@ async function refreshLocal() {
     CLASES = data.clases.sort((a,b) => String(b.inicio).localeCompare(String(a.inicio)));
     MAPA = Object.fromEntries(CLASES.map(c => [c.id, c]));
     HECHOS = new Set(data.hechos || []);
-    const signature = JSON.stringify([GEN.asignaturas, GEN.horario, GEN.nombre, GEN.agente?.activo, GEN.agente?.estado, GEN.agente?.clase_id, CLASES.map(c => [c.id,c.version,c.error_resumen]), [...HECHOS], localSummaries]);
+    const signature = JSON.stringify([GEN.asignaturas, GEN.horario, GEN.nombre, GEN.agente?.activo, GEN.agente?.estado, GEN.agente?.clase_id, CLASES.map(c => [c.id,c.version,c.estado_resumen,c.error_resumen]), [...HECHOS], localSummaries]);
     if (!wasOK || signature !== localSignature) { localSignature = signature; renderTodo(); }
     else renderEstado();
   } catch (e) {
@@ -1057,6 +1058,7 @@ function vClase(id) {
   const a = asig(c.asignatura), r = c.resumen, k = color(a.color);
   const ds = (r?.destacados || []).map((d, i) => ({ ...d, clase: c, clave: `${c.id}~${i}` }));
   const estado = c.en_curso ? `Esta clase se está grabando ahora. La transcripción se actualiza mientras tengas el panel abierto${LOCAL ? "" : " en la app de Claude del ordenador"}, y el resumen se hace al terminar.`
+    : c.estado_resumen === "en_cola" ? `Esperando turno para resumir…`
     : (resumiendo.has(c.id) || c.estado_resumen === "generando") ? `Se está resumiendo esta clase…`
     : c.estado_resumen === "vacio" ? `No se transcribió nada en esta clase. ¿Estaba el micrófono silenciado?`
     : !r ? `Sin resumen todavía.${c.error_resumen ? ` Último intento: ${c.error_resumen}` : ""}` : "";
@@ -1087,7 +1089,7 @@ function vClase(id) {
         ${r?.modelo ? `<li><span>Resumen</span><b>${esc(r.modelo)}</b></li>` : ""}
       </ul></section>
       <section class="card acts"><h2>Acciones</h2>
-        ${!c.en_curso && c.estado_resumen !== "generando" && !resumiendo.has(c.id) && (LOCAL ? localSummaries && hostOK && c.n_segmentos : sample) ? `<button class="btn sec" id="regen" type="button">${ic("spark")}${r ? "Rehacer resumen" : LOCAL ? "Generar resumen" : "Resumir con Claude"}</button>` : ""}
+        ${!c.en_curso && (LOCAL || c.estado_resumen !== "generando") && !resumiendo.has(c.id) && (LOCAL ? localSummaries && hostOK && c.n_segmentos : sample) ? `<button class="btn sec" id="regen" type="button">${ic("spark")}${LOCAL && ["generando","en_cola"].includes(c.estado_resumen) ? "Reintentar resumen" : r ? "Rehacer resumen" : LOCAL ? "Generar resumen" : "Resumir con Claude"}</button>` : ""}
         ${hostOK && (!LOCAL || (!c.en_curso && c.estado_resumen !== "generando")) ? `<label class="field">Mover a otra asignatura<select id="mover">${GEN.asignaturas.map((x) => `<option value="${esc(x.id)}" ${x.id === c.asignatura ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
         ${hostOK && !c.en_curso && (!LOCAL || c.estado_resumen !== "generando") ? `<button class="btn sec danger" id="borrar" type="button">Borrar clase</button>` : ""}
         <span class="muted" id="accMsg" style="font-size:13px">${hostOK ? "" : LOCAL ? "No hay conexión con los datos locales." : "Mover o borrar clases solo se puede desde la app de Claude de tu ordenador."}</span>
@@ -1243,7 +1245,7 @@ function pintarVista(forzar) {
   let sec = "hoy", html;
   if (h.startsWith("clase=")) {
     const id = h.slice(6), c = MAPA[id];
-    const firma = JSON.stringify([id, c?.version, c?.resumen?.generado, c?.asignatura, resumiendo.has(id), hostOK, !!sample, !!db, localSummaries, cargado, (c?.resumen?.destacados || []).map((_, i) => HECHOS.has(`${id}~${i}`))]);
+    const firma = JSON.stringify([id, c?.version, c?.estado_resumen, c?.resumen?.generado, c?.asignatura, resumiendo.has(id), hostOK, !!sample, !!db, localSummaries, cargado, (c?.resumen?.destacados || []).map((_, i) => HECHOS.has(`${id}~${i}`))]);
     if (!forzar && rutaPintada === h && firma === firmaClase) { cargarSegs(); return; }
     firmaClase = firma; sec = "asignaturas";
     if (claseAbierta !== id) { claseAbierta = id; SEGS = []; segsVersion = ""; busq = ""; }

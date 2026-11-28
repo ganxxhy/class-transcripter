@@ -36,6 +36,24 @@ class SQLiteStoreTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             reopened.leer(class_id)
 
+    def test_summary_job_recovers_abandoned_state(self):
+        cid = self.repository.crear_clase("math", "Math", "manual")
+        self.repository.cerrar(cid)
+        self.repository.actualizar(cid, estado_resumen="generando")
+        other = SQLiteClassRepository(self.path)
+        with self.repository.summary_job(cid) as owned:
+            self.assertTrue(owned)
+            self.assertEqual(other.leer(cid)["estado_resumen"], "en_cola")
+            self.assertTrue(self.repository.claim_summary(cid))
+            with other.summary_job(cid) as duplicate:
+                self.assertFalse(duplicate)
+        with other.summary_job(cid) as recovered:
+            self.assertTrue(recovered)
+            self.assertTrue(other.claim_summary(cid))
+            other.actualizar(cid, estado_resumen="listo")
+        with self.repository.summary_job(cid) as completed:
+            self.assertFalse(completed)
+
     def test_migration_idempotence_and_conflict(self):
         class_id = self.repository.crear_clase("math", "Math", "manual")
         self.repository.anadir_segmentos(class_id, [{"ini": 0, "fin": 2, "texto": "Hola mundo"}])

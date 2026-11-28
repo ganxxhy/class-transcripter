@@ -19,7 +19,22 @@ def generar(cid, *, proveedor: IAIProvider | None = None,
                             is_enabled=resumen_en_pc, select_provider=elegir_proveedor)
 
 
-def generar_seguro(cid, log=print, *, repositorio: IClassRepository = almacen):
+def generar_seguro(cid, log=print, *, repositorio: IClassRepository = almacen, retry_completed=False):
+    job = getattr(repositorio, "summary_job", None)
+    if job is not None:
+        try:
+            with job(cid, retry_completed=retry_completed, log=log) as owned:
+                if not owned:
+                    log(f"Resumen omitido (activo o terminado): {cid}")
+                    return False
+                return _generate_safely(cid, log, repositorio)
+        except Exception as error:
+            log(f"No se pudo iniciar el resumen {cid}: {error}")
+            return False
+    return _generate_safely(cid, log, repositorio)
+
+
+def _generate_safely(cid, log, repositorio):
     try:
         if generar(cid, repositorio=repositorio) is False:
             return False
@@ -41,4 +56,4 @@ def en_segundo_plano(cid, log=print, *, repositorio: IClassRepository = almacen)
 
 def pendientes(*, repositorio: IClassRepository = almacen):
     return [c["id"] for c in repositorio.listar()
-            if not c.get("en_curso") and c.get("estado_resumen") in ("pendiente", "error", "generando") and c.get("n_segmentos")]
+            if not c.get("en_curso") and c.get("estado_resumen") in ("pendiente", "error", "generando", "en_cola") and c.get("n_segmentos")]

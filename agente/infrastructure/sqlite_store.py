@@ -151,6 +151,33 @@ class SQLiteClassRepository:
             if not connection.execute("DELETE FROM classes WHERE id = ?", (cid,)).rowcount:
                 raise FileNotFoundError(cid)
 
+    @contextmanager
+    def summary_job(self, cid, *, retry_completed=False, log=print):
+        """Serialize local jobs and recover abandoned states under OS locks."""
+        import hashlib
+        import time
+        from infrastructure.file_lock import try_file_lock
+        self._validate_id(cid)
+        directory = self.path.parent / "summary-locks"
+        key = hashlib.sha256(cid.encode("utf-8")).hexdigest()
+        with try_file_lock(str(directory / (key + ".lock"))) as owned:
+            if not owned:
+                yield False
+                return
+            record = self.leer(cid)
+            if record.get("en_curso") or (record.get("estado_resumen") == "listo" and not retry_completed):
+                yield False
+                return
+            self.actualizar(cid, estado_resumen="en_cola", error_resumen=None)
+            log(f"Resumen en cola: {cid}")
+            while True:
+                with try_file_lock(str(directory / "queue.lock")) as ready:
+                    if ready:
+                        log(f"Iniciando resumen: {cid}")
+                        yield True
+                        return
+                time.sleep(0.5)
+
     def claim_summary(self, cid):
         with self.transaction() as connection:
             if self._read(connection, cid).get("estado_resumen") == "generando":

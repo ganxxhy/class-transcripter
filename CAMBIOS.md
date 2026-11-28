@@ -8,6 +8,15 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## 1.3.0
 
+### Panel
+- Estados de cola y reintento de resúmenes locales.
+- Recuperación de resúmenes interrumpidos y coordinación de trabajos locales entre Estudio y Hub mediante bloqueos liberados al cerrar el proceso.
+
+### Estudio Hub
+- Aplicación local de consulta y gestión de clases, tareas y calendario, con acceso directo e icono propios en Windows y Linux.
+- El Hub comparte SQLite y la configuración de Estudio, sin depender de Claude ni del proveedor de resúmenes para consultar los datos.
+- El artefacto de Claude y MCP siguen disponibles como integración opcional.
+
 ### Integración de ChatGPT
 - Coordinación de peticiones y cierre de sesión entre procesos locales.
 - Inicio de sesión con ChatGPT y selección de cuenta y modelo, sujeto a disponibilidad del plan.
