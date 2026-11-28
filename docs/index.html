@@ -356,12 +356,8 @@ footer a{color:#fff}
 @keyframes preview-float{
  50%{translate:0 -8px}
 }
-@keyframes dashboard-float{
- 0%,100%{transform:translate3d(0,0,0)}
- 50%{transform:translate3d(0,-8px,0)}
-}
 @media (prefers-reduced-motion:no-preference){
- .hero .frame{will-change:transform;animation:rise 1.1s .1s var(--ease) both,dashboard-float 8s ease-in-out 1.2s infinite}
+ .hero .frame{animation:rise 1.1s .1s var(--ease) both,preview-float 8s ease-in-out 1.2s infinite}
  .hero .show-left{animation:preview-float 9s ease-in-out -2s infinite}
  .hero .show-right{animation:preview-float 10s ease-in-out -5s infinite}
 }
@@ -684,10 +680,8 @@ function drawArc(h){
  previews.forEach((preview,index)=>{
   preview.svg.innerHTML=`<defs><radialGradient id="sg-${index}"><stop offset="0" stop-color="#FFE3C7"/><stop offset=".35" stop-color="#FF9A55"/><stop offset=".6" stop-color="#FF7A2F" stop-opacity=".5"/><stop offset="1" stop-color="#FF7A2F" stop-opacity="0"/></radialGradient></defs><path d="${arc(8,24)}" fill="none" stroke="#E6EEF8" stroke-width="20" stroke-linecap="round"/>${segs}<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="50" fill="url(#sg-${index})"/><circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="12" fill="#FF7A2F" stroke="#fff" stroke-width="3"/>`;
   preview.time.textContent=clockText;
-  if(preview.title.textContent!==title){
-   preview.title.textContent=title;
-   preview.sub.textContent=sub;
-  }
+  preview.title.textContent=title;
+  preview.sub.textContent=sub;
  });
  const sf=document.getElementById('st-fis'),se=document.getElementById('st-est');
  sf.textContent=h>=17?'Resumen listo':'En curso';sf.style.setProperty('--c',h>=17?GREEN:ORANGE);
