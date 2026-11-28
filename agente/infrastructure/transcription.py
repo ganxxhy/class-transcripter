@@ -71,10 +71,14 @@ class LocalTranscriber:
                     raise
                 self.vulkan.close()
                 self.log(f"Falló Vulkan durante la transcripción: {error}. Se reintentará en CPU.")
-                self.active = self._faster_whisper("cpu")
-                segments = self.active.transcribir(audio, offset_s, contexto)
+                self.active = None  # if the CPU model fails to load, the next call selects a backend again
+                cpu = self._faster_whisper("cpu")
+                cpu.cargar()
+                self.active = cpu
+                start = perf_counter()  # the speed must not include loading the CPU model
+                segments = cpu.transcribir(audio, offset_s, contexto)
             elapsed = max(perf_counter() - start, 1e-9)
-            if len(audio):
+            if len(audio) and segments:  # silent chunks skip decoding and would inflate the multiplier
                 speed = len(audio) / SAMPLE_RATE / elapsed
                 self.log(f"Velocidad de transcripción: {speed:.2f}× · {self.active.descripcion}")
             return segments

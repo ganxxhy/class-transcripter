@@ -85,6 +85,49 @@ class VulkanSelectionTests(unittest.TestCase):
         self.backend.vulkan.close.assert_called_once()
         self.assertTrue(any("Velocidad de transcripción:" in call.args[0] for call in self.log.call_args_list))
 
+    def test_inference_failure_loads_cpu_before_retry(self):
+        self.legacy.transcribir.return_value = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
+        order = Mock()
+        order.attach_mock(self.legacy.cargar, "cargar")
+        order.attach_mock(self.legacy.transcribir, "transcribir")
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.backend.transcribir(self.audio, 0)
+        self.assertEqual([call[0] for call in order.mock_calls], ["cargar", "transcribir"])
+        self.assertIs(self.backend.modelo, self.legacy)
+
+    def test_fallback_speed_excludes_cpu_model_load(self):
+        self.legacy.transcribir.return_value = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.legacy.descripcion = "cpu"
+        with patch("infrastructure.transcription.perf_counter", side_effect=[0, 100, 101]):
+            self.backend.transcribir(self.audio, 0)
+        self.assertIn("1.00×", self.log.call_args_list[-1].args[0])
+
+    def test_failed_cpu_load_does_not_keep_the_dead_vulkan_backend(self):
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.legacy.cargar.side_effect = RuntimeError("model unavailable")
+        with self.assertRaisesRegex(RuntimeError, "model unavailable"):
+            self.backend.transcribir(self.audio, 0)
+        self.assertIsNone(self.backend.modelo)
+
+    def test_silent_chunks_do_not_log_a_speed(self):
+        self.backend.vulkan.installed.return_value = True
+        self.backend.vulkan.transcribir.return_value = []
+        self.backend.settings = {"dispositivo": "vulkan"}
+        self.backend.transcribir(self.audio, 0)
+        self.assertFalse(any("Velocidad" in call.args[0] for call in self.log.call_args_list))
+
+    def test_fallback_survives_failing_close(self):
+        worker = VulkanWhisper(Path("."), {}, self.log)
+        worker.process = Mock()
+        worker.process.stdin.close.side_effect = BrokenPipeError
+        worker.transcribir = Mock(side_effect=RuntimeError("device lost"))
+        self.backend.vulkan = worker
+        self.backend.active = worker
+        result = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
+        self.legacy.transcribir.return_value = result
+        self.assertIs(self.backend.transcribir(self.audio, 0), result)
+
 
 class TranscriberContractTests(unittest.TestCase):
     def test_transcribers_expose_ui_contract(self):
@@ -112,6 +155,15 @@ class PrefetchTests(unittest.TestCase):
 
 
 class VulkanProtocolTests(unittest.TestCase):
+    def test_close_tolerates_broken_pipe(self):
+        worker = VulkanWhisper(Path("."), {}, Mock())
+        process = worker.process = Mock()
+        process.stdin.close.side_effect = BrokenPipeError
+        worker.close()
+        self.assertIsNone(worker.process)
+        process.stdout.close.assert_called_once()
+
+
     def test_worker_requires_voice_activity_model_before_launch(self):
         with TemporaryDirectory() as directory:
             adapter = VulkanWhisper(directory, {}, Mock())
@@ -147,6 +199,11 @@ class VulkanProtocolTests(unittest.TestCase):
                 adapter.transcribir(np.zeros(16000, dtype=np.float32), 6),
                 [{"ini": 6.2, "fin": 7.0, "texto": "Álgebra lineal"}],
             )
+
+    def test_split_utf8_segment_does_not_abort(self):
+        segments = read_segments(BytesIO(b"SEGMENTS 1\n0 100 0.1 1\n\xc3"))
+        self.assertEqual([s.text for s in segments], ["\ufffd"])
+
 
     def test_truncated_response_fails_as_a_whole(self):
         with self.assertRaisesRegex(RuntimeError, "Incomplete Vulkan segment"):

@@ -43,7 +43,7 @@ def read_segments(stream):
             raise RuntimeError("Incomplete Vulkan segment")
         segments.append(SimpleNamespace(
             start=int(start) / 100, end=int(end) / 100,
-            no_speech_prob=float(silence), text=content.decode("utf-8"),
+            no_speech_prob=float(silence), text=content.decode("utf-8", errors="replace"),
         ))
     return segments
 
@@ -147,5 +147,8 @@ class VulkanWhisper:
         if process is not None:
             process.kill()
             process.wait()
-            process.stdin.close()
-            process.stdout.close()
+            for stream in (process.stdin, process.stdout):
+                try:
+                    stream.close()
+                except OSError:  # BrokenPipeError when buffered input is still pending
+                    pass
