@@ -1,0 +1,217 @@
+"""Exercise optional GPU selection and fallback without downloading models."""
+from io import BytesIO
+from pathlib import Path
+import sys
+from tempfile import TemporaryDirectory
+import unittest
+from unittest.mock import Mock, patch
+
+import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agente"))
+
+from infrastructure.transcription import LocalTranscriber
+from infrastructure.vulkan_whisper import VulkanWhisper, read_segments
+
+
+class VulkanSelectionTests(unittest.TestCase):
+    def setUp(self):
+        directory = self.enterContext(TemporaryDirectory())
+        self.log = Mock()
+        self.make_legacy = self.enterContext(patch("infrastructure.transcription.Transcriptor"))
+        self.cuda = self.enterContext(patch("infrastructure.transcription.cuda_available", return_value=False))
+        self.backend = LocalTranscriber({}, directory, self.log)
+        self.backend.vulkan = Mock()
+        self.backend.openvino = Mock()
+        self.backend.openvino.installed.return_value = False
+        self.legacy = self.make_legacy.return_value
+        self.audio = np.zeros(16000, dtype=np.float32)
+
+    def test_missing_worker_preserves_legacy_auto_selection(self):
+        self.backend.vulkan.installed.return_value = False
+        self.backend.cargar()
+        self.make_legacy.assert_called_once_with({"dispositivo": "auto"}, self.log)
+        self.cuda.assert_not_called()
+        self.backend.vulkan.cargar.assert_not_called()
+
+    def test_legacy_loaded_check_reflects_active_backend(self):
+        self.backend.vulkan.installed.return_value = False
+        self.assertIsNone(self.backend.modelo)
+        self.backend.cargar()
+        self.assertIs(self.backend.modelo, self.legacy)
+
+    def test_cuda_has_priority(self):
+        self.backend.openvino.installed.return_value = True
+        self.cuda.return_value = True
+        self.backend.cargar()
+        self.make_legacy.assert_called_once_with({"dispositivo": "cuda"}, self.log)
+        self.backend.vulkan.cargar.assert_not_called()
+        self.backend.openvino.cargar.assert_not_called()
+
+    def test_explicit_legacy_modes_skip_vulkan(self):
+        for device in ("cpu", "cuda"):
+            with self.subTest(device=device):
+                self.backend.settings["dispositivo"] = device
+                self.backend.active = None
+                self.backend.cargar()
+                self.make_legacy.assert_called_with({"dispositivo": device}, self.log)
+        self.cuda.assert_not_called()
+        self.backend.vulkan.installed.assert_not_called()
+
+    def test_auto_ignores_installed_vulkan(self):
+        self.backend.vulkan.installed.return_value = True
+        self.backend.cargar()
+        self.make_legacy.assert_called_once_with({"dispositivo": "auto"}, self.log)
+        self.backend.vulkan.cargar.assert_not_called()
+        self.backend.vulkan.installed.assert_not_called()
+
+    def test_explicit_vulkan_startup_failure_selects_cpu(self):
+        self.backend.settings["dispositivo"] = "vulkan"
+        self.backend.vulkan.cargar.side_effect = RuntimeError("driver missing")
+        self.backend.cargar()
+        self.make_legacy.assert_called_once_with({"dispositivo": "cpu"}, self.log)
+        self.cuda.assert_not_called()
+        self.assertTrue(any("driver missing" in call.args[0] for call in self.log.call_args_list))
+
+    def test_inference_failure_retries_once_and_keeps_cpu(self):
+        self.backend.settings["dispositivo"] = "vulkan"
+        result = [{"ini": 3.0, "fin": 4.0, "texto": "Matrices"}]
+        self.legacy.transcribir.return_value = result
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.assertIs(self.backend.transcribir(self.audio, 3), result)
+        self.legacy.transcribir.assert_called_once_with(self.audio, 3, "")
+        self.assertIs(self.backend.transcribir(self.audio, 4), result)
+        self.backend.vulkan.transcribir.assert_called_once()
+        self.backend.vulkan.close.assert_called_once()
+        self.assertTrue(any("Velocidad de transcripción:" in call.args[0] for call in self.log.call_args_list))
+
+    def test_inference_failure_loads_cpu_before_retry(self):
+        self.backend.settings["dispositivo"] = "vulkan"
+        self.legacy.transcribir.return_value = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
+        order = Mock()
+        order.attach_mock(self.legacy.cargar, "cargar")
+        order.attach_mock(self.legacy.transcribir, "transcribir")
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.backend.transcribir(self.audio, 0)
+        self.assertEqual([call[0] for call in order.mock_calls], ["cargar", "transcribir"])
+        self.assertIs(self.backend.modelo, self.legacy)
+
+    def test_fallback_speed_excludes_cpu_model_load(self):
+        self.backend.settings["dispositivo"] = "vulkan"
+        self.legacy.transcribir.return_value = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.legacy.descripcion = "cpu"
+        with patch("infrastructure.transcription.perf_counter", side_effect=[0, 100, 101]):
+            self.backend.transcribir(self.audio, 0)
+        self.assertIn("1.00×", self.log.call_args_list[-1].args[0])
+
+    def test_failed_cpu_load_does_not_keep_the_dead_vulkan_backend(self):
+        self.backend.settings["dispositivo"] = "vulkan"
+        self.backend.vulkan.transcribir.side_effect = RuntimeError("device lost")
+        self.legacy.cargar.side_effect = RuntimeError("model unavailable")
+        with self.assertRaisesRegex(RuntimeError, "model unavailable"):
+            self.backend.transcribir(self.audio, 0)
+        self.assertIsNone(self.backend.modelo)
+
+    def test_silent_chunks_do_not_log_a_speed(self):
+        self.backend.vulkan.installed.return_value = True
+        self.backend.vulkan.transcribir.return_value = []
+        self.backend.settings = {"dispositivo": "vulkan"}
+        self.backend.transcribir(self.audio, 0)
+        self.assertFalse(any("Velocidad" in call.args[0] for call in self.log.call_args_list))
+
+    def test_fallback_survives_failing_close(self):
+        worker = VulkanWhisper(Path("."), {}, self.log)
+        worker.process = Mock()
+        worker.process.stdin.close.side_effect = BrokenPipeError
+        worker.transcribir = Mock(side_effect=RuntimeError("device lost"))
+        self.backend.vulkan = worker
+        self.backend.active = worker
+        result = [{"ini": 0.0, "fin": 1.0, "texto": "Hola"}]
+        self.legacy.transcribir.return_value = result
+        self.assertIs(self.backend.transcribir(self.audio, 0), result)
+
+
+class TranscriberContractTests(unittest.TestCase):
+    def test_transcribers_expose_ui_contract(self):
+        from infrastructure.whisper import Transcriptor
+        with TemporaryDirectory() as directory:
+            backends = [LocalTranscriber({}, directory), Transcriptor({})]
+        for backend in backends:
+            with self.subTest(backend=type(backend).__name__):
+                for name in ("cargar", "transcribir", "puede_aligerar", "aligerar"):
+                    self.assertTrue(callable(getattr(backend, name)))
+                self.assertIsNone(backend.modelo)
+                self.assertEqual(backend.descripcion, "sin cargar")
+
+
+class PrefetchTests(unittest.TestCase):
+    def test_prefetch_maps_vulkan_to_legacy_auto(self):
+        from bootstrap import prefetch_speech_model
+        with patch("infrastructure.whisper.Transcriptor") as legacy:
+            prefetch_speech_model({"dispositivo": "vulkan"})
+            legacy.assert_called_once_with({"dispositivo": "auto"}, print)
+            legacy.return_value.cargar.assert_called_once_with()
+            legacy.reset_mock()
+            prefetch_speech_model({"dispositivo": "cpu"})
+            legacy.assert_called_once_with({"dispositivo": "cpu"}, print)
+
+
+class VulkanProtocolTests(unittest.TestCase):
+    def test_close_tolerates_broken_pipe(self):
+        worker = VulkanWhisper(Path("."), {}, Mock())
+        process = worker.process = Mock()
+        process.stdin.close.side_effect = BrokenPipeError
+        worker.close()
+        self.assertIsNone(worker.process)
+        process.stdout.close.assert_called_once()
+
+
+    def test_worker_requires_voice_activity_model_before_launch(self):
+        with TemporaryDirectory() as directory:
+            adapter = VulkanWhisper(directory, {}, Mock())
+            adapter.worker.touch()
+            adapter.model.touch()
+            with patch("infrastructure.vulkan_whisper.subprocess.Popen") as launch:
+                with self.assertRaisesRegex(RuntimeError, "detección de voz"):
+                    adapter.cargar()
+            launch.assert_not_called()
+
+    def test_missing_files_name_directory_and_remedy(self):
+        with TemporaryDirectory() as directory:
+            adapter = VulkanWhisper(directory, {}, Mock())
+            with self.assertRaisesRegex(RuntimeError, "README") as caught:
+                adapter.cargar()
+            self.assertIn(str(Path(directory).resolve()), str(caught.exception))
+            adapter.worker.touch()
+            with self.assertRaisesRegex(RuntimeError, "--descargar-modelo-vulkan"):
+                adapter.cargar()
+            adapter.model.touch()
+            with self.assertRaisesRegex(RuntimeError, "--descargar-modelo-vulkan"):
+                adapter.cargar()
+
+    def test_response_preserves_class_offsets_and_filters_silence(self):
+        transcript = "Álgebra lineal".encode()
+        stream = BytesIO(
+            b"SEGMENTS 2\n25 140 0.1 " + str(len(transcript)).encode() + b"\n" + transcript
+            + b"10 20 0.99 3\nabc"
+        )
+        adapter = VulkanWhisper(Path.cwd(), {}, Mock())
+        with patch.object(adapter, "_infer", return_value=read_segments(stream)):
+            self.assertEqual(
+                adapter.transcribir(np.zeros(16000, dtype=np.float32), 6),
+                [{"ini": 6.2, "fin": 7.0, "texto": "Álgebra lineal"}],
+            )
+
+    def test_split_utf8_segment_does_not_abort(self):
+        segments = read_segments(BytesIO(b"SEGMENTS 1\n0 100 0.1 1\n\xc3"))
+        self.assertEqual([s.text for s in segments], ["\ufffd"])
+
+
+    def test_truncated_response_fails_as_a_whole(self):
+        with self.assertRaisesRegex(RuntimeError, "Incomplete Vulkan segment"):
+            read_segments(BytesIO(b"SEGMENTS 2\n0 1 0 2\nok0 1 0 5\nbad"))
+
+
+if __name__ == "__main__":
+    unittest.main()

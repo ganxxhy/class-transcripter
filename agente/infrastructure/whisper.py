@@ -62,6 +62,20 @@ def _preparar_dlls_cuda():
                 pass
 
 
+def cuda_available():
+    """Check CTranslate2 after making bundled CUDA libraries discoverable."""
+    _preparar_dlls_cuda()
+    return _cuda_device_present()
+
+
+def _cuda_device_present():
+    try:
+        import ctranslate2
+        return ctranslate2.get_cuda_device_count() > 0
+    except Exception:
+        return False
+
+
 class Transcriptor:
     def __init__(self, ajustes, log=print):
         self.ajustes = ajustes
@@ -91,13 +105,8 @@ class Transcriptor:
         disp = self.ajustes.get("dispositivo", "auto")
         nombre = self.ajustes.get("modelo_whisper", "auto")
         intentos = []
-        if disp == "auto":
-            try:
-                import ctranslate2
-                if ctranslate2.get_cuda_device_count() == 0:
-                    disp = "cpu"  # sin GPU NVIDIA (p. ej. AMD): no intentamos CUDA
-            except Exception:
-                disp = "cpu"
+        if disp == "auto" and not _cuda_device_present():
+            disp = "cpu"
         if disp in ("auto", "cuda"):
             intentos.append(("cuda", "float16", "large-v3-turbo" if nombre == "auto" else nombre))
         if disp in ("auto", "cpu"):
@@ -130,10 +139,7 @@ class Transcriptor:
         (contexto se ignora: pasarle el texto anterior hacía que Whisper lo repitiera en bucle.)"""
         if self.modelo is None:
             self.cargar()
-        # Normaliza el volumen: el micro del portátil suele captar al profe muy bajo
-        pico = float(np.max(np.abs(audio))) if len(audio) else 0.0
-        if 0.002 < pico < 0.5:
-            audio = (audio * min(8.0, 0.7 / pico)).astype(np.float32)
+        audio = normalize_audio(audio)
         params = dict(
             language=self.ajustes.get("idioma", "es"),
             beam_size=5,
@@ -151,18 +157,36 @@ class Transcriptor:
         except TypeError:  # faster-whisper antiguo
             segs, _info = self.modelo.transcribe(audio, **params)
             segs = list(segs)
-        fin_audio = len(audio) / 16000
-        out = []
-        for s in segs:
-            texto = _limpiar(s.text.strip())
-            if not texto or _ALUC.search(texto) or s.no_speech_prob > 0.8:
-                continue
-            if getattr(s, "compression_ratio", 0) > 2.4 or getattr(s, "avg_logprob", 0) < -1.2:
-                continue
-            n = _norm(texto)
-            if len(n) > 12 and n in self._ultimos:  # la misma frase otra vez: bucle de Whisper
-                continue
-            self._ultimos = (self._ultimos + [n])[-6:]
-            ini, fin = max(0.0, s.start), min(s.end, fin_audio)
-            out.append({"ini": round(offset_s + ini, 1), "fin": round(offset_s + max(ini, fin), 1), "texto": texto})
-        return out
+        return format_segments(segs, len(audio) / 16000, offset_s, self._ultimos)
+
+
+def normalize_audio(audio):
+    """Boost quiet recordings for either Whisper backend."""
+    peak = float(np.max(np.abs(audio))) if len(audio) else 0.0
+    if 0.002 < peak < 0.5:
+        return (audio * min(8.0, 0.7 / peak)).astype(np.float32)
+    return audio
+
+
+def format_segments(segments, duration, offset, recent):
+    """Filter decoder output and preserve the stored class-relative timestamps."""
+    output = []
+    for segment in segments:
+        text = _limpiar(segment.text.strip())
+        if not text or _ALUC.search(text) or segment.no_speech_prob > 0.8:
+            continue
+        if getattr(segment, "compression_ratio", 0) > 2.4 or getattr(segment, "avg_logprob", 0) < -1.2:
+            continue
+        normalized = _norm(text)
+        if len(normalized) > 12 and normalized in recent:
+            continue
+        recent.append(normalized)
+        del recent[:-6]
+        start = max(0.0, segment.start)
+        end = min(segment.end, duration)
+        output.append({
+            "ini": round(offset + start, 1),
+            "fin": round(offset + max(start, end), 1),
+            "texto": text,
+        })
+    return output

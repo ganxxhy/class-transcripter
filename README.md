@@ -35,6 +35,41 @@ Después Estudio se queda junto al reloj y graba solo según tu horario.
 - **Privacidad:** el audio y la transcripción se quedan siempre en tu ordenador. Con un servicio externo (Claude, Gemini, OpenAI, Cloudflare…) el texto de la transcripción sí se envía a ese servicio para resumirlo; con un modelo local (Ollama, LM Studio…) no sale nada. Enviar el contenido de las clases a un tercero también puede estar sujeto a las normas de tu universidad.
 - Tus datos se guardan en `Documentos\AgenteClases` (Windows) o en `~/.local/share/estudio`, con la configuración en `~/.config/estudio` (Linux).
 
+## Optional Intel and AMD GPU transcription
+
+Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks for an integrated or discrete Intel or AMD GPU with a Vulkan 1.2 or newer driver. Actual support and speed depend on the GPU, driver and available memory. Verified so far only on an Intel integrated GPU (Lunar Lake, Mesa driver, Linux); AMD and Windows have not been tested on real hardware, so treat them as experimental and report results. The standard installer and AppImage use the existing `faster-whisper` CPU and NVIDIA CUDA runtime. Vulkan requires the separately built worker, a GGML transcription model and a small voice activity model.
+
+1. Install a Vulkan driver for your GPU. To build the worker, install CMake, a C++ toolchain and the Vulkan headers and shader compiler (`glslc`). On Windows, use a Visual Studio C++ toolchain and the Vulkan SDK.
+2. From the repository root, build the optional worker.
+
+   ```sh
+   cmake -S packaging/vulkan -B build/vulkan -DCMAKE_BUILD_TYPE=Release
+   cmake --build build/vulkan --config Release --parallel
+   ```
+
+3. Put `studio-whisper-vulkan` (Linux) or `studio-whisper-vulkan.exe` (Windows, typically under `build/vulkan/Release`) in the `datos/vulkan` subdirectory of Estudio's data root. The default is `~/.local/share/estudio/datos/vulkan` for the AppImage and `Documents\AgenteClases\datos\vulkan` on Windows. When running from source it is `agente/datos/vulkan`. If you set `AGENTE_CLASES_DATOS`, use its `datos/vulkan` subdirectory.
+4. Download the two GGML models into that directory. The simplest way is to let Estudio do it (it verifies size and SHA-256 of what it downloads, and keeps files already present if their size matches): `python agente/app.py --descargar-modelo-vulkan` from source, or run the installed executable with the same argument. The manual alternative is:
+
+   ```sh
+   cd <datos/vulkan directory>
+   curl -fLO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin   # 1624555275 bytes
+   curl -fLO https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v6.2.0.bin      # 885098 bytes
+   sha256sum ggml-*.bin
+   ```
+
+   Expected SHA-256: `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69` (large-v3-turbo) and `2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987` (Silero). The worker itself is not downloaded; build it as in step 2. If you explicitly set `modelo_whisper` to another model, install the matching `ggml-<model>.bin` there by hand. If a file is missing, the log names it and the folder where Estudio looks for it, then falls back to CPU.
+5. Restart Estudio. In the `ajustes` object of `config.json`, `"dispositivo": "auto"` keeps CUDA first, then tries the optional OpenVINO backend (if installed, see below), then uses CPU; Vulkan is used only when selected explicitly because it measured slower than CPU on the tested hardware. Set `"dispositivo": "vulkan"` (or `"openvino"`) to try that engine first with CPU fallback, or use `"cpu"` or `"cuda"` to select an existing backend directly. The same choice is available in Ajustes → «Dispositivo de transcripción»; it applies the next time Estudio starts.
+
+The transcription log shows the active model and device, any fallback reason, and a real-time speed multiplier per chunk. To compare Vulkan with CPU, transcribe the same sample with `modelo_whisper` set to `large-v3-turbo` for both runs and compare the speed after model startup. A value above `1.0×` means the chunk was processed faster than it was recorded.
+
+Vulkan frees the processor but is not always faster than it. On an Intel Core Ultra 7 258V (Lunar Lake) with its integrated GPU, `large-v3-turbo` measured about 3.5× (clear TV audio) to 5× (faint audio) on Vulkan against about 6.4× on CPU on the same samples; the GPU encoder takes roughly 4 s per 30 s window. Measure on your own hardware and choose "Solo CPU" if CPU is faster for you.
+
+### OpenVINO on Intel GPUs (faster than Vulkan)
+
+On Intel integrated and discrete GPUs, OpenVINO encodes much faster than Vulkan. It needs the optional `openvino-genai` Python package, which is not in `requirements.txt` and is not bundled in the installer or AppImage, so for now it works when running from source: `pip install openvino-genai` in the same environment, then `python agente/app.py --descargar-modelo-openvino` to download the pre-converted `OpenVINO/whisper-large-v3-int8-ov` model (about 1.6 GB, pinned to a fixed revision) into `datos/openvino`. Then use `"dispositivo": "openvino"`, pick it in Ajustes, or leave `"auto"`, which tries OpenVINO before CPU when the package is installed. If the package, the model or a GPU is missing, or OpenVINO fails during a class, Estudio logs why and continues on CPU.
+
+On an Intel Core Ultra 7 258V (Lunar Lake, Arc iGPU, Linux) this measured about 12× on clear TV audio and about 19× on faint audio, against about 6.4× for CPU `large-v3-turbo` on the same samples. Differences to be aware of: the model is `large-v3` (int8), not `large-v3-turbo`, because no official `turbo` conversion exists; the text matched whisper.cpp closely, but OpenVINO does not trim silence, so quiet speech after a pause can be missed more often than on the CPU path; the NPU is not used; Windows and AMD are untested.
+
 ## Resúmenes con tu cuenta de ChatGPT
 
 Esta opción es independiente de `openai`, el proveedor de API. Utiliza el flujo oficial [Sign in with ChatGPT para aplicaciones de código abierto](https://developers.openai.com/siwc/token-sharing-open-source), actualmente en fase de disponibilidad limitada por cuenta, modelo y políticas de OpenAI.

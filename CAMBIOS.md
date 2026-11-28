@@ -9,6 +9,10 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 ### Web
 - Mejora del contraste del texto sobre el cielo dinámico durante el amanecer, el atardecer y la noche.
 
+### Transcripción
+- Transcripción opcional con Vulkan (whisper.cpp) en GPU Intel y AMD, con vuelta automática a CPU. Los modelos se bajan con `--descargar-modelo-vulkan`; si falta algún archivo, el registro dice cuál y en qué carpeta. Ajustes permite elegir el dispositivo de transcripción (automático, CPU, CUDA, OpenVINO o Vulkan).
+- Transcripción opcional con OpenVINO en GPU Intel (paquete `openvino-genai` y modelo `large-v3` int8 que se baja con `--descargar-modelo-openvino`). En automático se usa si está instalado (Vulkan solo si se elige a mano) y vuelve a CPU si falla.
+
 ## 1.3.0
 
 ### Panel

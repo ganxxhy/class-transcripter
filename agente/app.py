@@ -34,6 +34,7 @@ from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre
 from nucleo.motor import microfonos  # noqa: E402
 from bootstrap import build_motor, build_repository  # noqa: E402
 import tema  # noqa: E402
+from device_choices import DEVICE_CHOICES, device_help, device_label, device_value  # noqa: E402
 from version import VERSION  # noqa: E402
 
 if sys.platform.startswith("linux") and CONGELADA:
@@ -467,6 +468,15 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)", style="Card.TLabel").pack(anchor="w")
         self.var_mod = tk.StringVar(value=aj.get("modelo_whisper", "auto"))
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
+        ttk.Label(f, text="Dispositivo de transcripción (OpenVINO y Vulkan son opcionales; ver README)", style="Card.TLabel").pack(anchor="w")
+        self.var_disp = tk.StringVar(value=device_label(aj.get("dispositivo", "auto")))
+        self.cmb_disp = ttk.Combobox(f, textvariable=self.var_disp, values=[text for _, text in DEVICE_CHOICES], state="readonly",
+                     width=58)
+        self.cmb_disp.pack(anchor="w", pady=(2, 2))
+        self.var_disp_ayuda = tk.StringVar(value=device_help(aj.get("dispositivo", "auto")))
+        ttk.Label(f, textvariable=self.var_disp_ayuda, style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(0, 10))
+        self.cmb_disp.bind("<<ComboboxSelected>>", lambda _e: self.var_disp_ayuda.set(
+            device_help(device_value(self.var_disp.get(), aj.get("dispositivo", "auto")))))
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         if edit_schedule:
@@ -485,13 +495,16 @@ class DialogoAjustes(tk.Toplevel):
 
     def _guardar(self):
         aj = self.cfg["ajustes"]
-        cambio_modelo = aj.get("modelo_whisper") != self.var_mod.get()
+        dispositivo = device_value(self.var_disp.get(), aj.get("dispositivo", "auto"))
+        cambio_modelo = (aj.get("modelo_whisper") != self.var_mod.get()
+                         or aj.get("dispositivo", "auto") != dispositivo)
         aj["anthropic_api_key"] = self.var_clave.get().strip()
         aj["modelo_whisper"] = self.var_mod.get()
+        aj["dispositivo"] = dispositivo
         aj["guardar_audio"] = self.var_audio.get()
         guardar(self.cfg)
         if cambio_modelo:
-            messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
+            messagebox.showinfo("Ajustes", "El nuevo modelo o dispositivo de voz se usará al volver a abrir Estudio.")
         if resumen_en_pc(self.cfg):
             repository = build_repository()
             for cid in resumen.pendientes(repositorio=repository):
@@ -565,10 +578,26 @@ def main():
             actualizacion.novedades_si_toca()
         actualizacion.comprobar_y_avisar(forzar="--forzar" in args)
         return
-    if "--descargar-modelo" in args:
-        from nucleo.transcripcion import Transcriptor
+    if "--descargar-modelo-vulkan" in args:
+        from bootstrap import download_vulkan_models
         try:
-            Transcriptor(cargar()["ajustes"]).cargar()
+            download_vulkan_models()
+        except Exception as error:
+            print(f"No se pudieron descargar los modelos de Vulkan: {error}")
+            sys.exit(1)
+        return
+    if "--descargar-modelo-openvino" in args:
+        from bootstrap import download_openvino_model
+        try:
+            download_openvino_model()
+        except Exception as error:
+            print(f"No se pudo descargar el modelo de OpenVINO: {error}")
+            sys.exit(1)
+        return
+    if "--descargar-modelo" in args:
+        from bootstrap import prefetch_speech_model
+        try:
+            prefetch_speech_model()
         except Exception:
             pass  # se volverá a intentar al abrir el agente
         return

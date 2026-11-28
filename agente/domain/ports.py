@@ -10,6 +10,7 @@ class AudioInput(Protocol):
 
 class ITranscriber(Protocol):
     descripcion: str
+    modelo: object  # None until a backend is loaded; read by the UI status line
 
     def cargar(self) -> None: ...
     def transcribir(self, audio, offset_s: float, contexto: str = "") -> list[Segment]: ...
