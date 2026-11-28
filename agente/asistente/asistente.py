@@ -17,6 +17,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(AQUI))
 
 from nucleo import config  # noqa: E402
+from infrastructure.chatgpt import SESSION, ChatGPTError  # noqa: E402
 
 import ventana_web  # noqa: E402
 
@@ -59,9 +60,11 @@ def _hardware():
 
 
 class Api:
-    def __init__(self):
+    def __init__(self, summary_only=False, schedule_only=False):
         # Ojo: pywebview expone a la página todo atributo público de esta clase, recorriéndolo
         # entero. La ventana tiene que ser privada (_ventana): si no, al recorrerla se queda colgado.
+        self._summary_only = summary_only
+        self._schedule_only = schedule_only
         self._stream = None
         self._nivel = 0.0
         self._ventana = None
@@ -77,12 +80,15 @@ class Api:
             "horario": cfg["horario"],
             "ajustes": {
                 "microfono": aj.get("microfono"),
+                "permiso_grabar": aj.get("permiso_grabar", False),
                 "modelo_whisper": aj.get("modelo_whisper", "auto"),
                 "proveedor": aj.get("proveedor", "claude"),
                 "tiene_clave": bool(config.api_key(cfg)),
                 "resumen_en_pc": config.resumen_en_pc(cfg),
                 "openai_base_url": aj.get("openai_base_url", ""),
                 "modelo_openai": aj.get("modelo_openai", ""),
+                "modelo_chatgpt": aj.get("modelo_chatgpt", ""),
+                "chatgpt": SESSION.status(),
                 "url_hub": aj.get("url_hub", ""),
             },
             "colores": config.COLORES,
@@ -90,21 +96,45 @@ class Api:
             "prompt_horario": PROMPT_HORARIO,
             # Prueba automática (GitHub Actions): la página se cierra sola en cuanto arranca
             "so": sys.platform,
+            "summary_only": self._summary_only,
+            "schedule_only": self._schedule_only,
             "prueba": bool(os.environ.get("AGENTE_CLASES_PRUEBA")),
         }
 
     def guardar(self, datos):
         cfg = config.cargar()
-        cfg["perfil"] = {"nombre": (datos.get("nombre") or "").strip(),
-                         "estudios": (datos.get("estudios") or "").strip()}
-        cfg["asignaturas"] = datos.get("asignaturas") or []
-        cfg["horario"] = datos.get("horario") or []
         aj = cfg["ajustes"]
-        aj["microfono"] = datos.get("microfono") or None
-        aj["modelo_whisper"] = datos.get("modelo_whisper") or "auto"
+        if self._schedule_only:
+            cfg["asignaturas"] = datos.get("asignaturas") or []
+            cfg["horario"] = datos.get("horario") or []
+            config.guardar(cfg)
+            return {"ok": True}
+        if not self._summary_only:
+            cfg["perfil"] = {"nombre": (datos.get("nombre") or "").strip(),
+                             "estudios": (datos.get("estudios") or "").strip()}
+            cfg["asignaturas"] = datos.get("asignaturas") or []
+            cfg["horario"] = datos.get("horario") or []
+            aj["microfono"] = datos.get("microfono") or None
+            aj["modelo_whisper"] = datos.get("modelo_whisper") or "auto"
         prov = datos.get("proveedor")
         clave = (datos.get("clave") or "").strip()
+        if prov == "chatgpt":
+            model = (datos.get("modelo_chatgpt") or "").strip()
+            status = SESSION.status()
+            if not model or not status["connected"]:
+                if not datos.get("skip_chatgpt"):
+                    return {"error": "Conecta ChatGPT, autoriza el plan y selecciona un modelo."}
+                model = ""  # Stay on ChatGPT without sending requests until configured.
+            aj["proveedor"] = prov
+            aj["resumen_modo"] = "chatgpt"
+            aj["modelo_chatgpt"] = model
+            aj["chatgpt_account_id"] = status["active"]
+        elif prov is None and aj.get("proveedor") == "chatgpt":
+            # The Claude panel is not the Claude paid API. Never activate a saved key implicitly.
+            aj["proveedor"] = "claude"
+            aj["resumen_modo"] = "cuenta"
         if prov in ("claude", "gemini", "openai"):
+            aj["resumen_modo"] = "clave"
             aj["proveedor"] = prov
             if prov == "openai":
                 aj["openai_base_url"] = (datos.get("base_url") or "").strip()
@@ -113,9 +143,38 @@ class Api:
                 aj[{"gemini": "gemini_api_key", "openai": "openai_api_key"}.get(prov, "anthropic_api_key")] = clave
         if datos.get("url_hub"):
             aj["url_hub"] = datos["url_hub"].strip()
-        aj["permiso_grabar"] = bool(datos.get("permiso"))
+        if not self._summary_only:
+            aj["permiso_grabar"] = bool(datos.get("permiso"))
         config.guardar(cfg)
         return {"ok": True}
+
+    # ----- ChatGPT account -----
+    def chatgpt_status(self):
+        return SESSION.status()
+
+    def chatgpt_sign_in(self, account_id=""):
+        return self._chatgpt_call(SESSION.sign_in, account_id)
+
+    def chatgpt_select(self, account_id):
+        return self._chatgpt_call(SESSION.select, account_id)
+
+    def chatgpt_sign_out(self):
+        return self._chatgpt_call(SESSION.sign_out)
+
+    def chatgpt_resume(self):
+        return self._chatgpt_call(SESSION.resume)
+
+    def chatgpt_models(self):
+        return self._chatgpt_call(SESSION.models)
+
+    @staticmethod
+    def _chatgpt_call(function, *args):
+        try:
+            return {"ok": True, "result": function(*args)}
+        except ChatGPTError as exc:
+            return {"ok": False, "error": str(exc)}
+        except Exception:
+            return {"ok": False, "error": "No se pudo completar la operación de ChatGPT. Revisa la conexión."}
 
     # ----- micrófono -----
     def listar_micros(self, refrescar=False):
@@ -165,12 +224,24 @@ class Api:
     def abrir_claude_horario(self):
         webbrowser.open("https://claude.ai/new?q=" + urllib.parse.quote(PROMPT_HORARIO))
 
+    def open_chatgpt_schedule(self):
+        webbrowser.open("https://chatgpt.com/?q=" + urllib.parse.quote(PROMPT_HORARIO))
+
     def abrir_claude_panel(self):
         webbrowser.open("https://claude.ai/new?q=" + urllib.parse.quote(PROMPT_HUB))
 
     def copiar(self, texto):
         """Copy text with the system's clipboard tool (the embedded browser often blocks its own on Linux)."""
-        if not isinstance(texto, str) or not sys.platform.startswith("linux"):
+        if not isinstance(texto, str):
+            return False
+        if sys.platform == "win32":
+            try:
+                subprocess.run(["clip.exe"], input=texto.encode("utf-16"), check=True, timeout=5,
+                               creationflags=subprocess.CREATE_NO_WINDOW)
+                return True
+            except (OSError, subprocess.SubprocessError):
+                return False
+        if not sys.platform.startswith("linux"):
             return False
         for cmd in (["wl-copy"], ["xclip", "-selection", "clipboard"], ["xsel", "--clipboard", "--input"]):
             if shutil.which(cmd[0]):
@@ -189,7 +260,7 @@ class Api:
     def terminar(self, siguiente=None):
         self.parar_medidor()
         self._terminado = siguiente or "agente"
-        if sys.platform.startswith("linux") and siguiente != "prueba":
+        if sys.platform.startswith("linux") and siguiente != "prueba" and not (self._schedule_only or self._summary_only):
             # What the Windows installer does: launcher + autostart, and connect Claude's desktop app
             try:
                 import linux_desktop
@@ -211,11 +282,11 @@ def html():
         return f.read()
 
 
-def ejecutar():
+def ejecutar(summary_only=False, schedule_only=False):
     """Abre el asistente y bloquea hasta que se cierra. Devuelve qué abrir después."""
     webview = ventana_web.importar_webview()
 
-    api = Api()
+    api = Api(summary_only=summary_only, schedule_only=schedule_only)
     api._ventana = webview.create_window("Estudio", html=html(), js_api=api, width=1000, height=700,
                                         min_size=(900, 640), background_color="#CFE6FF")
     if not ventana_web.iniciar(webview):

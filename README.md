@@ -15,14 +15,14 @@ Descarga `Estudio-…-x86_64.AppImage`, hazlo ejecutable (`chmod +x Estudio-*.Ap
 - Al acabar el asistente crea su lanzador en el menú y arranca con tu sesión. Si mueves el AppImage, se corrige solo al abrirlo.
 - Hace falta WebKitGTK (casi todos los escritorios ya lo tienen). Si falta, Estudio te dice qué instalar: `gir1.2-webkit2-4.1` (Debian/Ubuntu), `webkit2gtk4.1` (Fedora), `webkit2gtk-4.1` y `gobject-introspection-runtime` (Arch).
 - En GNOME hace falta la extensión AppIndicator para ver el icono junto al reloj; si no, la ventana se minimiza.
-- Si no tienes la app de escritorio de Claude (en Linux no hay una versión oficial confirmada), lo más sencillo es hacer los resúmenes con una clave de API de Claude o Gemini (paso «Resúmenes» del asistente). El panel «Mis clases» se conecta con las versiones de la comunidad que usen `~/.config/Claude`.
+- Si no tienes la app de escritorio de Claude (en Linux no hay una versión oficial confirmada), puedes hacer los resúmenes con tu cuenta de ChatGPT o con una clave de API (paso «Resúmenes» del asistente). El panel «Mis clases» se conecta con las versiones de la comunidad que usen `~/.config/Claude`.
 
 La primera vez que abras la app, un asistente te ayuda a:
 
 1. Poner tu nombre y aceptar el aviso de permiso para grabar.
 2. Añadir tus asignaturas y tu horario (a mano o leyendo una captura con Claude).
 3. Elegir el micrófono y probarlo.
-4. Decidir cómo hacer los resúmenes: con tu cuenta de Claude Pro o Max (recomendado) o con una clave de API de Claude o Gemini, o con cualquier modelo compatible con OpenAI (ChatGPT, Ollama, LM Studio, Cloudflare…).
+4. Decidir cómo hacer los resúmenes: con tu cuenta de Claude Pro o Max, con tu cuenta de ChatGPT Plus o Pro (si es compatible con el uso del plan), con una clave de API o con un modelo compatible con OpenAI (Ollama, LM Studio, Cloudflare…).
 
 Después Estudio se queda junto al reloj y graba solo según tu horario.
 
@@ -30,9 +30,25 @@ Después Estudio se queda junto al reloj y graba solo según tu horario.
 
 - **Transcripción en local:** el audio nunca sale de tu ordenador.
 - **Resúmenes con tu cuenta de Claude:** publicas tu propio panel "Mis clases" en Claude ([instrucciones](hub/PUBLICAR.md)) y los resúmenes se hacen con tu suscripción. Ves tus clases desde el móvil o cualquier ordenador.
+- **Resúmenes con tu cuenta de ChatGPT:** conecta tu cuenta en el asistente y elige un modelo. El texto se procesa con tu plan de ChatGPT al terminar la clase; los apuntes se guardan en Estudio y se consultan en el visor local «Mis clases». No requiere una clave API.
 - **Resúmenes con clave de API (opcional):** si pones una clave de Claude o Gemini, o configuras un modelo compatible con OpenAI, el resumen se hace solo en tu ordenador al acabar la clase.
 - **Privacidad:** el audio y la transcripción se quedan siempre en tu ordenador. Con un servicio externo (Claude, Gemini, OpenAI, Cloudflare…) el texto de la transcripción sí se envía a ese servicio para resumirlo; con un modelo local (Ollama, LM Studio…) no sale nada. Enviar el contenido de las clases a un tercero también puede estar sujeto a las normas de tu universidad.
 - Tus datos se guardan en `Documentos\AgenteClases` (Windows) o en `~/.local/share/estudio`, con la configuración en `~/.config/estudio` (Linux).
+
+## Resúmenes con tu cuenta de ChatGPT
+
+Esta opción es independiente de `openai`, el proveedor de API. Utiliza el flujo oficial [Sign in with ChatGPT para aplicaciones de código abierto](https://developers.openai.com/siwc/token-sharing-open-source), actualmente en fase de disponibilidad limitada por cuenta, modelo y políticas de OpenAI.
+
+1. Abre Estudio y, en el paso «¿Cómo quieres los resúmenes?» (o Ajustes → Configurar proveedor de resúmenes / cuenta de ChatGPT), selecciona «Con mi cuenta de ChatGPT».
+2. Pulsa «Continuar con ChatGPT». Inicia sesión en tu navegador habitual, autoriza Estudio y concede permiso para utilizar tu plan.
+3. Vuelve a Estudio, selecciona un modelo del catálogo de tu cuenta y guarda los ajustes.
+4. Al terminar la siguiente clase, Estudio transcribe el audio con Whisper y genera automáticamente el resumen con ChatGPT. Abre «Mis clases» para consultar los apuntes y la transcripción por asignatura.
+
+Puedes cambiar de cuenta, volver a autorizarla o desconectarla desde los ajustes. Las grabaciones y los apuntes no se borran al cambiar de proveedor. El visor de ChatGPT es local: no crea conversaciones en tu historial de ChatGPT ni publica un artefacto de Claude. La sincronización móvil del panel de Claude sigue siendo exclusiva de ese panel. El visor local reutiliza la misma interfaz web del panel original. «Asignaturas y horario» abre el calendario semanal; para modificarlo, entra en «Ajustes → Editar asignaturas y horario», sin volver a configurar la cuenta ni el micrófono.
+
+Las peticiones utilizan los límites de tu plan de ChatGPT, no una clave de API ni la facturación del proveedor `openai`. Revisa [el uso de ChatGPT](https://chatgpt.com/settings/usage) y desactiva los créditos adicionales si no quieres utilizarlos. Cuando se alcance un límite, Estudio pausa los resúmenes de esa cuenta; consulta los ajustes de uso y pulsa «Reanudar resúmenes» cuando vuelva a estar disponible. No se cambia automáticamente a un proveedor de pago.
+
+El audio no se envía a OpenAI; solo se transmite el texto necesario para resumir. Los tokens OAuth se guardan fuera de los datos de las clases, protegidos con DPAPI en Windows y permisos de usuario en Linux. El flujo no lee cookies ni credenciales de tu navegador. Consulta [la documentación técnica](docs/CHATGPT.md) para conocer los límites y la validación.
 
 ## Resúmenes con otros modelos
 
@@ -75,7 +91,7 @@ Antes de grabar una clase, asegúrate de tener permiso del profesorado y de cump
 - `docs/`: la web de la app (GitHub Pages), con la guía de diseño "Jornada" en `docs/DISENO.md`.
 - `packaging/`: icono, imágenes y script del instalador (Inno Setup), y `linux/install.sh` para instalar desde el código en Linux.
 - `CAMBIOS.md`: novedades de cada versión (salen en Releases y en el aviso de actualización).
-- `tests/`: pruebas (`python tests/test_horario.py`, `python tests/test_linux.py` y `python tests/test_resumen.py`).
+- `tests/`: pruebas (`python tests/test_horario.py`, `python tests/test_linux.py` y `python tests/test_resumen.py` y `python tests/test_chatgpt.py`).
 
 Desde el código: `pip install -r agente/requirements.txt` y `python agente/app.py`. En Linux, `bash packaging/linux/install.sh` crea el entorno, el lanzador del menú y descarga el modelo (necesita Python 3.10–3.13 con tkinter, PortAudio, y PyGObject con WebKitGTK: `python3-gi` y `gir1.2-webkit2-4.1` en Debian/Ubuntu, `python3-gobject` y `webkit2gtk4.1` en Fedora, `python-gobject` y `webkit2gtk-4.1` en Arch).
 

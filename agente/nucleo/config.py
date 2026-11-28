@@ -67,6 +67,7 @@ AJUSTES_POR_DEFECTO = {
     # Resúmenes en el PC (opcional): "claude", "gemini" u "openai" (cualquier servicio compatible
     # con OpenAI: ChatGPT, Ollama, LM Studio, Cloudflare...), cada uno con su clave
     "proveedor": "claude",
+    "resumen_modo": "",
     "modelo_resumen": "claude-opus-5-5",
     "anthropic_api_key": "",
     "modelo_gemini": "gemini-flash-latest",
@@ -74,6 +75,8 @@ AJUSTES_POR_DEFECTO = {
     "openai_base_url": "",
     "modelo_openai": "",
     "openai_api_key": "",
+    "modelo_chatgpt": "",
+    "chatgpt_account_id": "",
     "guardar_audio": False,
     "url_hub": "",
 }
@@ -136,6 +139,8 @@ def guardar(cfg):
 def api_key(cfg):
     """Clave del proveedor elegido para resumir en el PC ("" si no hay)."""
     aj = cfg["ajustes"]
+    if aj.get("proveedor") == "chatgpt" or aj.get("resumen_modo") == "cuenta":
+        return ""
     if aj.get("proveedor") == "gemini":
         return (aj.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or "").strip()
     if aj.get("proveedor") == "openai":
@@ -146,6 +151,9 @@ def api_key(cfg):
 def resumen_en_pc(cfg):
     """True if summaries are generated on this PC (the OpenAI-compatible provider needs no key)."""
     aj = cfg["ajustes"]
+    if aj.get("proveedor") == "chatgpt":
+        # Keep pending jobs recoverable even if the account needs reauthorization.
+        return bool((aj.get("modelo_chatgpt") or "").strip())
     if aj.get("proveedor") == "openai":
         return bool((aj.get("openai_base_url") or "").strip() and (aj.get("modelo_openai") or "").strip())
     return bool(api_key(cfg))

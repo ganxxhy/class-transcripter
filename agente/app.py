@@ -55,11 +55,11 @@ def _comando(*args):
     return ([sys.executable] if CONGELADA else [sys.executable, os.path.abspath(__file__)]) + list(args)
 
 
-def lanzar_asistente():
+def lanzar_asistente(summary_only=False, schedule_only=False):
     """Abre el asistente en otro proceso (pywebview y Tk no conviven bien) y espera."""
     cmd = [sys.executable] if CONGELADA else [sys.executable, os.path.abspath(__file__)]
     try:
-        subprocess.run(cmd + ["--asistente"], check=False)
+        subprocess.run(cmd + ["--asistente"] + (["--resumenes"] if summary_only else ["--editar-horario"] if schedule_only else []), check=False)
     except Exception:
         pass
 
@@ -167,7 +167,7 @@ class App:
         self.btn_parar.pack(side="left", padx=6)
         self.btn_cambiar = ttk.Button(fila, text="Cambiar asignatura", command=self.cambiar, state="disabled")
         self.btn_cambiar.pack(side="left")
-        ttk.Button(fila, text="Abrir Mis clases", command=lambda: webbrowser.open(self.url_hub)).pack(side="right")
+        ttk.Button(fila, text="Abrir Mis clases", command=self.open_classes).pack(side="right")
 
         c = tema.tarjeta(f, fill="x", pady=(10, 0))
         ttk.Label(c, text="Micrófono", style="Seccion.TLabel").pack(anchor="w")
@@ -194,10 +194,12 @@ class App:
         pie = ttk.Frame(f)
         pie.pack(fill="x", pady=(8, 0))
         self.lbl_pie = ttk.Label(pie, text="", style="Sub.TLabel")
-        self.lbl_pie.pack(side="left")
-        ttk.Button(pie, text="Ajustes", style="Link.TButton", command=self.ajustes).pack(side="right")
-        ttk.Button(pie, text="Asignaturas y horario", style="Link.TButton", command=self.reconfigurar).pack(side="right")
-        ttk.Button(pie, text="Registro", style="Link.TButton", command=self.ver_log).pack(side="right")
+        self.lbl_pie.pack(anchor="w")
+        links = ttk.Frame(pie)
+        links.pack(fill="x", pady=(2, 0))
+        ttk.Button(links, text="Ajustes", style="Link.TButton", command=self.ajustes).pack(side="right")
+        ttk.Button(links, text="Asignaturas y horario", style="Link.TButton", command=self.open_schedule).pack(side="right")
+        ttk.Button(links, text="Registro", style="Link.TButton", command=self.ver_log).pack(side="right")
 
         r.protocol("WM_DELETE_WINDOW", self.al_cerrar)
 
@@ -261,7 +263,12 @@ class App:
             self.txt.insert("end", lineas)
             self.txt.see("end")
             self.txt.configure(state="disabled")
-        self.lbl_pie.configure(text="Resúmenes: " + ("al acabar cada clase" if resumen_en_pc(cargar()) else "desde Mis clases"))
+        cfg = cargar()
+        if cfg["ajustes"].get("proveedor") == "chatgpt":
+            mode = "plan de ChatGPT · al acabar cada clase" if resumen_en_pc(cfg) else "ChatGPT · pendiente de configurar"
+        else:
+            mode = "al acabar cada clase" if resumen_en_pc(cfg) else "desde Mis clases"
+        self.lbl_pie.configure(text="Resúmenes: " + mode)
         self.root.after(500, self._tick)
 
     # ---------- acciones ----------
@@ -295,14 +302,38 @@ class App:
             self.motor.cambiar_asignatura(d.resultado[1])
 
     def ajustes(self):
-        DialogoAjustes(self.root, self.buscar_actualizacion)
+        DialogoAjustes(self.root, self.buscar_actualizacion, self.configure_summaries, self.reconfigurar)
+
+    def open_classes(self):
+        cfg = cargar()
+        if cfg["ajustes"].get("proveedor") == "chatgpt":
+            self.open_local_panel()
+        else:
+            webbrowser.open(self.url_hub)
+
+    def open_schedule(self):
+        self.open_local_panel("calendario")
+
+    def open_local_panel(self, section="hoy"):
+        try:
+            subprocess.Popen(_comando("--panel", section))
+        except OSError as e:
+            messagebox.showerror("Mis clases", str(e))
+
+    def configure_summaries(self):
+        lanzar_asistente(summary_only=True)
+        self.cfg = cargar()
+        self.url_hub = self.cfg["ajustes"].get("url_hub") or self.url_hub
+        if resumen_en_pc(self.cfg):
+            for cid in resumen.pendientes(repositorio=self.repository):
+                resumen.en_segundo_plano(cid, self.log, repositorio=self.repository)
 
     def reconfigurar(self):
         if self.motor.activo:
             messagebox.showinfo("Asignaturas y horario", "Para la escucha antes de cambiar el horario.")
             return
         self.root.withdraw()
-        lanzar_asistente()
+        lanzar_asistente(schedule_only=True)
         self.cfg = cargar()
         self.motor.cfg = self.cfg
         self.url_hub = self.cfg["ajustes"].get("url_hub") or self.url_hub
@@ -338,7 +369,7 @@ class App:
             img = tema.icono(64)
             menu = pystray.Menu(
                 pystray.MenuItem("Mostrar", lambda: self.root.after(0, self._mostrar), default=True),
-                pystray.MenuItem("Abrir Mis clases", lambda: webbrowser.open(self.url_hub)),
+                pystray.MenuItem("Abrir Mis clases", lambda: self.root.after(0, self.open_classes)),
                 pystray.MenuItem("Parar y salir", lambda: self.root.after(0, self._parar_y_salir)),
             )
             self.icono = pystray.Icon("agente_clases", img, "Estudio", menu)
@@ -419,7 +450,7 @@ class DialogoModo(tk.Toplevel):
 class DialogoAjustes(tk.Toplevel):
     MODELOS = ["auto", "small", "medium", "large-v3-turbo", "large-v3"]
 
-    def __init__(self, padre, buscar_actualizacion=None):
+    def __init__(self, padre, buscar_actualizacion=None, configure_summaries=None, edit_schedule=None):
         super().__init__(padre)
         self.title("Ajustes")
         self.transient(padre)
@@ -429,18 +460,22 @@ class DialogoAjustes(tk.Toplevel):
         aj = self.cfg["ajustes"]
         f = ttk.Frame(self, style="Card.TFrame", padding=20)
         f.pack(fill="both", expand=True)
+        if configure_summaries:
+            ttk.Button(f, text="Configurar proveedor de resúmenes / cuenta de ChatGPT",
+                       command=lambda: (self.destroy(), configure_summaries())).pack(anchor="w", pady=(0, 10))
         ttk.Label(f, text="Clave de la API de Claude (opcional)", style="Card.TLabel").pack(anchor="w")
         self.var_clave = tk.StringVar(value=aj.get("anthropic_api_key", ""))
         ttk.Entry(f, textvariable=self.var_clave, show="•", width=52).pack(anchor="w", pady=(2, 2))
-        ttk.Label(f, text="Sin clave, los resúmenes se hacen desde tu panel Mis clases con tu cuenta de Claude. Con clave, se hacen aquí solos al acabar cada clase. Se guarda solo en config.json.",
+        ttk.Label(f, text="La clave se usa solo si eliges el proveedor Claude mediante API. Para cambiar el proveedor o conectar ChatGPT, usa el botón superior.",
                   style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(0, 10))
         ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)", style="Card.TLabel").pack(anchor="w")
         self.var_mod = tk.StringVar(value=aj.get("modelo_whisper", "auto"))
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
-        ttk.Label(f, text="Las asignaturas y el horario se cambian con «Asignaturas y horario» en la ventana principal.",
-                  style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(10, 0))
+        if edit_schedule:
+            ttk.Button(f, text="Editar asignaturas y horario",
+                       command=lambda: (self.destroy(), edit_schedule())).pack(anchor="w", pady=(10, 0))
         ver = ttk.Frame(f, style="Card.TFrame")
         ver.pack(fill="x", pady=(12, 0))
         ttk.Label(ver, text=f"Versión {VERSION}", style="CardSub.TLabel").pack(side="left")
@@ -516,9 +551,13 @@ def main():
         import comprobar
         comprobar.main()
         return
+    if "--panel" in args:
+        from asistente.class_viewer import run_panel
+        run_panel("calendario" if "calendario" in args else "hoy")
+        return
     if "--asistente" in args:
         from asistente.asistente import ejecutar
-        ejecutar()
+        ejecutar(summary_only="--resumenes" in args, schedule_only="--editar-horario" in args)
         return
     if "--registrar-mcp" in args or "--quitar-mcp" in args:
         import registrar_mcp
