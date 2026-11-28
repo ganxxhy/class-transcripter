@@ -470,6 +470,20 @@ class DialogoAjustes(tk.Toplevel):
 
 def main():
     args = sys.argv[1:]
+    if "--test-installer-launch" in args:
+        if sys.platform != "win32" or os.environ.get("ESTUDIO_INSTALLER_TEST") != "1":
+            raise RuntimeError("Installer test mode is disabled")
+        from actualizacion import launch_windows_installer
+        from pathlib import Path
+        directory = Path(os.environ["ESTUDIO_INSTALLER_TEST_DIR"]).resolve()
+        process = launch_windows_installer(
+            str(directory / "installer-probe.exe"), str(directory / "install.log"))
+        if process.wait(timeout=60) != 0:
+            raise RuntimeError("Installer probe failed")
+        if not (directory / "installed" / "probe.txt").is_file():
+            raise RuntimeError("Installer probe did not install its marker")
+        (directory / "launch.ok").write_text("ok", encoding="utf-8")
+        return
     if "--migrate-sqlite" in args:
         from infrastructure.storage_activation import activate_sqlite
         from nucleo.config import RUTA_DATOS

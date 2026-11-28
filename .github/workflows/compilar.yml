@@ -205,6 +205,27 @@ jobs:
           & $iscc /DVersion=${{ steps.version.outputs.v }} packaging\instalador.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Test packaged Windows installer launch
+        shell: pwsh
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}\installer-probe-data
+          ESTUDIO_INSTALLER_TEST: "1"
+          ESTUDIO_INSTALLER_TEST_DIR: ${{ runner.temp }}\installer-probe
+        run: |
+          $probe = $env:ESTUDIO_INSTALLER_TEST_DIR
+          New-Item -ItemType Directory -Force $probe | Out-Null
+          Set-Content "$probe\probe.txt" "installer launch probe"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/O$probe" "/DProbeDir=$probe" packaging\installer-probe.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $p = Start-Process dist\AgenteClases\AgenteClases.exe -ArgumentList "--test-installer-launch" -PassThru
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "Installer probe timed out" }
+          Get-Content "$probe\install.log" -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0 -or -not (Test-Path "$probe\launch.ok")) {
+            Get-Content "$env:AGENTE_CLASES_DATOS\error.log" -ErrorAction SilentlyContinue
+            throw "Packaged installer launch failed"
+          }
+
       - uses: actions/upload-artifact@v4
         with:
           name: Estudio-${{ steps.version.outputs.v }}-instalador

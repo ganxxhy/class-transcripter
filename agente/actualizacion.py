@@ -193,6 +193,42 @@ def _ajuste(clave, valor=None):
     config.guardar(cfg)
 
 
+def launch_windows_installer(installer, log_path):
+    """Launch an external installer without PyInstaller's DLL search override."""
+    import ctypes
+
+    environment = os.environ.copy()
+    environment["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    frozen = getattr(sys, "frozen", False)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True) if frozen else None
+    if kernel is not None:
+        kernel.SetDllDirectoryW.argtypes = [ctypes.c_wchar_p]
+        kernel.SetDllDirectoryW.restype = ctypes.c_int
+        if not kernel.SetDllDirectoryW(None):
+            raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        return subprocess.Popen(
+            [installer, "/SILENT", "/SP-", "/NOCANCEL", "/NORESTART",
+             f"/LOG={log_path}"],
+            cwd=os.path.dirname(installer),
+            env=environment,
+            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0),
+        )
+    finally:
+        if kernel is not None:
+            kernel.SetDllDirectoryW(sys._MEIPASS)
+
+
+def check_installer_start(process):
+    """Detect immediate installer failures without waiting for a full update."""
+    try:
+        code = process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        return
+    if code != 0:
+        raise RuntimeError(f"El instalador terminó con código {code}.")
+
+
 class Api:
     def __init__(self, info, modo):
         self._info = info
@@ -233,7 +269,8 @@ class Api:
                 raise RuntimeError("Esta versión no tiene instalador.")
             if ES_LINUX:
                 return self._actualizar_appimage(url)
-            destino = os.path.join(tempfile.gettempdir(), f"Estudio-{self._info['version']}-instalador.exe")
+            update_directory = tempfile.mkdtemp(prefix="Estudio-update-")
+            destino = os.path.join(update_directory, f"Estudio-{self._info['version']}-instalador.exe")
             req = urllib.request.Request(url, headers={"User-Agent": "AgenteClases"})
             with urllib.request.urlopen(req, timeout=60) as r, open(destino + ".part", "wb") as f:
                 e["total"] = int(r.headers.get("Content-Length") or e["total"] or 0)
@@ -246,13 +283,18 @@ class Api:
             _verificar_descarga(destino + ".part", self._info)
             os.replace(destino + ".part", destino)
             e["estado"] = "instalando"
-            # El instalador cierra el agente, actualiza y lo vuelve a abrir solo
-            subprocess.Popen([destino, "/SILENT", "/SP-", "/NOCANCEL", "/NORESTART"],
-                             creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
+            log_path = os.path.join(update_directory, "install.log")
+            try:
+                process = launch_windows_installer(destino, log_path)
+                check_installer_start(process)
+            except Exception as error:
+                raise RuntimeError(
+                    f"{error}. Ejecuta manualmente: {destino}. Registro: {log_path}"
+                ) from error
             threading.Timer(1.0, self._cerrar).start()
         except Exception as ex:
             e["estado"] = "error"
-            e["error"] = str(ex)[:300]
+            e["error"] = str(ex)[:1500]
 
     def _actualizar_appimage(self, url):
         """Linux: download next to the current AppImage, make it executable, swap it in and relaunch."""

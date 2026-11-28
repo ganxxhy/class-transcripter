@@ -8,6 +8,8 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## 1.3.0
 
+- Actualizador de Windows: aislamiento del entorno de PyInstaller al lanzar el instalador, registro de instalación y detección de fallos inmediatos con instrucciones de instalación manual.
+
 ### Novedades
 - SQLite pasa a ser el almacenamiento obligatorio de clases y transcripciones. La primera apertura migra y verifica los datos anteriores; los JSON se conservan en `datos/clases-json-backup`.
 - Si falla la migración, Estudio no vuelve silenciosamente al almacenamiento anterior.
