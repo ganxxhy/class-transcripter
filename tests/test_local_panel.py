@@ -89,7 +89,7 @@ class LocalPanelTests(unittest.TestCase):
     def test_summary_uses_existing_provider(self):
         with patch('nucleo.resumen.generar_seguro', return_value=True) as generate:
             self.assertEqual(self.api.summarize(self.cid), {'ok': True})
-            generate.assert_called_once_with(self.cid, repositorio=self.api._repository)
+            generate.assert_called_once_with(self.cid, repositorio=self.api._repository, retry_completed=True)
 
 
 if __name__ == '__main__':
