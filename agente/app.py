@@ -566,9 +566,9 @@ def main():
         actualizacion.comprobar_y_avisar(forzar="--forzar" in args)
         return
     if "--descargar-modelo" in args:
-        from nucleo.transcripcion import Transcriptor
+        from bootstrap import build_transcriber
         try:
-            Transcriptor(cargar()["ajustes"]).cargar()
+            build_transcriber().cargar()
         except Exception:
             pass  # se volverá a intentar al abrir el agente
         return
