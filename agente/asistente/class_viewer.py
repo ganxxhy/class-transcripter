@@ -39,18 +39,19 @@ class PanelApi:
         return self._service.borrar({'id': cid})
 
     def summarize(self, cid):
-        self._check_idle(cid)
+        if self._repository.leer(cid).get("en_curso"):
+            raise RuntimeError("Espera a que termine la grabación.")
         if not config.resumen_en_pc(config.cargar()):
             raise RuntimeError('Configura un proveedor de resúmenes locales en Estudio.')
         from nucleo import resumen
-        if not resumen.generar_seguro(cid, repositorio=self._repository):
+        if not resumen.generar_seguro(cid, repositorio=self._repository, retry_completed=True):
             record = self._repository.leer(cid)
             raise RuntimeError(record.get('error_resumen') or 'Ya se está procesando la clase.')
         return {'ok': True}
 
     def _check_idle(self, cid):
         record = self._repository.leer(cid)
-        if record.get('en_curso') or record.get('estado_resumen') == 'generando':
+        if record.get('en_curso') or record.get('estado_resumen') in ('generando', 'en_cola'):
             raise RuntimeError('Espera a que termine el procesamiento de la clase.')
 
 
