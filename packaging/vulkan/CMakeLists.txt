@@ -12,7 +12,8 @@ set(WHISPER_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 find_package(Vulkan REQUIRED)
 FetchContent_Declare(whisper_cpp
-  URL https://github.com/ggml-org/whisper.cpp/archive/2eeeba56e9edd762b4b38467bab96c2517163158.tar.gz)
+  URL https://codeload.github.com/ggml-org/whisper.cpp/tar.gz/2eeeba56e9edd762b4b38467bab96c2517163158
+  URL_HASH SHA256=089b898aa83b24a8321e0fd554eeb0967fb03dd687e27f6374c72d3363b5b429)
 FetchContent_MakeAvailable(whisper_cpp)
 
 add_executable(studio-whisper-vulkan worker.cpp)
