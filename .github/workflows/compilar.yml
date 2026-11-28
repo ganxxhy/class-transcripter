@@ -58,6 +58,8 @@ jobs:
           python tests/test_horario.py
           python tests/test_linux.py
           python tests/test_resumen.py
+          python tests/test_chatgpt.py
+          python tests/test_local_panel.py
           python tests/test_interfaces.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
@@ -118,6 +120,8 @@ jobs:
         run: |
           python tests/test_horario.py
           python tests/test_resumen.py
+          python tests/test_chatgpt.py
+          python tests/test_local_panel.py
           python tests/test_interfaces.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
@@ -144,6 +148,7 @@ jobs:
           --paths agente
           --add-data "agente/asistente/asistente.html;asistente"
           --add-data "agente/asistente/actualizacion.html;asistente"
+          --add-data "hub/mis-clases.html;hub"
           --add-data "agente/config.ejemplo.json;."
           --collect-data faster_whisper
           --collect-binaries ctranslate2
@@ -267,6 +272,8 @@ jobs:
           python tests/test_horario.py
           python tests/test_linux.py
           python tests/test_resumen.py
+          python tests/test_chatgpt.py
+          python tests/test_local_panel.py
           python tests/test_interfaces.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
@@ -288,6 +295,7 @@ jobs:
           --paths agente
           --add-data "agente/asistente/asistente.html:asistente"
           --add-data "agente/asistente/actualizacion.html:asistente"
+          --add-data "hub/mis-clases.html:hub"
           --add-data "agente/config.ejemplo.json:."
           --add-binary "$(ldconfig -p | awk '/libportaudio.so.2 /{print $NF; exit}'):."
           --collect-data faster_whisper
