@@ -9,6 +9,7 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 ## 1.3.0
 
 ### Integración de ChatGPT
+- Coordinación de peticiones y cierre de sesión entre procesos locales.
 - Inicio de sesión con ChatGPT y selección de cuenta y modelo, sujeto a disponibilidad del plan.
 - Visor local de clases y horario conectado a SQLite.
 

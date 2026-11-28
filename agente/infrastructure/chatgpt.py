@@ -210,6 +210,7 @@ class ChatGPTSession:
         self.directory = Path(directory) if directory is not None else secure_directory()
         self.path = self.directory / 'accounts.dat'
         self.lock = FileLock(str(self.directory / 'accounts.lock'))
+        self.inference_lock = FileLock(str(self.directory / 'inference.lock'))
 
     def read(self):
         try:
@@ -318,7 +319,7 @@ class ChatGPTSession:
 
     def sign_out(self):
         warning = ''
-        with self.lock.hold():
+        with INFERENCE_LOCK, self.inference_lock.hold(), self.lock.hold():
             data = self.read()
             account = data['accounts'].get(data['active'], {})
             if account.get('refresh_token'):
@@ -352,8 +353,8 @@ class ChatGPTSession:
 
     def infer(self, model, instructions, messages, *, account_id=None):
         body = {'model': model, 'instructions': instructions, 'input': messages, 'store': False, 'stream': True}
-        # Serialize requests in the agent process, so a usage limit stops queued jobs.
-        with INFERENCE_LOCK:
+        # Serialize inference across the agent and local panel processes.
+        with INFERENCE_LOCK, self.inference_lock.hold():
             with self.lock.hold():
                 data = self.read()
                 selected = account_id if account_id is not None else data['active']
