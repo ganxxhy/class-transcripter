@@ -129,6 +129,10 @@ int main() {
     params.print_realtime = false;
     params.print_timestamps = false;
     params.print_special = false;
+    // Let whisper.cpp drop non-speech audio before decoding, as faster-whisper does with vad_filter.
+    // Without it, faint speech after a pause is skipped and chunks needing a second window decode slowly.
+    params.vad_model_path = vad_path.c_str();
+    params.vad_params = vad_params;
 
     std::cout << "READY 2 " << device << std::endl;
     std::string request;
@@ -161,6 +165,7 @@ int main() {
         }
         // The probe confirms GPU inference without encoding a full 30-second window.
         params.audio_ctx = probe ? 100 : 0;
+        params.vad = !probe;  // the silent probe would otherwise skip inference
         if (whisper_full(context.get(), params, audio.data(), samples) != 0) {
             return fail("Vulkan inference failed");
         }

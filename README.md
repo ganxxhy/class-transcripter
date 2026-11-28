@@ -62,7 +62,7 @@ Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks
 
 The transcription log shows the active model and device, any fallback reason, and a real-time speed multiplier per chunk. To compare Vulkan with CPU, transcribe the same sample with `modelo_whisper` set to `large-v3-turbo` for both runs and compare the speed after model startup. A value above `1.0×` means the chunk was processed faster than it was recorded.
 
-Vulkan frees the processor but is not always faster than it. On an Intel Core Ultra 7 258V (Lunar Lake) with its integrated GPU, `large-v3-turbo` measured about 4.6× on Vulkan against about 7.1× on CPU on the same sample; the GPU encoder takes roughly 4 s per 30 s window, and a chunk that needs a second window takes about twice as long. Measure on your own hardware and choose "Solo CPU" if CPU is faster for you.
+Vulkan frees the processor but is not always faster than it. On an Intel Core Ultra 7 258V (Lunar Lake) with its integrated GPU, `large-v3-turbo` measured about 3.5× (clear TV audio) to 5× (faint audio) on Vulkan against about 6.4× on CPU on the same samples; the GPU encoder takes roughly 4 s per 30 s window. Measure on your own hardware and choose "Solo CPU" if CPU is faster for you.
 
 ## Resúmenes con tu cuenta de ChatGPT
 
