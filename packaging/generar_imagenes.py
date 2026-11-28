@@ -89,6 +89,10 @@ def main():
     base = icono(256)
     base.save(os.path.join(SALIDA, "icono.ico"), sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     base.save(os.path.join(SALIDA, "icono.png"))
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(AQUI), "agente"))
+    from tema import hub_icon
+    hub_icon().save(os.path.join(SALIDA, "hub.ico"), sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     # Inno Setup elige la imagen según la escala de pantalla (100 % … 250 %)
     for escala in (100, 125, 150, 175, 200, 225, 250):
         k = escala / 100

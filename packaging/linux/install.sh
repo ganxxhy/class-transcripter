@@ -52,4 +52,5 @@ echo "Creando el lanzador del menú y el arranque con la sesión…"
 echo "Descargando el modelo de voz (hasta 1,6 GB la primera vez)…"
 .venv/bin/python agente/app.py --descargar-modelo || true
 
+echo "Estudio Hub: abre su acceso directo o ejecuta .venv/bin/python agente/app.py --hub"
 echo "Listo. Abre «Estudio» desde el menú de aplicaciones, o ejecuta: .venv/bin/python agente/app.py"

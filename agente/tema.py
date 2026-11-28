@@ -181,3 +181,16 @@ def icono(tam=64):
     d.ellipse((sx - sr - s * 1.75 / 64, sy - sr - s * 1.75 / 64, sx + sr + s * 1.75 / 64, sy + sr + s * 1.75 / 64), fill="#FFFFFF")
     d.ellipse((sx - sr, sy - sr, sx + sr, sy + sr), fill=SUN)
     return img.resize((tam, tam), Image.LANCZOS)
+
+
+def hub_icon(size=256):
+    """Create the Hub variant of the Estudio icon with an integrated H."""
+    from PIL import Image, ImageDraw
+    scale = 4
+    side = size * scale
+    image = icono(side)
+    draw = ImageDraw.Draw(image)
+    unit = side / 64
+    for x1, y1, x2, y2 in ((22, 38, 26, 54), (38, 38, 42, 54), (26, 44, 38, 48)):
+        draw.rectangle(tuple(round(v * unit) for v in (x1, y1, x2, y2)), fill="#CFE6FF")
+    return image.resize((size, size), Image.LANCZOS)

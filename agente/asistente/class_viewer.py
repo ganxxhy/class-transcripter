@@ -70,6 +70,6 @@ def panel_html(section='hoy'):
 
 def run_panel(section='hoy'):
     webview = ventana_web.importar_webview()
-    webview.create_window('Estudio · Mis clases', html=panel_html(section), js_api=PanelApi(),
+    webview.create_window('Estudio Hub', html=panel_html(section), js_api=PanelApi(),
                           width=1200, height=800, min_size=(640, 500), background_color='#CFE6FF')
     ventana_web.iniciar(webview)

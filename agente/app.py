@@ -305,18 +305,14 @@ class App:
         DialogoAjustes(self.root, self.buscar_actualizacion, self.configure_summaries, self.reconfigurar)
 
     def open_classes(self):
-        cfg = cargar()
-        if cfg["ajustes"].get("proveedor") == "chatgpt":
-            self.open_local_panel()
-        else:
-            webbrowser.open(self.url_hub)
+        self.open_local_panel()
 
     def open_schedule(self):
         self.open_local_panel("calendario")
 
     def open_local_panel(self, section="hoy"):
         try:
-            subprocess.Popen(_comando("--panel", section))
+            subprocess.Popen(_comando("--hub", section))
         except OSError as e:
             messagebox.showerror("Mis clases", str(e))
 
@@ -551,7 +547,7 @@ def main():
         import comprobar
         comprobar.main()
         return
-    if "--panel" in args:
+    if "--hub" in args or "--panel" in args:
         from asistente.class_viewer import run_panel
         run_panel("calendario" if "calendario" in args else "hoy")
         return

@@ -60,7 +60,11 @@ Name: "inicio"; Description: "Iniciar con Windows (para que grabe solo según tu
 [Files]
 Source: "..\dist\AgenteClases\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+Source: "{#Img}hub.ico"; DestDir: "{app}"; Flags: ignoreversion
+
 [Icons]
+Name: "{userprograms}\\Estudio Hub"; Filename: "{app}\\{#Exe}"; Parameters: "--hub"; IconFilename: "{app}\\hub.ico"
+Name: "{userdesktop}\\Estudio Hub"; Filename: "{app}\\{#Exe}"; Parameters: "--hub"; IconFilename: "{app}\\hub.ico"; Tasks: escritorio
 Name: "{userprograms}\{#Nombre}"; Filename: "{app}\{#Exe}"
 Name: "{userdesktop}\{#Nombre}"; Filename: "{app}\{#Exe}"; Tasks: escritorio
 
