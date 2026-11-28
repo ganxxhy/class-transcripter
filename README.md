@@ -37,7 +37,7 @@ Después Estudio se queda junto al reloj y graba solo según tu horario.
 
 ## Optional Intel and AMD GPU transcription
 
-Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks for an integrated or discrete Intel or AMD GPU with a Vulkan 1.2 or newer driver. Actual support and speed depend on the GPU, driver and available memory. The standard installer and AppImage use the existing `faster-whisper` CPU and NVIDIA CUDA runtime. Vulkan requires the separately built worker, a GGML transcription model and a small voice activity model.
+Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks for an integrated or discrete Intel or AMD GPU with a Vulkan 1.2 or newer driver. Actual support and speed depend on the GPU, driver and available memory. Verified so far only on an Intel integrated GPU (Lunar Lake, Mesa driver, Linux); AMD and Windows have not been tested on real hardware, so treat them as experimental and report results. The standard installer and AppImage use the existing `faster-whisper` CPU and NVIDIA CUDA runtime. Vulkan requires the separately built worker, a GGML transcription model and a small voice activity model.
 
 1. Install a Vulkan driver for your GPU. To build the worker, install CMake, a C++ toolchain and the Vulkan headers and shader compiler (`glslc`). On Windows, use a Visual Studio C++ toolchain and the Vulkan SDK.
 2. From the repository root, build the optional worker.
