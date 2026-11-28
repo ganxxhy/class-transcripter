@@ -27,10 +27,33 @@ function colors(alt){let i=0;while(i<K.length-2&&alt>K[i+1][0])i++;const a=K[i],
 const load=k=>{try{return localStorage.getItem(k)}catch(e){return null}},store=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const S={city:load('sky-city')||'auto',preview:6};
 function place(){return S.city!=='auto'&&CITIES[S.city]?{name:S.city,ll:CITIES[S.city],how:'elegida por ti'}:autoPlace()}
+// Choose the smallest palette correction that keeps both text colors readable.
+function luminance(rgb){
+ return rgb.map(v=>{const s=v/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4})
+  .reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+}
+function accessiblePalette(palette){
+ const options=[{dark:false,ink:'#0D2340',muted:'#3F5068',target:'#FFFFFF'},
+                {dark:true,ink:'#F2F5FA',muted:'#DCE6F4',target:'#000000'}];
+ return options.map(option=>{
+  const foreground=luminance(hx(option.muted));
+  for(let step=0;step<=100;step++){
+   const stops=palette.map(color=>mix(color,option.target,step/100));
+   const channels=stops.map(hx);
+   // Channel bounds cover every interpolated gradient color, not only its stops.
+   const bound=[0,1,2].map(i=>(option.dark?Math.max:Math.min)(...channels.map(rgb=>rgb[i])));
+   const background=luminance(bound);
+   const ratio=(Math.max(background,foreground)+.05)/(Math.min(background,foreground)+.05);
+   if(ratio>=4.6 && (option.dark?background<foreground:background>foreground))
+    return {...option,stops,step};
+  }
+  throw new Error('No accessible sky palette');
+ }).sort((a,b)=>a.step-b.step)[0];
+}
 function paint(el,alt){
- const [a,b,c]=colors(alt),root=el.style,dark=alt<-1;
+ const {stops:[a,b,c],dark,ink,muted}=accessiblePalette(colors(alt)),root=el.style;
  root.setProperty('--bg-a',a);root.setProperty('--bg-b',b);root.setProperty('--bg-c',c);
- root.setProperty('--on-sky',dark?'#F2F5FA':'#0D2340');root.setProperty('--on-sky-mute',dark?'#B9C6DA':'#3F5068');
+ root.setProperty('--on-sky',ink);root.setProperty('--on-sky-mute',muted);
  root.setProperty('--stars',String(Math.max(0,Math.min(1,(-alt-4)/10))));
  el.dataset.sky=dark?'night':alt<8?'golden':'day';
 }
