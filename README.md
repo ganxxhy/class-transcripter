@@ -37,7 +37,7 @@ Después Estudio se queda junto al reloj y graba solo según tu horario.
 
 ## Optional Intel and AMD GPU transcription
 
-Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks for an integrated or discrete Intel or AMD GPU with a Vulkan 1.2 or newer driver. Actual support and speed depend on the GPU, driver and available memory. The standard installer and AppImage use the existing `faster-whisper` CPU and NVIDIA CUDA runtime. Vulkan requires the separately built worker and a GGML model.
+Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks for an integrated or discrete Intel or AMD GPU with a Vulkan 1.2 or newer driver. Actual support and speed depend on the GPU, driver and available memory. The standard installer and AppImage use the existing `faster-whisper` CPU and NVIDIA CUDA runtime. Vulkan requires the separately built worker, a GGML transcription model and a small voice activity model.
 
 1. Install a Vulkan driver for your GPU. To build the worker, install CMake, a C++ toolchain and the Vulkan headers and shader compiler (`glslc`). On Windows, use a Visual Studio C++ toolchain and the Vulkan SDK.
 2. From the repository root, build the optional worker.
@@ -48,7 +48,7 @@ Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks
    ```
 
 3. Put `studio-whisper-vulkan` (Linux) or `studio-whisper-vulkan.exe` (Windows, typically under `build/vulkan/Release`) in the `datos/vulkan` subdirectory of Estudio's data root. The default is `~/.local/share/estudio/datos/vulkan` for the AppImage and `Documents\AgenteClases\datos\vulkan` on Windows. When running from source it is `agente/datos/vulkan`. If you set `AGENTE_CLASES_DATOS`, use its `datos/vulkan` subdirectory.
-4. Download [the GGML large-v3-turbo model](https://huggingface.co/ggerganov/whisper.cpp/blob/main/ggml-large-v3-turbo.bin) into that directory as `ggml-large-v3-turbo.bin`. If you explicitly set `modelo_whisper` to another model, install the matching `ggml-<model>.bin` there.
+4. Download [the Silero voice activity model](https://huggingface.co/ggml-org/whisper-vad/blob/main/ggml-silero-v6.2.0.bin) as `ggml-silero-v6.2.0.bin` and [the GGML large-v3-turbo model](https://huggingface.co/ggerganov/whisper.cpp/blob/main/ggml-large-v3-turbo.bin) into that directory as `ggml-large-v3-turbo.bin`. If you explicitly set `modelo_whisper` to another model, install the matching `ggml-<model>.bin` there.
 5. Restart Estudio. In the `ajustes` object of `config.json`, `"dispositivo": "auto"` keeps CUDA first, then tries the optional Vulkan worker, then uses CPU. Set `"dispositivo": "vulkan"` to try Vulkan first with CPU fallback, or use `"cpu"` or `"cuda"` to select an existing backend directly.
 
 The transcription log shows the active model and device, any fallback reason, and a real-time speed multiplier per chunk. To compare Vulkan with CPU, transcribe the same sample with `modelo_whisper` set to `large-v3-turbo` for both runs and compare the speed after model startup. A value above `1.0×` means the chunk was processed faster than it was recorded.

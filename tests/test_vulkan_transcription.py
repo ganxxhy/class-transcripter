@@ -81,6 +81,16 @@ class VulkanSelectionTests(unittest.TestCase):
 
 
 class VulkanProtocolTests(unittest.TestCase):
+    def test_worker_requires_voice_activity_model_before_launch(self):
+        with TemporaryDirectory() as directory:
+            adapter = VulkanWhisper(directory, {}, Mock())
+            adapter.worker.touch()
+            adapter.model.touch()
+            with patch("infrastructure.vulkan_whisper.subprocess.Popen") as launch:
+                with self.assertRaisesRegex(RuntimeError, "detección de voz"):
+                    adapter.cargar()
+            launch.assert_not_called()
+
     def test_response_preserves_class_offsets_and_filters_silence(self):
         transcript = "Álgebra lineal".encode()
         stream = BytesIO(

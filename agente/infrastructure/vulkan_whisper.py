@@ -57,6 +57,7 @@ class VulkanWhisper:
         if self.model_name == "auto":
             self.model_name = "large-v3-turbo"
         self.model = directory / f"ggml-{self.model_name}.bin"
+        self.vad_model = directory / "ggml-silero-v6.2.0.bin"
         self.language = settings.get("idioma", "es")
         self.log = log
         self.process = None
@@ -71,7 +72,9 @@ class VulkanWhisper:
             raise RuntimeError("No se encontró el motor opcional de Vulkan.")
         if self.model.parent != self.worker.parent or not self.model.is_file():
             raise RuntimeError(f"No se encontró el modelo Vulkan {self.model_name!r}.")
-        if any(c in str(self.model) + self.language for c in "\r\n"):
+        if not self.vad_model.is_file():
+            raise RuntimeError("No se encontró el modelo de detección de voz para Vulkan.")
+        if any(c in str(self.model) + str(self.vad_model) + self.language for c in "\r\n"):
             raise RuntimeError("Ruta del modelo o idioma no válido para Vulkan.")
         # PyInstaller can redirect library lookup to the app bundle on Linux.
         env = os.environ.copy()
@@ -88,11 +91,11 @@ class VulkanWhisper:
         )
         try:
             reply = self._exchange(
-                f"{self.model}\n{self.language}\n".encode(), read_line, STARTUP_TIMEOUT,
+                f"{self.model}\n{self.vad_model}\n{self.language}\n".encode(), read_line, STARTUP_TIMEOUT,
             )
-            if not reply.startswith("READY 1 ") or not reply[8:]:
+            if not reply.startswith("READY 2 ") or not reply[8:]:
                 raise RuntimeError("Versión incompatible del motor Vulkan.")
-            self._infer(np.zeros(SAMPLE_RATE, dtype=np.float32))
+            self._infer(np.zeros(SAMPLE_RATE, dtype=np.float32), probe=True)
         except Exception:
             self.close()
             raise
@@ -126,10 +129,11 @@ class VulkanWhisper:
             raise result
         return result
 
-    def _infer(self, audio):
+    def _infer(self, audio, *, probe=False):
         pcm = np.asarray(audio, dtype="<f4")
+        header = f"PROBE {len(pcm)}" if probe else str(len(pcm))
         return self._exchange(
-            f"{len(pcm)}\n".encode("ascii") + pcm.tobytes(), read_segments, INFERENCE_TIMEOUT,
+            f"{header}\n".encode("ascii") + pcm.tobytes(), read_segments, INFERENCE_TIMEOUT,
         )
 
     def transcribir(self, audio, offset_s, contexto=""):

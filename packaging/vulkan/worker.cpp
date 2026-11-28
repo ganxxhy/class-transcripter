@@ -92,9 +92,10 @@ int main() {
         return fail("No compatible Intel or AMD Vulkan GPU found");
     }
 
-    std::string model_path, language;
-    if (!std::getline(std::cin, model_path) || !std::getline(std::cin, language)) {
-        return fail("Missing model path or language");
+    std::string model_path, vad_path, language;
+    if (!std::getline(std::cin, model_path) || !std::getline(std::cin, vad_path) ||
+            !std::getline(std::cin, language)) {
+        return fail("Missing model paths or language");
     }
     if (language != "auto" && whisper_lang_id(language.c_str()) < 0) {
         return fail("Invalid transcription language");
@@ -109,6 +110,17 @@ int main() {
         return fail("Could not initialize the Vulkan model");
     }
 
+    auto vad_context_params = whisper_vad_default_context_params();
+    vad_context_params.use_gpu = false;
+    std::unique_ptr<whisper_vad_context, decltype(&whisper_vad_free)> vad(
+        whisper_vad_init_from_file_with_params(vad_path.c_str(), vad_context_params), whisper_vad_free);
+    if (!vad) {
+        return fail("Could not initialize the voice activity detector");
+    }
+    auto vad_params = whisper_vad_default_params();
+    vad_params.min_silence_duration_ms = 700;
+    vad_params.speech_pad_ms = 300;
+
     auto params = whisper_full_default_params(WHISPER_SAMPLING_BEAM_SEARCH);
     params.beam_search.beam_size = 5;
     params.language = language.c_str();
@@ -118,12 +130,13 @@ int main() {
     params.print_timestamps = false;
     params.print_special = false;
 
-    std::cout << "READY 1 " << device << std::endl;
+    std::cout << "READY 2 " << device << std::endl;
     std::string request;
     while (std::getline(std::cin, request)) {
+        const bool probe = request.rfind("PROBE ", 0) == 0;
         int samples = 0;
         try {
-            samples = std::stoi(request);
+            samples = std::stoi(probe ? request.substr(6) : request);
         } catch (const std::exception &) {
             return fail("Invalid audio frame size");
         }
@@ -134,6 +147,20 @@ int main() {
         if (!std::cin.read(reinterpret_cast<char *>(audio.data()), samples * sizeof(float))) {
             return fail("Incomplete audio frame");
         }
+        if (!probe) {
+            std::unique_ptr<whisper_vad_segments, decltype(&whisper_vad_free_segments)> speech(
+                whisper_vad_segments_from_samples(vad.get(), vad_params, audio.data(), samples),
+                whisper_vad_free_segments);
+            if (!speech) {
+                return fail("Voice activity detection failed");
+            }
+            if (!whisper_vad_segments_n_segments(speech.get())) {
+                std::cout << "SEGMENTS 0" << std::endl;
+                continue;
+            }
+        }
+        // The probe confirms GPU inference without encoding a full 30-second window.
+        params.audio_ctx = probe ? 100 : 0;
         if (whisper_full(context.get(), params, audio.data(), samples) != 0) {
             return fail("Vulkan inference failed");
         }
