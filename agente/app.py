@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from nucleo import almacen, horario, resumen  # noqa: E402
 from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre_asignatura, resumen_en_pc  # noqa: E402
 from nucleo.motor import microfonos  # noqa: E402
-from bootstrap import build_motor  # noqa: E402
+from bootstrap import build_motor, build_repository  # noqa: E402
 import tema  # noqa: E402
 from version import VERSION  # noqa: E402
 
@@ -69,7 +69,8 @@ class App:
         self.root = root
         self.cfg = cargar()
         self.logs = []
-        self.motor = build_motor(log=self.log)
+        self.repository = build_repository()
+        self.motor = build_motor(log=self.log, repository=self.repository)
         self.url_hub = self.cfg["ajustes"].get("url_hub") or "https://claude.ai/code/artifacts"
         self.icono = None
         self._construir()
@@ -131,12 +132,12 @@ class App:
 
     def _recuperar(self):
         """Cierra clases que quedaron abiertas si el agente se cortó y resume lo pendiente."""
-        for cid in almacen.clases_abiertas_huerfanas():
-            almacen.cerrar(cid)
+        for cid in self.repository.clases_abiertas_huerfanas():
+            self.repository.cerrar(cid)
             self.log(f"Recuperada clase sin cerrar: {cid}")
         if resumen_en_pc(self.cfg):
-            for cid in resumen.pendientes():
-                resumen.en_segundo_plano(cid, self.log)
+            for cid in resumen.pendientes(repositorio=self.repository):
+                resumen.en_segundo_plano(cid, self.log, repositorio=self.repository)
 
     # ---------- interfaz ----------
     def _construir(self):
@@ -461,13 +462,34 @@ class DialogoAjustes(tk.Toplevel):
         if cambio_modelo:
             messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
         if resumen_en_pc(self.cfg):
-            for cid in resumen.pendientes():
-                resumen.en_segundo_plano(cid)
+            repository = build_repository()
+            for cid in resumen.pendientes(repositorio=repository):
+                resumen.en_segundo_plano(cid, repositorio=repository)
         self.destroy()
 
 
 def main():
     args = sys.argv[1:]
+    if "--migrate-sqlite" in args:
+        from infrastructure.storage_activation import activate_sqlite
+        from nucleo.config import RUTA_DATOS
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            if messagebox.askyesno("Migrar a SQLite",
+                "Cierra todas las otras instancias de Estudio, Claude y el servidor MCP. "
+                "Actualiza el Hub a una versión compatible con SQLite antes de continuar. "
+                "Los archivos JSON originales se conservarán. ¿Confirmas que todo está preparado?",
+                parent=root):
+                try:
+                    database = activate_sqlite(RUTA_DATOS, offline_confirmed=True)
+                    messagebox.showinfo("Migrar a SQLite", f"Migración verificada: {database}", parent=root)
+                except Exception as error:
+                    messagebox.showerror("Migrar a SQLite", str(error), parent=root)
+                    raise
+        finally:
+            root.destroy()
+        return
     if "--mcp" in args:
         import mcp_servidor
         mcp_servidor.main()

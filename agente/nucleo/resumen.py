@@ -39,6 +39,6 @@ def en_segundo_plano(cid, log=print, *, repositorio: IClassRepository = almacen)
                      kwargs={"repositorio": repositorio}, daemon=True).start()
 
 
-def pendientes():
-    return [c["id"] for c in almacen.listar()
+def pendientes(*, repositorio: IClassRepository = almacen):
+    return [c["id"] for c in repositorio.listar()
             if not c.get("en_curso") and c.get("estado_resumen") in ("pendiente", "error", "generando") and c.get("n_segmentos")]
