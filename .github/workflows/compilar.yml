@@ -62,6 +62,13 @@ jobs:
           python tests/test_local_panel.py
           python tests/test_hub_launchers.py
           python tests/test_interfaces.py
+          python tests/test_vulkan_transcription.py
+          python tests/test_vulkan_models.py
+          python tests/test_device_choices.py
+          python tests/test_openvino_transcription.py
+          python tests/test_openvino_runtime.py
+          python tests/test_gpu_detection.py
+          python tests/test_acceleration_advice.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -125,6 +132,13 @@ jobs:
           python tests/test_local_panel.py
           python tests/test_hub_launchers.py
           python tests/test_interfaces.py
+          python tests/test_vulkan_transcription.py
+          python tests/test_vulkan_models.py
+          python tests/test_device_choices.py
+          python tests/test_openvino_transcription.py
+          python tests/test_openvino_runtime.py
+          python tests/test_gpu_detection.py
+          python tests/test_acceleration_advice.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -182,6 +196,17 @@ jobs:
           # El servidor MCP tiene que responder a initialize por stdio
           echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' | dist/AgenteClases/agente-mcp.exe | tee salida.txt
           grep -q agente_clases salida.txt
+
+      - name: Prueba del motor OpenVINO descargado
+        shell: pwsh
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}\datos-openvino
+        run: |
+          $p = Start-Process dist\AgenteClases\AgenteClases.exe -ArgumentList "--instalar-openvino","--sin-modelo" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { Get-Content "$env:AGENTE_CLASES_DATOS\datos\error.log" -ErrorAction SilentlyContinue; exit 1 }
+          $p = Start-Process dist\AgenteClases\AgenteClases.exe -ArgumentList "--comprobar-openvino" -PassThru -Wait
+          Get-Content "$env:AGENTE_CLASES_DATOS\datos\comprobar-openvino.txt" -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0) { exit 1 }
 
       - name: Prueba del asistente (abre la ventana y se cierra sola)
         shell: pwsh
@@ -278,6 +303,13 @@ jobs:
           python tests/test_local_panel.py
           python tests/test_hub_launchers.py
           python tests/test_interfaces.py
+          python tests/test_vulkan_transcription.py
+          python tests/test_vulkan_models.py
+          python tests/test_device_choices.py
+          python tests/test_openvino_transcription.py
+          python tests/test_openvino_runtime.py
+          python tests/test_gpu_detection.py
+          python tests/test_acceleration_advice.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -358,6 +390,13 @@ jobs:
         env:
           AGENTE_CLASES_DATOS: ${{ runner.temp }}/datos-comprobar
         run: xvfb-run -a timeout 120 ./Estudio-*-x86_64.AppImage --appimage-extract-and-run --comprobar
+
+      - name: Prueba del motor OpenVINO descargado dentro del AppImage
+        env:
+          AGENTE_CLASES_DATOS: ${{ runner.temp }}/datos-openvino
+        run: |
+          timeout 900 ./Estudio-*-x86_64.AppImage --appimage-extract-and-run --instalar-openvino --sin-modelo
+          timeout 120 ./Estudio-*-x86_64.AppImage --appimage-extract-and-run --comprobar-openvino
 
       - name: Prueba del asistente (abre la ventana y se cierra sola)
         env:

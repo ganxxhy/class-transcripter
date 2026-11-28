@@ -16,14 +16,63 @@ def build_class_service():
     return ClassService(build_repository(), cargar, lambda: read_status(RUTA_DATOS))
 
 
+def prefetch_speech_model(settings=None, log=print):
+    """Download the faster-whisper model that CPU fallback relies on."""
+    from infrastructure.whisper import Transcriptor
+    settings = dict(cargar()["ajustes"] if settings is None else settings)
+    if settings.get("dispositivo") in ("vulkan", "openvino"):
+        settings["dispositivo"] = "auto"
+    Transcriptor(settings, log).cargar()
+
+
+def build_transcriber(settings=None, log=print):
+    from infrastructure.transcription import LocalTranscriber
+    if settings is None:
+        settings = cargar()["ajustes"]
+    return LocalTranscriber(settings, RUTA_DATOS, log)
+
+
+def download_vulkan_models(log=print):
+    from pathlib import Path
+    from infrastructure.vulkan_models import download_vulkan_models as download
+    download(Path(RUTA_DATOS) / "vulkan", cargar()["ajustes"], log)
+
+
+def download_openvino_model(log=print):
+    from pathlib import Path
+    from infrastructure.openvino_models import download_openvino_model as download
+    download(Path(RUTA_DATOS) / "openvino", cargar()["ajustes"], log)
+
+
+def acceleration_status(log=print):
+    """Detect GPU vendors and installed engines without loading any GPU runtime."""
+    from pathlib import Path
+    from acceleration_advice import AccelerationStatus
+    from infrastructure.gpu_detection import detect_gpu_vendors
+    from infrastructure.openvino_runtime import install_running, pack_available
+    from infrastructure.openvino_whisper import OpenVinoWhisper
+    from infrastructure.vulkan_whisper import VulkanWhisper
+    settings = cargar()["ajustes"]
+    data = Path(RUTA_DATOS)
+    return AccelerationStatus(detect_gpu_vendors(), OpenVinoWhisper(data / "openvino", settings, log).ready(),
+                              VulkanWhisper(data / "vulkan", settings, log).installed(),
+                              pack_available(), install_running(data / "openvino"))
+
+
+def install_openvino_pack(log=print, include_model=True):
+    """Download the OpenVINO runtime and model for Intel GPUs (the acceleration pack)."""
+    from pathlib import Path
+    from infrastructure.openvino_runtime import install_acceleration_pack
+    install_acceleration_pack(Path(RUTA_DATOS) / "openvino", cargar()["ajustes"], log, include_model)
+
+
 def build_motor(log=print, repository=None):
     from application.recording import RecordingEngine
     from infrastructure.recording_files import write_status, open_wave
-    from infrastructure.whisper import Transcriptor
     from nucleo import horario, resumen
     from nucleo.config import nombre_asignatura, resumen_en_pc
     repository = repository if repository is not None else build_repository()
-    return RecordingEngine(log, transcriptor=Transcriptor(cargar()["ajustes"], log=log),
+    return RecordingEngine(log, transcriptor=build_transcriber(log=log),
                            repositorio=repository, audio_input=SoundDeviceInput(),
                            load_config=cargar, subject_name=nombre_asignatura,
                            current_subject=horario.asignatura_actual,

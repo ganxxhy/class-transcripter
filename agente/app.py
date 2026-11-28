@@ -9,10 +9,13 @@ Opciones (las usa el instalador):
   --registrar-mcp   conecta el agente con la app de escritorio de Claude
   --quitar-mcp      lo desconecta (al desinstalar)
   --descargar-modelo  descarga el modelo de voz que toca para este ordenador
+  --instalar-openvino [--sin-modelo]  descarga el motor OpenVINO para GPU Intel (y su modelo, salvo --sin-modelo)
+  --comprobar-openvino  carga el motor OpenVINO descargado (lo usa el CI)
   --al-arrancar     novedades tras actualizar y aviso si hay versión nueva (lo lanza la app)
   --buscar-actualizacion [--forzar]  aviso de versión nueva (--forzar: aunque se saltara)
 """
 import os
+import queue
 import subprocess
 import sys
 
@@ -32,8 +35,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from nucleo import almacen, horario, resumen  # noqa: E402
 from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre_asignatura, resumen_en_pc  # noqa: E402
 from nucleo.motor import microfonos  # noqa: E402
-from bootstrap import build_motor, build_repository  # noqa: E402
+from bootstrap import acceleration_status, build_motor, build_repository, install_openvino_pack  # noqa: E402
+from acceleration_advice import acceleration_advice, install_done_text  # noqa: E402
 import tema  # noqa: E402
+from device_choices import DEVICE_CHOICES, device_help, device_label, device_value  # noqa: E402
 from version import VERSION  # noqa: E402
 
 if sys.platform.startswith("linux") and CONGELADA:
@@ -467,6 +472,22 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)", style="Card.TLabel").pack(anchor="w")
         self.var_mod = tk.StringVar(value=aj.get("modelo_whisper", "auto"))
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
+        ttk.Label(f, text="Dispositivo de transcripción (OpenVINO y Vulkan son opcionales; ver README)", style="Card.TLabel").pack(anchor="w")
+        self.var_disp = tk.StringVar(value=device_label(aj.get("dispositivo", "auto")))
+        self.cmb_disp = ttk.Combobox(f, textvariable=self.var_disp, values=[text for _, text in DEVICE_CHOICES], state="readonly",
+                     width=58)
+        self.cmb_disp.pack(anchor="w", pady=(2, 2))
+        self.var_disp_ayuda = tk.StringVar(value=device_help(aj.get("dispositivo", "auto")))
+        ttk.Label(f, textvariable=self.var_disp_ayuda, style="CardSub.TLabel", wraplength=380).pack(anchor="w", pady=(0, 10))
+        self.cmb_disp.bind("<<ComboboxSelected>>", lambda _e: self.var_disp_ayuda.set(
+            device_help(device_value(self.var_disp.get(), aj.get("dispositivo", "auto")))))
+        self.cola_accel = queue.Queue()
+        self.var_accel = tk.StringVar(value="")
+        self.zona_accel = ttk.Frame(f, style="Card.TFrame")  # filled in once the GPU has been detected
+        self.zona_accel.pack(anchor="w", fill="x")
+        self.btn_accel = None
+        threading.Thread(target=self._detectar_aceleracion, daemon=True).start()
+        self._accel_job = self.after(200, self._sondear_aceleracion)
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         if edit_schedule:
@@ -483,15 +504,73 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Button(fila, text="Cancelar", command=self.destroy).pack(side="right", padx=6)
         self.grab_set()
 
+    def destroy(self):
+        try:
+            self.after_cancel(self._accel_job)
+        except (AttributeError, tk.TclError):
+            pass
+        super().destroy()
+
+    def _dispositivo_elegido(self):
+        return device_value(self.var_disp.get(), self.cfg["ajustes"].get("dispositivo", "auto"))
+
+    def _detectar_aceleracion(self):
+        try:
+            estado = acceleration_status(log=lambda *_: None)
+            self.cola_accel.put(("advice", acceleration_advice(estado, self.cfg["ajustes"].get("dispositivo", "auto"))))
+        except Exception:
+            pass  # detection is a hint only; Settings keeps working without it
+
+    def _instalar_aceleracion(self):
+        if not messagebox.askyesno("Aceleración Intel", "Se descargarán unos 1,7 GB (motor OpenVINO y modelo de voz). "
+                                   "Puede tardar un rato. ¿Continuar?", parent=self):
+            return
+        self.btn_accel.configure(state="disabled")
+        self.var_accel.set("Descargando… puede tardar unos minutos. Puedes cerrar Ajustes; la descarga sigue.")
+        cola = self.cola_accel
+
+        def trabajo():
+            try:
+                install_openvino_pack(lambda mensaje: cola.put(("log", mensaje)))
+                cola.put(("done", None))
+            except Exception as error:
+                cola.put(("done", str(error)))
+        threading.Thread(target=trabajo, daemon=True).start()
+
+    def _sondear_aceleracion(self):
+        while not self.cola_accel.empty():
+            tipo, dato = self.cola_accel.get()
+            if tipo == "advice" and dato is not None:
+                self.var_accel.set(dato.text)
+                ttk.Label(self.zona_accel, textvariable=self.var_accel, style="CardSub.TLabel",
+                          wraplength=380).pack(anchor="w", pady=(0, 6))
+                if dato.can_install:
+                    self.btn_accel = ttk.Button(self.zona_accel, text="Activar aceleración Intel",
+                                                command=self._instalar_aceleracion)
+                    self.btn_accel.pack(anchor="w", pady=(0, 10))
+            elif tipo == "log" and self.btn_accel is not None and dato and "%" not in dato:
+                self.var_accel.set(dato)
+            elif tipo == "done" and self.btn_accel is not None:
+                if dato is None:
+                    self.var_accel.set(install_done_text(self._dispositivo_elegido()))
+                    self.btn_accel.pack_forget()
+                else:
+                    self.var_accel.set(f"No se pudo instalar: {dato}")
+                    self.btn_accel.configure(state="normal")
+        self._accel_job = self.after(200, self._sondear_aceleracion)
+
     def _guardar(self):
         aj = self.cfg["ajustes"]
-        cambio_modelo = aj.get("modelo_whisper") != self.var_mod.get()
+        dispositivo = device_value(self.var_disp.get(), aj.get("dispositivo", "auto"))
+        cambio_modelo = (aj.get("modelo_whisper") != self.var_mod.get()
+                         or aj.get("dispositivo", "auto") != dispositivo)
         aj["anthropic_api_key"] = self.var_clave.get().strip()
         aj["modelo_whisper"] = self.var_mod.get()
+        aj["dispositivo"] = dispositivo
         aj["guardar_audio"] = self.var_audio.get()
         guardar(self.cfg)
         if cambio_modelo:
-            messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
+            messagebox.showinfo("Ajustes", "El nuevo modelo o dispositivo de voz se usará al volver a abrir Estudio.")
         if resumen_en_pc(self.cfg):
             repository = build_repository()
             for cid in resumen.pendientes(repositorio=repository):
@@ -565,10 +644,38 @@ def main():
             actualizacion.novedades_si_toca()
         actualizacion.comprobar_y_avisar(forzar="--forzar" in args)
         return
-    if "--descargar-modelo" in args:
-        from nucleo.transcripcion import Transcriptor
+    if "--descargar-modelo-vulkan" in args:
+        from bootstrap import download_vulkan_models
         try:
-            Transcriptor(cargar()["ajustes"]).cargar()
+            download_vulkan_models()
+        except Exception as error:
+            print(f"No se pudieron descargar los modelos de Vulkan: {error}")
+            sys.exit(1)
+        return
+    if "--instalar-openvino" in args:
+        from bootstrap import install_openvino_pack
+        try:
+            install_openvino_pack(include_model="--sin-modelo" not in args)
+        except Exception as error:
+            print(f"No se pudo instalar OpenVINO: {error}")
+            sys.exit(1)
+        return
+    if "--comprobar-openvino" in args:
+        import comprobar
+        comprobar.openvino()
+        return
+    if "--descargar-modelo-openvino" in args:
+        from bootstrap import download_openvino_model
+        try:
+            download_openvino_model()
+        except Exception as error:
+            print(f"No se pudo descargar el modelo de OpenVINO: {error}")
+            sys.exit(1)
+        return
+    if "--descargar-modelo" in args:
+        from bootstrap import prefetch_speech_model
+        try:
+            prefetch_speech_model()
         except Exception:
             pass  # se volverá a intentar al abrir el agente
         return
