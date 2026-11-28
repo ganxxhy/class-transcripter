@@ -8,6 +8,8 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 
 ## 1.3.0
 
+- Migración SQLite: detección de cambios en los JSON durante la importación y conservación separada de archivos antiguos que reaparezcan después de activar SQLite.
+
 - Actualizador de Windows: aislamiento del entorno de PyInstaller al lanzar el instalador, registro de instalación y detección de fallos inmediatos con instrucciones de instalación manual.
 
 ### Novedades

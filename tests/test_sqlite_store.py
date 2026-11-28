@@ -135,6 +135,54 @@ class SQLiteStoreTests(unittest.TestCase):
         self.assertEqual(SQLiteClassRepository(database).leer(class_id), record)
         self.assertEqual(ensure_sqlite(root), database)
 
+    def test_recreated_legacy_directory_is_preserved(self):
+        from infrastructure.storage_activation import ensure_sqlite
+        root = self.root / "recreated"
+        database = ensure_sqlite(root)
+        source = root / "clases"
+        source.mkdir()
+        (source / "late.json").write_text("legacy content", encoding="utf-8")
+        self.assertEqual(ensure_sqlite(root), database)
+        self.assertTrue((root / "clases-json-backup").is_dir())
+        recovered = list(root.glob("legacy-recovery-*-preserved/late.json"))
+        self.assertEqual(len(recovered), 1)
+        self.assertEqual(recovered[0].read_text(encoding="utf-8"), "legacy content")
+        self.assertEqual(SQLiteClassRepository(database).listar(), [])
+        source.mkdir()
+        self.assertEqual(ensure_sqlite(root), database)
+        self.assertFalse(source.exists())
+
+    def test_changed_snapshot_is_not_activated(self):
+        from unittest.mock import patch
+        from infrastructure import storage_activation
+        root = self.root / "changed"
+        source = root / "clases"
+        source.mkdir(parents=True)
+        original = storage_activation.legacy_snapshot
+        calls = 0
+        def snapshot(directory):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                (source / "late.json").write_text("late write", encoding="utf-8")
+            return original(directory)
+        with patch.object(storage_activation, "legacy_snapshot", side_effect=snapshot):
+            with self.assertRaises(RuntimeError):
+                storage_activation.ensure_sqlite(root)
+        self.assertFalse((root / "sqlite-active.json").exists())
+        self.assertTrue((source / "late.json").exists())
+
+    def test_concurrent_activation(self):
+        import subprocess
+        root = self.root / "concurrent"
+        agent = str(Path(__file__).resolve().parents[1] / "agente")
+        script = "import sys; sys.path.insert(0, sys.argv[1]); from infrastructure.storage_activation import ensure_sqlite; ensure_sqlite(sys.argv[2])"
+        processes = [subprocess.Popen([sys.executable, "-c", script, agent, str(root)]) for _ in range(3)]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=60), 0)
+        self.assertTrue((root / "sqlite-active.json").is_file())
+        self.assertTrue((root / "clases-json-backup").is_dir())
+
 
 if __name__ == "__main__":
     unittest.main()

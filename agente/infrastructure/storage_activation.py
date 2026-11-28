@@ -1,5 +1,6 @@
 """Offline storage cutover. Requires all legacy writers to be stopped."""
 import json
+import hashlib
 import os
 import tempfile
 from pathlib import Path
@@ -27,6 +28,16 @@ def active_database(data_directory):
     return database
 
 
+def legacy_snapshot(root):
+    """Fingerprint legacy inputs, including additions and removals."""
+    paths = sorted((root / "clases").glob("*.json"))
+    state = root / "estado.json"
+    if state.exists():
+        paths.append(state)
+    return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in paths}
+
+
 def activate_sqlite(data_directory, *, offline_confirmed=False):
     if not offline_confirmed:
         raise ValueError("Stop Estudio, MCP and all Hub instances before migration")
@@ -37,6 +48,7 @@ def activate_sqlite(data_directory, *, offline_confirmed=False):
     root.mkdir(parents=True, exist_ok=True)
     source = root / "clases"
     source.mkdir(exist_ok=True)
+    snapshot = legacy_snapshot(root)
     state = root / "estado.json"
     database = root / DATABASE
     # Never overwrite an inactive database: it may contain newer user data.
@@ -61,6 +73,8 @@ def activate_sqlite(data_directory, *, offline_confirmed=False):
             json.dump({"version": 1, "database": DATABASE}, stream)
             stream.flush()
             os.fsync(stream.fileno())
+        if legacy_snapshot(root) != snapshot:
+            raise RuntimeError("Legacy data changed during migration; close the old Hub and retry")
         if database.exists():
             SQLiteClassRepository.validate_existing(database)
             previous = SQLiteClassRepository(database)
@@ -68,6 +82,8 @@ def activate_sqlite(data_directory, *, offline_confirmed=False):
                 raise ValueError("Inactive database differs from the verified snapshot; preserve it for manual recovery")
         else:
             os.replace(candidate, database)
+        if legacy_snapshot(root) != snapshot:
+            raise RuntimeError("Legacy data changed before activation; preserve both stores for recovery")
         os.replace(marker, root / MARKER)
     return database
 
@@ -83,6 +99,14 @@ def ensure_sqlite(data_directory):
         backup = root / "clases-json-backup"
         if source.exists():
             if backup.exists():
-                raise RuntimeError("Both legacy class directories exist; review before continuing")
-            source.rename(backup)
+                # Never merge stale JSON into the active database or overwrite a backup.
+                if not any(source.iterdir()):
+                    source.rmdir()
+                else:
+                    with tempfile.TemporaryDirectory(prefix="legacy-recovery-", dir=root) as temporary:
+                        # Keep a uniquely named sibling directory after the temporary context exits.
+                        recovery = Path(temporary).with_name(Path(temporary).name + "-preserved")
+                        source.rename(recovery)
+            else:
+                source.rename(backup)
         return database
