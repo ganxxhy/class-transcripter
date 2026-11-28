@@ -44,3 +44,20 @@ def main():
         import ventana_web
         probar("ventanas web (WebKitGTK)", lambda: (ventana_web.importar_webview(), __import__("webview.platforms.gtk")))
     sys.exit(1 if fallos else 0)
+
+
+def openvino():
+    """--comprobar-openvino: import the downloaded OpenVINO runtime inside the frozen app and list its devices."""
+    from pathlib import Path
+    from infrastructure.openvino_runtime import probe_runtime
+    from nucleo.config import RUTA_DATOS
+    try:
+        message = f"ok openvino {probe_runtime(Path(RUTA_DATOS) / 'openvino')}"
+        code = 0
+    except Exception as e:  # noqa: BLE001
+        message = f"FALLA openvino: {type(e).__name__}: {e}"
+        code = 1
+    print(message)
+    Path(RUTA_DATOS).mkdir(parents=True, exist_ok=True)
+    (Path(RUTA_DATOS) / "comprobar-openvino.txt").write_text(message + "\n", encoding="utf-8")
+    sys.exit(code)

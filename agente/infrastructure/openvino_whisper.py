@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
+from .openvino_models import model_complete
+from .openvino_runtime import activate_runtime
 from .whisper import format_segments, normalize_audio
 
 SAMPLE_RATE = 16000
@@ -40,17 +42,24 @@ class OpenVinoWhisper:
         self.config = None
         self.history = []
         self.descripcion = "sin cargar"
+        self.runtime_problem = None
 
     def installed(self):
-        return importlib.util.find_spec("openvino_genai") is not None
+        self.runtime_problem = activate_runtime(self.directory)  # makes a downloaded acceleration pack importable
+        return self.runtime_problem is None and importlib.util.find_spec("openvino_genai") is not None
+
+    def ready(self):
+        """True when the package and the complete model are both available."""
+        return self.installed() and self.model.parent == self.directory and model_complete(self.model)
 
     def cargar(self):
         if not self.installed():
-            raise RuntimeError("Falta el paquete opcional openvino-genai (pip install openvino-genai).")
-        if self.model.parent != self.directory or not (self.model / "openvino_encoder_model.xml").is_file():
+            raise RuntimeError(self.runtime_problem or
+                               "Falta el motor opcional de OpenVINO (Ajustes → Activar aceleración Intel, o pip install openvino-genai).")
+        if self.model.parent != self.directory or not model_complete(self.model):
             raise RuntimeError(
-                f"No se encontró el modelo OpenVINO {self.model_name!r} en {self.directory}; "
-                "descárgalo con --descargar-modelo-openvino.")
+                f"No se encontró el modelo OpenVINO {self.model_name!r} completo en {self.directory}; "
+                "descárgalo desde Ajustes → Activar aceleración Intel o con --descargar-modelo-openvino.")
         device, device_name = self.gpu_probe()
         pipeline = self.pipeline_factory(self.model, device)
         config = pipeline.get_generation_config()

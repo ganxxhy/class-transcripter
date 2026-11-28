@@ -1,6 +1,6 @@
 faster-whisper>=1.1
 sounddevice>=0.4.6
-numpy
+numpy<2.6  # the optional OpenVINO runtime (2026.4.1) requires numpy<2.6
 anthropic>=2.13
 pystray
 pillow

@@ -1,8 +1,8 @@
 """Download and verify the GGML models used by the optional Vulkan worker."""
-import hashlib
-import os
 from pathlib import Path
 import urllib.request
+
+from .downloads import fetch_verified
 
 WHISPER_URL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/{}"
 VAD_URL = "https://huggingface.co/ggml-org/whisper-vad/resolve/main/{}"
@@ -17,32 +17,6 @@ VULKAN_MODELS = (
     (VAD, VAD_URL.format(VAD), 885098,
      "2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987"),
 )
-
-
-def _fetch(name, url, size, digest, directory, log, opener, chunk_size):
-    final = directory / name
-    part = directory / f"{name}.part"
-    request = urllib.request.Request(url, headers={"User-Agent": "Estudio"})
-    sha = hashlib.sha256()
-    received = 0
-    next_report = 10
-    try:
-        with opener(request, timeout=60) as response, open(part, "wb") as out:
-            while True:
-                block = response.read(chunk_size)
-                if not block:
-                    break
-                out.write(block)
-                sha.update(block)
-                received += len(block)
-                while size and received * 100 // size >= next_report <= 100:
-                    log(f"Descargando {name}: {next_report} %")
-                    next_report += 10
-        if received != size or sha.hexdigest() != digest:
-            raise RuntimeError(f"Descarga corrupta: {name}")
-        os.replace(part, final)
-    finally:
-        part.unlink(missing_ok=True)
 
 
 def download_vulkan_models(directory, settings=None, log=print,
@@ -60,5 +34,5 @@ def download_vulkan_models(directory, settings=None, log=print,
             log(f"Ya está: {name}")
             continue
         log(f"Descargando {name}…")
-        _fetch(name, url, size, digest, directory, log, opener, chunk_size)
+        fetch_verified(name, url, size, digest, directory, log, opener, chunk_size)
         log(f"Listo: {name}")

@@ -9,6 +9,8 @@ Opciones (las usa el instalador):
   --registrar-mcp   conecta el agente con la app de escritorio de Claude
   --quitar-mcp      lo desconecta (al desinstalar)
   --descargar-modelo  descarga el modelo de voz que toca para este ordenador
+  --instalar-openvino [--sin-modelo]  descarga el motor OpenVINO para GPU Intel (y su modelo, salvo --sin-modelo)
+  --comprobar-openvino  carga el motor OpenVINO descargado (lo usa el CI)
   --al-arrancar     novedades tras actualizar y aviso si hay versión nueva (lo lanza la app)
   --buscar-actualizacion [--forzar]  aviso de versión nueva (--forzar: aunque se saltara)
 """
@@ -585,6 +587,18 @@ def main():
         except Exception as error:
             print(f"No se pudieron descargar los modelos de Vulkan: {error}")
             sys.exit(1)
+        return
+    if "--instalar-openvino" in args:
+        from bootstrap import install_openvino_pack
+        try:
+            install_openvino_pack(include_model="--sin-modelo" not in args)
+        except Exception as error:
+            print(f"No se pudo instalar OpenVINO: {error}")
+            sys.exit(1)
+        return
+    if "--comprobar-openvino" in args:
+        import comprobar
+        comprobar.openvino()
         return
     if "--descargar-modelo-openvino" in args:
         from bootstrap import download_openvino_model

@@ -177,6 +177,23 @@ class VulkanProtocolTests(unittest.TestCase):
                     adapter.cargar()
             launch.assert_not_called()
 
+    def test_non_ascii_paths_are_sent_as_utf8(self):
+        with TemporaryDirectory() as root:
+            directory = Path(root) / "José"
+            directory.mkdir()
+            adapter = VulkanWhisper(directory, {}, Mock())
+            for path in (adapter.worker, adapter.model, adapter.vad_model):
+                path.touch()
+            written = BytesIO()
+            process = Mock()
+            process.stdin.write.side_effect = written.write
+            process.stdout = BytesIO(b"READY 2 Fake GPU\nSEGMENTS 0\n")
+            with patch("infrastructure.vulkan_whisper.subprocess.Popen", return_value=process):
+                adapter.cargar()
+        sent = written.getvalue()
+        self.assertTrue(sent.startswith(str(adapter.model).encode("utf-8") + b"\n"))
+        self.assertIn("José".encode("utf-8"), sent)
+
     def test_missing_files_name_directory_and_remedy(self):
         with TemporaryDirectory() as directory:
             adapter = VulkanWhisper(directory, {}, Mock())

@@ -9,7 +9,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agente"))
 
-from infrastructure.openvino_models import MODEL_DIRECTORY, REPO, REVISION, download_openvino_model
+from infrastructure.openvino_models import (MODEL_DIRECTORY, REPO, REQUIRED_MODEL_FILES, REVISION,
+                                           download_openvino_model)
 from infrastructure.openvino_whisper import OpenVinoWhisper
 from infrastructure.transcription import LocalTranscriber
 
@@ -23,7 +24,8 @@ class FakeModelDirectory:
         self.root = Path(test.enterContext(TemporaryDirectory()))
         self.model = self.root / "whisper-large-v3-int8-ov"
         self.model.mkdir()
-        (self.model / "openvino_encoder_model.xml").touch()
+        for name in REQUIRED_MODEL_FILES:
+            (self.model / name).write_bytes(b"x")
 
 
 class OpenVinoBackendTests(unittest.TestCase):
@@ -50,6 +52,22 @@ class OpenVinoBackendTests(unittest.TestCase):
         backend = OpenVinoWhisper(self.files.root, {"modelo_whisper": "small"}, self.log)
         with self.assertRaisesRegex(RuntimeError, "--descargar-modelo-openvino"):
             backend.cargar()
+
+    def test_incomplete_model_is_not_ready(self):
+        (self.files.model / "openvino_decoder_model.bin").unlink()
+        with self.assertRaisesRegex(RuntimeError, "completo"):
+            self.backend.cargar()
+        self.assertFalse(self.backend.ready())
+        with TemporaryDirectory() as directory:
+            downloader = Mock()
+            target = Path(directory) / MODEL_DIRECTORY
+            target.mkdir()
+            (target / "openvino_encoder_model.xml").write_bytes(b"x")
+            download_openvino_model(directory, {}, Mock(), downloader)
+            downloader.assert_called_once()
+
+    def test_complete_model_is_ready(self):
+        self.assertTrue(self.backend.ready())
 
     def test_missing_package_is_reported(self):
         with patch.object(OpenVinoWhisper, "installed", return_value=False):
@@ -79,6 +97,15 @@ class OpenVinoBackendTests(unittest.TestCase):
         self.pipeline.generate.reset_mock()
         self.assertEqual(self.backend.transcribir(np.zeros(16000, dtype=np.float32), 0), [])
         self.pipeline.generate.assert_not_called()
+
+
+class OpenVinoRuntimeProblemTests(unittest.TestCase):
+    def test_runtime_problem_is_reported_instead_of_a_missing_package(self):
+        files = FakeModelDirectory(self)
+        backend = OpenVinoWhisper(files.root, {}, Mock(), Mock())
+        with patch("infrastructure.openvino_whisper.activate_runtime", return_value="numpy no compatible"):
+            with self.assertRaisesRegex(RuntimeError, "numpy no compatible"):
+                backend.cargar()
 
 
 class OpenVinoSelectionTests(unittest.TestCase):
@@ -143,7 +170,8 @@ class OpenVinoDownloadTests(unittest.TestCase):
                                                local_dir=str(Path(directory) / MODEL_DIRECTORY))
             target = Path(directory) / MODEL_DIRECTORY
             target.mkdir()
-            (target / "openvino_encoder_model.xml").touch()
+            for name in REQUIRED_MODEL_FILES:
+                (target / name).write_bytes(b"x")
             downloader.reset_mock()
             download_openvino_model(directory, {}, Mock(), downloader)
             downloader.assert_not_called()

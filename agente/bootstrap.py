@@ -44,6 +44,13 @@ def download_openvino_model(log=print):
     download(Path(RUTA_DATOS) / "openvino", cargar()["ajustes"], log)
 
 
+def install_openvino_pack(log=print, include_model=True):
+    """Download the OpenVINO runtime and model for Intel GPUs (the acceleration pack)."""
+    from pathlib import Path
+    from infrastructure.openvino_runtime import install_acceleration_pack
+    install_acceleration_pack(Path(RUTA_DATOS) / "openvino", cargar()["ajustes"], log, include_model)
+
+
 def build_motor(log=print, repository=None):
     from application.recording import RecordingEngine
     from infrastructure.recording_files import write_status, open_wave
