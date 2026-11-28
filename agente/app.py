@@ -34,6 +34,7 @@ from nucleo.config import CONGELADA, RUTA_DATOS, cargar, existe, guardar, nombre
 from nucleo.motor import microfonos  # noqa: E402
 from bootstrap import build_motor, build_repository  # noqa: E402
 import tema  # noqa: E402
+from device_choices import DEVICE_CHOICES, device_label, device_value  # noqa: E402
 from version import VERSION  # noqa: E402
 
 if sys.platform.startswith("linux") and CONGELADA:
@@ -467,6 +468,10 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)", style="Card.TLabel").pack(anchor="w")
         self.var_mod = tk.StringVar(value=aj.get("modelo_whisper", "auto"))
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
+        ttk.Label(f, text="Dispositivo de transcripción (Vulkan requiere el motor opcional; ver README)", style="Card.TLabel").pack(anchor="w")
+        self.var_disp = tk.StringVar(value=device_label(aj.get("dispositivo", "auto")))
+        ttk.Combobox(f, textvariable=self.var_disp, values=[text for _, text in DEVICE_CHOICES], state="readonly",
+                     width=48).pack(anchor="w", pady=(2, 10))
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         if edit_schedule:
@@ -485,13 +490,16 @@ class DialogoAjustes(tk.Toplevel):
 
     def _guardar(self):
         aj = self.cfg["ajustes"]
-        cambio_modelo = aj.get("modelo_whisper") != self.var_mod.get()
+        dispositivo = device_value(self.var_disp.get(), aj.get("dispositivo", "auto"))
+        cambio_modelo = (aj.get("modelo_whisper") != self.var_mod.get()
+                         or aj.get("dispositivo", "auto") != dispositivo)
         aj["anthropic_api_key"] = self.var_clave.get().strip()
         aj["modelo_whisper"] = self.var_mod.get()
+        aj["dispositivo"] = dispositivo
         aj["guardar_audio"] = self.var_audio.get()
         guardar(self.cfg)
         if cambio_modelo:
-            messagebox.showinfo("Ajustes", "El nuevo modelo de voz se usará al volver a abrir Estudio.")
+            messagebox.showinfo("Ajustes", "El nuevo modelo o dispositivo de voz se usará al volver a abrir Estudio.")
         if resumen_en_pc(self.cfg):
             repository = build_repository()
             for cid in resumen.pendientes(repositorio=repository):

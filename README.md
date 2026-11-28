@@ -58,9 +58,11 @@ Estudio can use `whisper.cpp` with Vulkan on Windows and Linux. The worker looks
    ```
 
    Expected SHA-256: `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69` (large-v3-turbo) and `2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987` (Silero). The worker itself is not downloaded; build it as in step 2. If you explicitly set `modelo_whisper` to another model, install the matching `ggml-<model>.bin` there by hand. If a file is missing, the log names it and the folder where Estudio looks for it, then falls back to CPU.
-5. Restart Estudio. In the `ajustes` object of `config.json`, `"dispositivo": "auto"` keeps CUDA first, then tries the optional Vulkan worker, then uses CPU. Set `"dispositivo": "vulkan"` to try Vulkan first with CPU fallback, or use `"cpu"` or `"cuda"` to select an existing backend directly.
+5. Restart Estudio. In the `ajustes` object of `config.json`, `"dispositivo": "auto"` keeps CUDA first, then tries the optional Vulkan worker, then uses CPU. Set `"dispositivo": "vulkan"` to try Vulkan first with CPU fallback, or use `"cpu"` or `"cuda"` to select an existing backend directly. The same choice is available in Ajustes → «Dispositivo de transcripción»; it applies the next time Estudio starts.
 
 The transcription log shows the active model and device, any fallback reason, and a real-time speed multiplier per chunk. To compare Vulkan with CPU, transcribe the same sample with `modelo_whisper` set to `large-v3-turbo` for both runs and compare the speed after model startup. A value above `1.0×` means the chunk was processed faster than it was recorded.
+
+Vulkan frees the processor but is not always faster than it. On an Intel Core Ultra 7 258V (Lunar Lake) with its integrated GPU, `large-v3-turbo` measured about 4.6× on Vulkan against about 7.1× on CPU on the same sample; the GPU encoder takes roughly 4 s per 30 s window, and a chunk that needs a second window takes about twice as long. Measure on your own hardware and choose "Solo CPU" if CPU is faster for you.
 
 ## Resúmenes con tu cuenta de ChatGPT
 

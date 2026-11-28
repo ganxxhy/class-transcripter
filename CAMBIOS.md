@@ -10,7 +10,7 @@ Si cambia el panel `hub/mis-clases.html`, sube su `VERSION_PANEL` y cuenta lo nu
 - Mejora del contraste del texto sobre el cielo dinámico durante el amanecer, el atardecer y la noche.
 
 ### Transcripción
-- Transcripción opcional con Vulkan (whisper.cpp) en GPU Intel y AMD, con vuelta automática a CPU. Los modelos se bajan con `--descargar-modelo-vulkan`; si falta algún archivo, el registro dice cuál y en qué carpeta.
+- Transcripción opcional con Vulkan (whisper.cpp) en GPU Intel y AMD, con vuelta automática a CPU. Los modelos se bajan con `--descargar-modelo-vulkan`; si falta algún archivo, el registro dice cuál y en qué carpeta. Ajustes permite elegir el dispositivo de transcripción (automático, CPU, CUDA o Vulkan).
 
 ## 1.3.0
 
