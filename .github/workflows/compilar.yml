@@ -65,6 +65,7 @@ jobs:
           python tests/test_vulkan_transcription.py
           python tests/test_vulkan_models.py
           python tests/test_device_choices.py
+          python tests/test_openvino_transcription.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -131,6 +132,7 @@ jobs:
           python tests/test_vulkan_transcription.py
           python tests/test_vulkan_models.py
           python tests/test_device_choices.py
+          python tests/test_openvino_transcription.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 
@@ -287,6 +289,7 @@ jobs:
           python tests/test_vulkan_transcription.py
           python tests/test_vulkan_models.py
           python tests/test_device_choices.py
+          python tests/test_openvino_transcription.py
           python tests/test_sqlite_store.py
           if [ -f tests/test_actualizacion.py ]; then python tests/test_actualizacion.py; fi
 

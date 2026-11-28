@@ -1,9 +1,10 @@
 """Transcription device options shown in Settings; stored values keep the `dispositivo` config key."""
 
 DEVICE_CHOICES = (
-    ("auto", "Automático (NVIDIA, luego Vulkan, luego CPU)"),
+    ("auto", "Automático (NVIDIA, luego Intel/AMD opcional, luego CPU)"),
     ("cpu", "Solo CPU"),
     ("cuda", "GPU NVIDIA (CUDA)"),
+    ("openvino", "GPU Intel (OpenVINO, opcional)"),
     ("vulkan", "GPU Intel o AMD (Vulkan, opcional)"),
 )
 

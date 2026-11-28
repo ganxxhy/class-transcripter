@@ -20,7 +20,7 @@ def prefetch_speech_model(settings=None, log=print):
     """Download the faster-whisper model that CPU fallback relies on."""
     from infrastructure.whisper import Transcriptor
     settings = dict(cargar()["ajustes"] if settings is None else settings)
-    if settings.get("dispositivo") == "vulkan":
+    if settings.get("dispositivo") in ("vulkan", "openvino"):
         settings["dispositivo"] = "auto"
     Transcriptor(settings, log).cargar()
 
@@ -36,6 +36,12 @@ def download_vulkan_models(log=print):
     from pathlib import Path
     from infrastructure.vulkan_models import download_vulkan_models as download
     download(Path(RUTA_DATOS) / "vulkan", cargar()["ajustes"], log)
+
+
+def download_openvino_model(log=print):
+    from pathlib import Path
+    from infrastructure.openvino_models import download_openvino_model as download
+    download(Path(RUTA_DATOS) / "openvino", cargar()["ajustes"], log)
 
 
 def build_motor(log=print, repository=None):

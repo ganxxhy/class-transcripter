@@ -10,7 +10,7 @@ from device_choices import DEVICE_CHOICES, device_label, device_value
 
 class DeviceChoicesTests(unittest.TestCase):
     def test_stored_values_are_the_supported_devices(self):
-        self.assertEqual([value for value, _ in DEVICE_CHOICES], ["auto", "cpu", "cuda", "vulkan"])
+        self.assertEqual([value for value, _ in DEVICE_CHOICES], ["auto", "cpu", "cuda", "openvino", "vulkan"])
 
     def test_labels_round_trip_to_stored_values(self):
         for value, _ in DEVICE_CHOICES:

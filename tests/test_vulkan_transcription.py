@@ -22,6 +22,8 @@ class VulkanSelectionTests(unittest.TestCase):
         self.cuda = self.enterContext(patch("infrastructure.transcription.cuda_available", return_value=False))
         self.backend = LocalTranscriber({}, directory, self.log)
         self.backend.vulkan = Mock()
+        self.backend.openvino = Mock()
+        self.backend.openvino.installed.return_value = False
         self.legacy = self.make_legacy.return_value
         self.audio = np.zeros(16000, dtype=np.float32)
 

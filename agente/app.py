@@ -468,10 +468,10 @@ class DialogoAjustes(tk.Toplevel):
         ttk.Label(f, text="Modelo de voz (auto = el mejor que aguante tu ordenador)", style="Card.TLabel").pack(anchor="w")
         self.var_mod = tk.StringVar(value=aj.get("modelo_whisper", "auto"))
         ttk.Combobox(f, textvariable=self.var_mod, values=self.MODELOS, state="readonly").pack(anchor="w", pady=(2, 10))
-        ttk.Label(f, text="Dispositivo de transcripción (Vulkan requiere el motor opcional; ver README)", style="Card.TLabel").pack(anchor="w")
+        ttk.Label(f, text="Dispositivo de transcripción (OpenVINO y Vulkan son opcionales; ver README)", style="Card.TLabel").pack(anchor="w")
         self.var_disp = tk.StringVar(value=device_label(aj.get("dispositivo", "auto")))
         ttk.Combobox(f, textvariable=self.var_disp, values=[text for _, text in DEVICE_CHOICES], state="readonly",
-                     width=48).pack(anchor="w", pady=(2, 10))
+                     width=58).pack(anchor="w", pady=(2, 10))
         self.var_audio = tk.BooleanVar(value=bool(aj.get("guardar_audio")))
         ttk.Checkbutton(f, text="Guardar también el audio (unos 115 MB por hora)", variable=self.var_audio).pack(anchor="w")
         if edit_schedule:
@@ -579,6 +579,14 @@ def main():
             download_vulkan_models()
         except Exception as error:
             print(f"No se pudieron descargar los modelos de Vulkan: {error}")
+            sys.exit(1)
+        return
+    if "--descargar-modelo-openvino" in args:
+        from bootstrap import download_openvino_model
+        try:
+            download_openvino_model()
+        except Exception as error:
+            print(f"No se pudo descargar el modelo de OpenVINO: {error}")
             sys.exit(1)
         return
     if "--descargar-modelo" in args:
